@@ -1,0 +1,6 @@
+batman-adv (0.1~beta+svn1082-1) unstable; urgency=low
+
+  * Initial release (Closes: #478729) 
+
+ -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Sun, 27 Apr 2008 09:43:36 +0200
+

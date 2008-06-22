@@ -1,0 +1,21 @@
+Source: batman-adv-source
+Section: admin
+Priority: optional
+Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Build-Depends: gcc (>= 4:4.0) [!m68k], gcc-3.3 [m68k], binutils-hppa64 [hppa], gcc-4.0-hppa64 [hppa], debhelper (>= 4.1.0), dpkg-dev (>= 1.10.23), debianutils (>= 1.6), sparc-utils [sparc], dpatch, module-assistant, linux-headers-_KVERS_
+XS-Vcs-Svn: https://dev.open-mesh.net/svn/batman/trunk
+Standards-Version: 3.7.3
+
+Package: batman-adv-modules-_KVERS_
+Architecture: any
+Provides: batman-adv-modules
+Description: batman-adv modules for Linux (kernel _KVERS_).
+ This package contains the set of loadable kernel modules for the
+ <description>.
+ .
+ This package contains the compiled kernel modules for _KVERS_
+ .
+ If you have compiled your own kernel, you will most likely need to build
+ your own batman-adv-modules. The batman-adv-source package has been
+ provided for use with the Debian's module-assistant or kernel-package
+ utilities to produce a version of batman-adv-modules for your kernel.
