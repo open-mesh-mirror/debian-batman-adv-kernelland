@@ -1,6 +1,12 @@
+batman-adv (0.1~beta+svn1082-2) unstable; urgency=low
+
+  * fix Description for batman-adv-battool
+
+ -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Sun, 27 Apr 2008 21:02:23 +0200
+
 batman-adv (0.1~beta+svn1082-1) unstable; urgency=low
 
   * Initial release (Closes: #478729) 
 
- -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Sun, 27 Apr 2008 09:43:36 +0200
+ -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Sun, 22 Jun 2008 20:51:13 +0200
 
