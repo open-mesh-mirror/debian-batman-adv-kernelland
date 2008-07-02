@@ -3,7 +3,9 @@ Section: net
 Priority: extra
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Build-Depends: debhelper (>= 5), bzip2
-XS-Vcs-Svn: https://dev.open-mesh.net/svn/batman/trunk
+Vcs-Git: git://gitorious.org/batman-adv-deb-pkg/mainline.git
+Vcs-Browser: http://gitorious.org/projects/batman-adv-deb-pkg/repos/mainline/trees/master
+Homepage: http://open-mesh.net/batman
 Standards-Version: 3.7.3
 
 Package: batman-adv-source
