@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 5), bzip2
 Vcs-Git: git://gitorious.org/batman-adv-deb-pkg/mainline.git
 Vcs-Browser: http://gitorious.org/projects/batman-adv-deb-pkg/repos/mainline/trees/master
 Homepage: http://open-mesh.net/batman
-Standards-Version: 3.7.3
+Standards-Version: 3.8.0
 
 Package: batman-adv-source
 Architecture: all

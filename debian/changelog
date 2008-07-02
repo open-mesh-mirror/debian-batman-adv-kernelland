@@ -1,3 +1,12 @@
+batman-adv (0.1~beta+svn1091-1) unstable; urgency=low
+
+  [ Sven Eckelmann ]
+  * update to latest upstream svn revision
+  * change version name
+  * clean up source package
+
+ -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Wed, 02 Jul 2008 23:46:32 +0200
+
 batman-adv (0.1~beta+svn1082-2) unstable; urgency=low
 
   * fix Description for batman-adv-battool
