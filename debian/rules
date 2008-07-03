@@ -29,7 +29,7 @@ psource:=batman-adv-source
 pbattool:=batman-adv-battool
 
 # The short upstream name, used for the module source directory
-sname:=batman-adv-source
+sname:=batman-adv
 
 ### KERNEL SETUP
 ### Setup the stuff needed for making kernel module packages
