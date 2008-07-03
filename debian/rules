@@ -15,7 +15,11 @@
 # Uncomment this to turn on verbose mode. 
 #export DH_VERBOSE=1
 
-
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
 
 
 # some default definitions, important!
