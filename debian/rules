@@ -178,8 +178,8 @@ install: build
 	cp debian/changelog debian/copyright debian/rules\
 		debian/compat debian/control debian/$(psource)/usr/src/modules/$(sname)/debian/
 
-	mkdir -p debian/$(psource)/usr/share/doc/$(sname)
-	cp debian/copyright debian/$(psource)/usr/share/doc/$(sname)
+	mkdir -p debian/$(psource)/usr/share/doc/$(psource)
+	cp debian/copyright debian/$(psource)/usr/share/doc/$(psource)
 
 	mkdir -p debian/$(psource)$(MA_DIR)/packages/
 	cd debian/$(psource)$(MA_DIR)/packages/ && ln -sf default.sh $(psource)
