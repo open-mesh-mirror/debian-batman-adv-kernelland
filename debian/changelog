@@ -1,11 +1,18 @@
 batman-adv (0.1~beta+svn1091-1) unstable; urgency=low
 
   [ Sven Eckelmann ]
-  * update to latest upstream svn revision
-  * change version name
+  * update to latest upstream svn revision (fixes some bugs)
+  * Use batman-adv as short name instead of batman-adv-source
+  * Push module standard version to 3.8.0
+  * DEB_BUILD_OPTIONS support for noopt
+  * Fix lintian warning latest-debian-changelog-entry-without-new-date 
+  * add git vcs to control file
   * clean up source package
 
- -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Wed, 02 Jul 2008 23:46:32 +0200
+  [ Simon Wunderlich ]
+  * remove predependency of dialog for battool
+
+ -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Sat, 05 Jul 2008 18:12:25 +0200
 
 batman-adv (0.1~beta+svn1082-2) unstable; urgency=low
 
