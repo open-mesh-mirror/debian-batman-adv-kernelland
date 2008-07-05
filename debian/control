@@ -26,7 +26,6 @@ Package: batman-adv-battool
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-Pre-Depends: dialog
 Description: B.A.T.M.A.N.-advanced network debugging tools
  B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is a new routing 
  protocol for multi-hop ad-hoc mesh networks. B.A.T.M.A.N.-advanced is the 
