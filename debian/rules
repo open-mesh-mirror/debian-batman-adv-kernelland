@@ -136,7 +136,7 @@ build: build-arch build-indep
 
 clean:
 	dh_testdir
-	#dh_testroot
+	dh_testroot
 	rm -f build-arch-stamp build-indep-stamp configure-stamp
 	rm -f binary-modules-stamp
 
