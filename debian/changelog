@@ -1,3 +1,15 @@
+batman-adv (0.1~beta+svn1092-1) unstable; urgency=low
+
+  [ Sven Eckelmann ]
+  * clean up orig (some paths were only included for symlinked files)
+  * remove dpatch prebuild dependency 
+  * fix copyright issues
+  * clean up debian/rules, use dh_testroot
+  * fix package descriptions
+  * upstream fixes copyright notes
+
+ -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Mon, 07 Jul 2008 00:29:07 +0200
+
 batman-adv (0.1~beta+svn1091-1) unstable; urgency=low
 
   [ Sven Eckelmann ]
