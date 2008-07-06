@@ -18,8 +18,8 @@ Description: Source for the batman-advanced kernel module
  .
  B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is a new routing 
  protocol for multi-hop ad-hoc mesh networks. B.A.T.M.A.N.-advanced is the 
- implementation of  this protocol on ISO/OSI Layer 2, allowing mesh networks 
- to be used as a virtual  switch. With this approach, LANs and WANs can be 
+ implementation of this protocol on ISO/OSI Layer 2, allowing mesh networks 
+ to be used as a virtual switch. With this approach, LANs and WANs can be 
  easily integrated, and more protocols (like DHCP, IPv6) are supported.
 
 Package: batman-adv-battool
@@ -29,9 +29,9 @@ Depends: ${shlibs:Depends},
 Description: B.A.T.M.A.N.-advanced network debugging tools
  B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is a new routing 
  protocol for multi-hop ad-hoc mesh networks. B.A.T.M.A.N.-advanced is the 
- implementation of  this protocol on ISO/OSI Layer 2, allowing mesh networks 
- to be used as a virtual  switch. With this approach, LANs and WANs can be 
+ implementation of this protocol on ISO/OSI Layer 2, allowing mesh networks 
+ to be used as a virtual switch. With this approach, LANs and WANs can be 
  easily integrated, and more protocols (like DHCP, IPv6) are supported.
  .
  This package contains battool, which provides ICMP functions like ping and
- traceroute  for the Layer 2 Mesh B.A.T.M.A.N. 
+ traceroute for the Layer 2 Mesh B.A.T.M.A.N. 
