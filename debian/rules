@@ -206,14 +206,12 @@ binary-indep: build install
 	dh_testdir -i
 	dh_testroot -i
 	dh_installchangelogs  -i
-	dh_installexamples -i
 	dh_installman -i
 	dh_link -i
 	dh_compress -i
 	dh_fixperms -i
 	dh_installdeb -i
 	dh_installdeb -i
-	dh_shlibdeps -i
 	dh_gencontrol -i
 	dh_md5sums -i
 	dh_builddeb -i
@@ -223,10 +221,6 @@ binary-arch: build install
 	dh_testdir -s
 	dh_testroot -s
 	dh_installdocs -s
-	dh_installexamples -s
-	dh_installmenu -s
-	dh_installcron -s
-	dh_installinfo -s
 	dh_installchangelogs  -s
 	dh_strip -s
 	dh_link -s
