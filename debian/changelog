@@ -2,8 +2,9 @@ batman-adv (0.1~beta+svn1105-2) unstable; urgency=low
 
   * remove useless dh_install* and dh_shlibdeps -i from rules
   * move maintainer to uploaders field in control for multiple maintainers
+  * add debian watch file for uscan/dehs
 
- -- Simon Wunderlich <siwu@hrz.tu-chemnitz.de>  Sat, 13 Sep 2008 01:19:11 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 13 Sep 2008 01:19:11 +0200
 
 batman-adv (0.1~beta+svn1105-1) unstable; urgency=low
 
