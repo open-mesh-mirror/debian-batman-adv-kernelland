@@ -1,3 +1,9 @@
+batman-adv (0.1~beta+svn1105-3) unstable; urgency=low
+
+  * reuse orig.tar.gz from 0.1~beta+svn1105-1 release
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 14 Sep 2008 14:24:34 +0200
+
 batman-adv (0.1~beta+svn1105-2) unstable; urgency=low
 
   * remove useless dh_install* and dh_shlibdeps -i from rules
