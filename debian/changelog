@@ -1,8 +1,11 @@
 batman-adv (0.1~beta+svn1141-1) unstable; urgency=low
 
-  * update to upstream revision 1141
+  * Update to upstream revision 1141
+  * debian/copyright:
+    - Add Andreas Langer who has also copyright to battool/*
+    - Set copyright of debian/* to Simon Wunderlich and myself
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 25 Oct 2008 19:33:48 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 26 Oct 2008 09:42:25 +0100
 
 batman-adv (0.1~beta+svn1105-3) unstable; urgency=low
 
