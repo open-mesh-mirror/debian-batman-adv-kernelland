@@ -5,7 +5,7 @@ Please see ./README for a description of the batman-adv-source software.
 
 The Debian batman-adv source package provides two packages,
 
- 1) batman-adv-utils, which the provides the userspace utilities
+ 1) batman-adv-battool, which the provides the userspace utilities
  2) batman-adv-source, which provides the source for the kernel modules
 
 The batman-adv-source-source package can be used in several ways,
