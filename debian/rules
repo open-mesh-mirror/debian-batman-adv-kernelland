@@ -92,9 +92,7 @@ binary-modules-stamp:
 	dh_clean -k
 	dh_installdirs lib/modules/$(KVERS)/kernel/net
 
-#	cd batman-adv-kernelland/batman-core/
 	# Build the module
-#	$(MAKE) -C batman-adv-kernelland/batman-core/ KERNEL_DIR=$(KSRC) KVERS=$(KVERS) 
 	$(MAKE) KERNEL_DIR=$(KSRC) KVERS=$(KVERS) 
 
 	# Install the module
@@ -144,9 +142,9 @@ clean:
 	#
 	# clean can be run from module assistant or the original package rules file. 
 	
-	if [ -r batman-adv-kernelland/batman-core/Makefile ]; then \
+	if [ -r batman-adv-kernelland/Makefile ]; then \
 		if [ -r /lib/modules/$(shell uname -r)/build/Makefile ]; then \
-			$(MAKE) -C batman-adv-kernelland/batman-core clean; \
+			$(MAKE) -C batman-adv-kernelland clean; \
 		fi; \
 	fi
 	if [ -r battool/Makefile ]; then $(MAKE) -C battool  clean; fi
@@ -169,9 +167,8 @@ install: build
 	dh_installdirs -p$(psource)  usr/src/modules/$(sname)/debian
 
 	# Copy only the driver source to the proper location
-#	cp -s *.c *.h Makefile* README  debian/$(psource)/usr/src/modules/$(sname)
-	cd batman-adv-kernelland/batman-core/ && cp *.c *.h Makefile* README  \
-		../../debian/$(psource)/usr/src/modules/$(sname)
+	cd batman-adv-kernelland/ && cp *.c *.h Makefile* README  \
+		../debian/$(psource)/usr/src/modules/$(sname)
 	# Copy the needed debian/ pieces to the proper location
 	cp debian/*modules.in* \
 		debian/$(psource)/usr/src/modules/$(sname)/debian

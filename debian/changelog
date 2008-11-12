@@ -1,3 +1,10 @@
+batman-adv (0.1~beta+svn1151-1) unstable; urgency=low
+
+  * UNRELEASED
+  * Support changed directory layout in upstream
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 12 Nov 2008 16:36:26 +0100
+
 batman-adv (0.1~beta+svn1141-1) unstable; urgency=low
 
   * Update to upstream revision 1141
