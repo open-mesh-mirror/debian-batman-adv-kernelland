@@ -96,7 +96,7 @@ binary-modules-stamp:
 	$(MAKE) KERNEL_DIR=$(KSRC) KVERS=$(KVERS) 
 
 	# Install the module
-	cp batman-adv-core.$ko debian/$(PKGNAME)/lib/modules/$(KVERS)/kernel/net
+	cp batman-adv.$ko debian/$(PKGNAME)/lib/modules/$(KVERS)/kernel/net
 
 	dh_installdocs
 	dh_installchangelogs
