@@ -1,9 +1,10 @@
 batman-adv (0.1~beta+svn1154-1) unstable; urgency=low
 
-  * UNRELEASED
   * Support changed directory layout in upstream
   * Correct name of battool package in debian/Readme.DEBIAN
   * Fix installation of the renamed kernel module
+  * Replace batman-adv@packages.debian.org maintainer with first Uploader in
+    debian/control
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 17 Nov 2008 11:28:35 +0100
 
