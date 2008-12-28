@@ -1,6 +1,7 @@
 batman-adv (0.1-1) unstable; urgency=low
 
   * New upstream release
+  * Install upstream changelog for batman-adv-source
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 28 Dec 2008 12:37:37 +0100
 

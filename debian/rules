@@ -202,7 +202,7 @@ install: build
 binary-indep: build install
 	dh_testdir -i
 	dh_testroot -i
-	dh_installchangelogs  -i
+	dh_installchangelogs  -i batman-adv-kernelland/CHANGELOG
 	dh_installman -i
 	dh_link -i
 	dh_compress -i
