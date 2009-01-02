@@ -3,7 +3,7 @@ Section: net
 Priority: extra
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Uploaders: Sven Eckelmann <sven.eckelmann@gmx.de>
-Build-Depends: debhelper (>= 5)
+Build-Depends: debhelper (>= 7)
 Build-Depends-Indep: bzip2
 Vcs-Git: git://gitorious.org/batman-adv-kernelland-deb-pkg/mainline.git
 Vcs-Browser: http://gitorious.org/projects/batman-adv-kernelland-deb-pkg/repos/mainline/trees/master

@@ -103,7 +103,6 @@ build:
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f binary-modules-stamp
 
 	# Add here commands to clean up after the build process.
 	#
