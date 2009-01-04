@@ -6,6 +6,7 @@ batman-adv-kernelland (0.1-2) unstable; urgency=low
   * Make bzip2 an arch independent dependency for module source creation
   * Remove toplevel stamps with dh_clean (>=7)
   * Change upstream url to http://www.open-mesh.net/
+  * Replace dh_clean -k with dh_prep in debian/rules
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Fri, 02 Jan 2009 14:20:44 +0100
 

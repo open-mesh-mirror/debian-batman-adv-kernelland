@@ -69,7 +69,7 @@ k = $(shell echo $(KVERS) | grep -q ^2.6 && echo k)
 # during a normal build
 binary-modules-stamp:
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs lib/modules/$(KVERS)/kernel/net
 
 	# Build the module
@@ -86,7 +86,7 @@ binary-modules-stamp:
 	dh_gencontrol -- -v$(VERSION)
 	dh_md5sums
 	dh_builddeb --destdir=$(DEB_DESTDIR)
-	dh_clean -k
+	dh_prep
 	touch $@
 	
 
@@ -121,7 +121,7 @@ install: DH_OPTIONS=
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs
 	dh_installdocs
 
