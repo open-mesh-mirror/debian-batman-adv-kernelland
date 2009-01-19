@@ -1,9 +1,8 @@
 batman-adv-kernelland (0.1-4) unstable; urgency=low
 
-  * UNRELEASED
   * Correct URL in watch file to match newer releases
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 13 Jan 2009 23:54:44 +0100
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 20 Jan 2009 00:51:45 +0100
 
 batman-adv-kernelland (0.1-3) unstable; urgency=low
 
