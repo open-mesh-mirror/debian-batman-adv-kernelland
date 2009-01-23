@@ -56,7 +56,7 @@ kdist_config: prep-deb-files
 #kdist_clean: clean
 kdist_clean: 
 	$(MAKE) $(MFLAGS) -f debian/rules clean
-	$(MAKE) KERNEL_DIR=$(KSRC) KVERS=$(KVERS)  clean
+	$(MAKE) KERNELPATH=$(KSRC) KVERS=$(KVERS)  clean
 
 ### end  KERNEL SETUP
 
@@ -73,7 +73,7 @@ binary-modules-stamp:
 	dh_installdirs lib/modules/$(KVERS)/kernel/net
 
 	# Build the module
-	$(MAKE) KERNEL_DIR=$(KSRC) KVERS=$(KVERS) 
+	$(MAKE) KERNELPATH=$(KSRC) KVERS=$(KVERS)
 
 	# Install the module
 	cp batman-adv.$ko debian/$(PKGNAME)/lib/modules/$(KVERS)/kernel/net

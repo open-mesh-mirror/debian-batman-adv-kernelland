@@ -1,3 +1,10 @@
+batman-adv-kernelland (0.1-5) unstable; urgency=low
+
+  * UNRELEASED
+  * Correct variable to specify kernel headers
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Fri, 23 Jan 2009 21:28:14 +0100
+
 batman-adv-kernelland (0.1-4) unstable; urgency=low
 
   * Correct URL in watch file to match newer releases
