@@ -8,7 +8,7 @@ Build-Depends-Indep: bzip2
 Vcs-Git: git://gitorious.org/batman-adv-kernelland-deb-pkg/mainline.git
 Vcs-Browser: http://gitorious.org/projects/batman-adv-kernelland-deb-pkg/repos/mainline/trees/master
 Homepage: http://www.open-mesh.net/
-Standards-Version: 3.8.0
+Standards-Version: 3.8.1
 
 Package: batman-adv-source
 Architecture: all
