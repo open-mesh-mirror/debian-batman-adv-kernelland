@@ -1,5 +1,5 @@
 Source: batman-adv-kernelland
-Section: net
+Section: kernel
 Priority: extra
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Uploaders: Sven Eckelmann <sven.eckelmann@gmx.de>
