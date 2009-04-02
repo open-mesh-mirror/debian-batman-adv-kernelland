@@ -10,6 +10,8 @@ batman-adv-kernelland (0.1-6) unstable; urgency=low
       access after forwarding broadcast ethernet frames
     - Add 101-rcu_iflist.patch to always use rcu save functions to access
       if_list
+    - Add 102-log-irqenable-sleep.patch to enable irqs again when reading log
+      which may sleep when putting data to userspace
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 16 Mar 2009 21:33:37 +0100
 
