@@ -3,7 +3,7 @@ Section: kernel
 Priority: extra
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Uploaders: Sven Eckelmann <sven.eckelmann@gmx.de>
-Build-Depends: debhelper (>= 7)
+Build-Depends: debhelper (>= 7), quilt
 Build-Depends-Indep: bzip2
 Vcs-Git: git://git.debian.org/git/collab-maint/batman-adv-kernelland.git
 Vcs-Browser: http://git.debian.org/?p=collab-maint/batman-adv-kernelland.git
@@ -12,7 +12,7 @@ Standards-Version: 3.8.1
 
 Package: batman-adv-source
 Architecture: all
-Depends: module-assistant, debhelper (>= 7), make, bzip2
+Depends: module-assistant, debhelper (>= 7), make, bzip2, quilt
 Recommends: batman-adv-battool
 Description: Source for the batman-advanced kernel module
  This package provides the source code for the batman-adv-source kernel modules.
