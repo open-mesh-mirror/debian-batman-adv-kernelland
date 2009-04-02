@@ -1,6 +1,5 @@
 batman-adv-kernelland (0.1-6) unstable; urgency=low
 
-  * UNRELEASED
   * Move to new section kernel
   * Upgraded to policy 3.8.1, no changes required
   * debian/control: Move Vcs-* to git.debian.org
@@ -13,7 +12,7 @@ batman-adv-kernelland (0.1-6) unstable; urgency=low
     - Add 102-log-irqenable-sleep.patch to enable irqs again when reading log
       which may sleep when putting data to userspace
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 16 Mar 2009 21:33:37 +0100
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 02 Apr 2009 21:09:50 +0200
 
 batman-adv-kernelland (0.1-5) unstable; urgency=low
 
