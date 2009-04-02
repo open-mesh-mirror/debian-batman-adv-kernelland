@@ -5,6 +5,9 @@ batman-adv-kernelland (0.1-6) unstable; urgency=low
   * Upgraded to policy 3.8.1, no changes required
   * debian/control: Move Vcs-* to git.debian.org
   * Add quilt as patch system to debian/rules
+  * debian/patches:
+    - Add 100-iface-after-forward-broadcast.patch to fix invalid memory
+      access after forwarding broadcast ethernet frames
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 16 Mar 2009 21:33:37 +0100
 
