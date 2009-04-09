@@ -1,3 +1,10 @@
+batman-adv-kernelland (0.1-7) unstable; urgency=low
+
+  * Install kernel module source tarball to batman-adv.tar.bz2 instead of
+    batman-adv-source.tar.bz2
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 09 Apr 2009 20:00:59 +0200
+
 batman-adv-kernelland (0.1-6) unstable; urgency=low
 
   * Move to new section kernel

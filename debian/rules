@@ -146,7 +146,7 @@ install: build
 
 	mkdir -p debian/$(psource)$(MA_DIR)/packages/
 	cd debian/$(psource)$(MA_DIR)/packages/ && ln -sf default.sh $(psource)
-	cd debian/$(psource)/usr/src && tar c modules | bzip2 -9 > $(psource).tar.bz2 && rm -rf modules
+	cd debian/$(psource)/usr/src && tar c modules | bzip2 -9 > $(sname).tar.bz2 && rm -rf modules
 
 	dh_install
 

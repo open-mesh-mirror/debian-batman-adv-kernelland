@@ -14,7 +14,7 @@ The batman-adv-source package can be used in several ways,
    the Debian kernel-image package that you are using. This is "the Debian
    way". See the "modules_image" section of the make-kpkg(1) man page.
 
- - Changing to the /usr/src/modules/batman-adv-source/ directory and building as
+ - Changing to the /usr/src/modules/batman-adv/ directory and building as
    the README file instructs using "make; make install". This will build
    and install a module specific to the system you are building on and is
    not under control of the packaging system.
