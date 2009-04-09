@@ -2,6 +2,7 @@ batman-adv-kernelland (0.1-7) unstable; urgency=low
 
   * Install kernel module source tarball to batman-adv.tar.bz2 instead of
     batman-adv-source.tar.bz2
+  * Allow out of tree module build for linux-modules-extra-2.6
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 09 Apr 2009 20:00:59 +0200
 

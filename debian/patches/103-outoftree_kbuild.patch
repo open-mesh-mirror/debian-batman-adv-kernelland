@@ -1,0 +1,16 @@
+--- a/Makefile.kbuild	2008-12-28 01:03:45.000000000 +0100
++++ b/Makefile.kbuild	2009-04-10 00:26:42.978219487 +0200
+@@ -16,6 +16,13 @@
+ # 02110-1301, USA
+ #
+ 
++KERNELPATH ?= /lib/modules/$(shell uname -r)/build
++
++all:
++	$(MAKE) -C $(KERNELPATH) REVISION=$(REVISION) M=$(PWD) PWD=$(PWD) -j $(NUM_CPUS) modules
++
++clean:
++	$(MAKE) -C $(KERNELPATH) M=$(PWD) PWD=$(PWD) clean
+ 
+ 
+ # openwrt integration

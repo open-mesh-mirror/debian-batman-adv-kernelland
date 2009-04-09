@@ -135,6 +135,8 @@ install: build
 	# Copy only the driver source to the proper location
 	cp *.c *.h Makefile* README  \
 		debian/$(psource)/usr/src/modules/$(sname)
+	mv debian/$(psource)/usr/src/modules/$(sname)/Makefile.kbuild \
+	   debian/$(psource)/usr/src/modules/$(sname)/Makefile
 	# Copy the needed debian/ pieces to the proper location
 	cp debian/*modules.in* \
 		debian/$(psource)/usr/src/modules/$(sname)/debian
