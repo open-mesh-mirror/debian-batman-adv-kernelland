@@ -1,3 +1,9 @@
+batman-adv-kernelland (0.1-8) UNRELEASED; urgency=low
+
+  * Allow Debian Maintainers to upload new versions of batman-adv-kernelland
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 02 May 2009 12:44:28 +0200
+
 batman-adv-kernelland (0.1-7) unstable; urgency=low
 
   * Install kernel module source tarball to batman-adv.tar.bz2 instead of
