@@ -1,8 +1,8 @@
-batman-adv-kernelland (0.1-8) UNRELEASED; urgency=low
+batman-adv-kernelland (0.1-8) unstable; urgency=low
 
   * Allow Debian Maintainers to upload new versions of batman-adv-kernelland
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 02 May 2009 12:44:28 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 06 May 2009 13:04:37 +0200
 
 batman-adv-kernelland (0.1-7) unstable; urgency=low
 
