@@ -7,6 +7,7 @@ batman-adv-kernelland (0.1-9) UNRELEASED; urgency=low
     - 103-outoftree_kbuild.patch, remove due to different linux module build
       approach
   * Convert debian/copyright to new dep5 version
+  * Upgraded to policy 3.8.2, no changes required
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 13 May 2009 15:36:38 +0200
 
