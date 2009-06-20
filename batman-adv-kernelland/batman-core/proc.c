@@ -304,12 +304,17 @@ ssize_t proc_interfaces_write(struct file *instance, const char __user *userbuff
 		}
 		rcu_read_unlock();
 
+		if (module_state == MODULE_INACTIVE)
+			module_state = MODULE_WAITING;
+
 		hardif_add_interface(if_string, if_num);
 
-		if ((module_state == MODULE_INACTIVE) && (hardif_get_active_if_num() > 0))
-			activate_module();
-		else if ((module_state == MODULE_INACTIVE) && (num_ifs > 0))
-			debug_log(LOG_TYPE_WARN, "Can't activate module: the primary interface is not active\n");
+		if (module_state == MODULE_WAITING) {
+			if (hardif_get_active_if_num() > 0)
+				activate_module();
+			else 
+				debug_log(LOG_TYPE_WARN, "Can't activate module: the primary interface is not active\n");
+		}
 	}
 
 	rcu_read_lock();
@@ -502,7 +507,11 @@ ssize_t proc_log_level_write(struct file *instance, const char __user *userbuffe
 
 int proc_transtable_local_read(struct seq_file *seq, void *offset)
 {
-	char buf[4096];
+	char *buf;
+
+	buf = kmalloc(4096, GFP_KERNEL);
+	if (!buf)
+		return 0;
 
 	rcu_read_lock();
 	if (list_empty(&if_list)) {
@@ -513,12 +522,13 @@ int proc_transtable_local_read(struct seq_file *seq, void *offset)
 
 	rcu_read_unlock();
 
-	seq_printf(seq, "Locally retrieved addresses (from %s) announced via HNA:\n", bat_device->name);
+	seq_printf(seq, "Locally retrieved addresses (from %s) announced via HNA:\n", soft_device->name);
 
 	hna_local_fill_buffer_text(buf, 4096);
 	seq_printf(seq, "%s", buf);
 
 end:
+	kfree(buf);
 	return 0;
 }
 
@@ -530,7 +540,11 @@ int proc_transtable_local_open(struct inode *inode, struct file *file)
 
 int proc_transtable_global_read(struct seq_file *seq, void *offset)
 {
-	char buf[4096];
+	char *buf;
+
+	buf = kmalloc(4096, GFP_KERNEL);
+	if (!buf)
+		return 0;
 
 	rcu_read_lock();
 	if (list_empty(&if_list)) {
@@ -547,6 +561,7 @@ int proc_transtable_global_read(struct seq_file *seq, void *offset)
 	seq_printf(seq, "%s", buf);
 
 end:
+	kfree(buf);
 	return 0;
 }
 int proc_transtable_global_open(struct inode *inode, struct file *file)
