@@ -1,4 +1,4 @@
-Source: batman-adv
+Source: batman-adv-kernelland
 Section: admin
 Priority: optional
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>

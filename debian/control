@@ -1,11 +1,12 @@
-Source: batman-adv
+Source: batman-adv-kernelland
 Section: net
 Priority: extra
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Uploaders: Sven Eckelmann <sven.eckelmann@gmx.de>
-Build-Depends: debhelper (>= 5), bzip2
-Vcs-Git: git://gitorious.org/batman-adv-deb-pkg/mainline.git
-Vcs-Browser: http://gitorious.org/projects/batman-adv-deb-pkg/repos/mainline/trees/master
+Build-Depends: debhelper (>= 5)
+Build-Depends-Indep: bzip2
+Vcs-Git: git://gitorious.org/batman-adv-kernelland-deb-pkg/mainline.git
+Vcs-Browser: http://gitorious.org/projects/batman-adv-kernelland-deb-pkg/repos/mainline/trees/master
 Homepage: http://open-mesh.net/batman
 Standards-Version: 3.8.0
 
@@ -15,20 +16,6 @@ Depends: module-assistant, debhelper (>= 5), make, bzip2
 Description: Source for the batman-advanced kernel module
  This package provides the source code for the batman-adv-source kernel modules.
  Kernel source or headers are required to compile these modules.
- .
- B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is a new routing 
- protocol for multi-hop ad-hoc mesh networks. B.A.T.M.A.N.-advanced is the 
- implementation of this protocol on ISO/OSI Layer 2, allowing mesh networks 
- to be used as a virtual switch. With this approach, LANs and WANs can be 
- easily integrated, and more protocols (like DHCP, IPv6) are supported.
-
-Package: batman-adv-battool
-Architecture: any
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
-Description: B.A.T.M.A.N.-advanced network debugging tools
- This package contains battool, which provides ICMP functions like ping and
- traceroute for the Layer 2 Mesh B.A.T.M.A.N.
  .
  B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is a new routing 
  protocol for multi-hop ad-hoc mesh networks. B.A.T.M.A.N.-advanced is the 

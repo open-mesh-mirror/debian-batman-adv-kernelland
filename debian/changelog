@@ -1,3 +1,12 @@
+batman-adv-kernelland (0.1-2) unstable; urgency=low
+
+  * Split batman-adv source package in batman-adv-kernelland and battool
+    to match with upstream released tar.gz
+  * Install README with usage instructions
+  * Make bzip2 an arch independent dependency for module source creation
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Fri, 02 Jan 2009 14:20:44 +0100
+
 batman-adv (0.1-1) unstable; urgency=low
 
   * New upstream release

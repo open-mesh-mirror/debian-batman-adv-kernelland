@@ -11,14 +11,6 @@ License: GPL-2
  On Debian systems the full text of the GNU General Public License can be found
  in the `/usr/share/common-licenses/GPL-2' file.
 
-Files: battool/*
-Copyright: Copyright 2007, Andreas Langer <a.langer@q-dsl.de>
- Copyright 2006-2008, Marek Lindner <lindner_marek@yahoo.de>
- Copyright 2006-2008, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-License: GPL-2
- On Debian systems the full text of the GNU General Public License can be found
- in the `/usr/share/common-licenses/GPL-2' file.
-
 Files: debian/*
 Copyright: Copyright 2008, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
  Copyright 2008, Sven Eckelmann <sven.eckelmann@gmx.de>
