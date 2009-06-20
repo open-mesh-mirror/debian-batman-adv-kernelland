@@ -30,6 +30,8 @@
 #include "routing.h"
 #include "hash.h"
 
+#define MIN(x,y) ((x) < (y) ? (x):(y))
+
 
 
 static DECLARE_DELAYED_WORK(hardif_check_interfaces_wq, hardif_check_interfaces_status);
@@ -39,7 +41,20 @@ static char active_ifs = 0;
 
 static void hardif_free_interface(struct rcu_head *rcu);
 
-
+int hardif_min_mtu(void) 
+{
+	struct batman_if *batman_if;
+	/* allow big frames if all devices are capable to do so 
+	 * (have MTU > 1500 + BAT_HEADER_LEN) */
+	int min_mtu = 1500;	
+	rcu_read_lock();
+	list_for_each_entry(batman_if, &if_list, list) {
+		if (batman_if->if_active == IF_ACTIVE) 
+			min_mtu = MIN(batman_if->net_dev->mtu - BAT_HEADER_LEN, min_mtu);
+	}
+	rcu_read_unlock();
+	return min_mtu;
+}
 
 /* checks if the interface is up. (returns 1 if it is) */
 int hardif_is_interface_up(char *dev)
@@ -245,8 +260,7 @@ int hardif_add_interface(char *dev, int if_num)
 	if (batman_if->pack_buff_len != sizeof(struct batman_packet))
 		batman_packet->num_hna = hna_local_fill_buffer(batman_if->pack_buff + sizeof(struct batman_packet), batman_if->pack_buff_len - sizeof(struct batman_packet));
 
-	batman_if->seqno = 1;
-	batman_if->seqno_lock = __SPIN_LOCK_UNLOCKED(batman_if->seqno_lock);
+	atomic_set(&batman_if->seqno, 1);
 
 
 	/* resize all orig nodes because orig_node->bcast_own(_sum) depend on if_num */
@@ -291,9 +305,11 @@ char hardif_get_active_if_num(void)
 void hardif_check_interfaces_status(struct work_struct *work)
 {
 	struct batman_if *batman_if;
+	int min_mtu;
 
-	if (module_state == MODULE_UNLOADING)
-		return;
+	if (module_state == MODULE_INACTIVE)
+		goto start_timer;
+
 	/* wait for readers of the the interfaces, so update won't be a problem.
 	 *
 	 * this function is not time critical and can wait a bit ....*/
@@ -309,9 +325,15 @@ void hardif_check_interfaces_status(struct work_struct *work)
 	}
 	rcu_read_unlock();
 
-	if ((module_state == MODULE_INACTIVE) && (hardif_get_active_if_num() > 0))
+	/* waiting for activation? if interfaces are available now, we can activate. */
+	if ((module_state == MODULE_WAITING) && (hardif_get_active_if_num() > 0))
 		activate_module();
 
+	/* decrease the MTU if a new interface with a smaller MTU appeared. */
+	min_mtu = hardif_min_mtu();
+	if (soft_device->mtu > min_mtu) 
+		soft_device->mtu = min_mtu;
+start_timer:
 	start_hardif_check_timer();
 }
 

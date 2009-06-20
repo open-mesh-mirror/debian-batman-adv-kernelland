@@ -53,7 +53,7 @@
 
 #define MODULE_INACTIVE 0
 #define MODULE_ACTIVE 1
-#define MODULE_UNLOADING 2
+#define MODULE_WAITING 2
 
 
 /*
@@ -78,7 +78,6 @@
 
 #include <linux/mutex.h>	/* mutex */
 #include <linux/module.h>	/* needed by all modules */
-#include <linux/version.h>	/* LINUX_VERSION_CODE */
 #include <linux/netdevice.h>	/* netdevice */
 #include <linux/timer.h>	/* timer */
 #include <linux/if_ether.h>	/* ethernet header */
@@ -100,7 +99,7 @@ extern atomic_t vis_interval;
 extern int16_t num_hna;
 extern int16_t num_ifs;
 
-extern struct net_device *bat_device;
+extern struct net_device *soft_device;
 
 extern unsigned char broadcastAddr[];
 extern char hna_local_changed;

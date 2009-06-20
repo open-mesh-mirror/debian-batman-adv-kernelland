@@ -30,6 +30,7 @@
 #include "vis.h"
 #include "types.h"
 #include "hash.h"
+#include "compat.h"
 
 
 
@@ -45,7 +46,7 @@ atomic_t vis_interval;
 int16_t num_hna = 0;
 int16_t num_ifs = 0;
 
-struct net_device *bat_device = NULL;
+struct net_device *soft_device = NULL;
 
 static struct task_struct *kthread_task = NULL;
 
@@ -60,6 +61,7 @@ struct workqueue_struct *bat_event_workqueue = NULL;
 int init_module(void)
 {
 	int retval;
+	int result;
 
 	INIT_LIST_HEAD(&if_list);
 	atomic_set(&originator_interval, 1000);
@@ -84,13 +86,37 @@ int init_module(void)
 	if (hna_global_init() < 0)
 		goto free_lhna_hash;
 
-	start_hardif_check_timer();
 	bat_device_init();
 
+	/* initialize layer 2 interface */
+	soft_device = alloc_netdev(sizeof(struct bat_priv) , "bat%d", interface_setup);
+
+	if (soft_device == NULL) {
+		debug_log(LOG_TYPE_CRIT, "Unable to allocate the batman interface\n");
+		goto free_lhna_hash;
+	}
+
+	result = register_netdev(soft_device);
+
+	if (result < 0) {
+		debug_log(LOG_TYPE_CRIT, "Unable to register the batman interface: %i\n", result);
+		goto free_soft_device;
+	}
+
+	hna_local_add(soft_device->dev_addr);
+
+	start_hardif_check_timer();
 	debug_log(LOG_TYPE_CRIT, "B.A.T.M.A.N. Advanced %s%s (compability version %i) loaded \n", SOURCE_VERSION, (strlen(REVISION_VERSION) > 3 ? REVISION_VERSION : ""), COMPAT_VERSION);
 
 	return 0;
+/* for later use ...
+unregister_soft_device:
+	unregister_netdev(soft_device);
+*/
 
+free_soft_device:
+	free_netdev(soft_device);
+	soft_device = NULL;
 free_lhna_hash:
 	hna_local_free();
 
@@ -104,9 +130,12 @@ clean_proc:
 
 void cleanup_module(void)
 {
-	module_state = MODULE_UNLOADING;
-
 	shutdown_module();
+	if (soft_device != NULL) {
+		unregister_netdev(soft_device);
+		soft_device = NULL;
+	}
+
 	destroy_hardif_check_timer();
 
 	spin_lock(&orig_hash_lock);
@@ -128,32 +157,8 @@ void start_purge_timer(void)
 /* activates the module, creates bat device, starts timer ... */
 void activate_module(void)
 {
-	int result;
 
 	module_state = MODULE_ACTIVE;
-
-	/* initialize layer 2 interface */
-	if (bat_device == NULL) {
-
-		bat_device = alloc_netdev(sizeof(struct bat_priv) , "bat%d", interface_setup);
-
-		if (bat_device == NULL) {
-			debug_log(LOG_TYPE_CRIT, "Unable to allocate the batman interface\n");
-			return;
-		}
-
-		result = register_netdev(bat_device);
-
-		if (result < 0) {
-			debug_log(LOG_TYPE_CRIT, "Unable to register the batman interface: %i\n", result);
-			free_netdev(bat_device);
-			bat_device = NULL;
-			return;
-		}
-
-		hna_local_add(bat_device->dev_addr);
-
-	}
 
 	/* (re)start kernel thread for packet processing */
 	kthread_task = kthread_run(packet_recv_thread, NULL, "batman-adv");
@@ -173,18 +178,12 @@ void activate_module(void)
 /* shuts down the whole module.*/
 void shutdown_module(void)
 {
-	if (module_state == MODULE_ACTIVE)
-		module_state = MODULE_INACTIVE;
+	module_state = MODULE_INACTIVE;
 
 	stop_bcast_timer();
 	flush_workqueue(bat_event_workqueue);
 
 	vis_quit();
-
-	if (bat_device != NULL) {
-		unregister_netdev(bat_device);
-		bat_device = NULL;
-	}
 
 	/* deactivate kernel thread for packet processing (if running) */
 	if (kthread_task) {

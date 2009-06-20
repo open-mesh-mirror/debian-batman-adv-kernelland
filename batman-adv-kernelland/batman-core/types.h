@@ -27,6 +27,7 @@
 #include "packet.h"
 #include "bitarray.h"
 
+#define BAT_HEADER_LEN (sizeof(struct ethhdr) + ((sizeof(struct unicast_packet) > sizeof(struct bcast_packet) ? sizeof(struct unicast_packet) : sizeof(struct bcast_packet))))
 
 
 struct batman_if
@@ -38,8 +39,7 @@ struct batman_if
 	char addr_str[ETH_STR_LEN];
 	struct net_device *net_dev;
 	struct socket *raw_sock;
-	uint16_t seqno;
-	spinlock_t seqno_lock;
+	atomic_t seqno;
 	unsigned char *pack_buff;
 	int pack_buff_len;
 	struct rcu_head rcu;

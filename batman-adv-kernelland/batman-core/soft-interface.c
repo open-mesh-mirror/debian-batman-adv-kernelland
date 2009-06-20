@@ -34,10 +34,8 @@
 
 
 
-#define BAT_HEADER_LEN (sizeof(struct ethhdr) + ((sizeof(struct unicast_packet) > sizeof(struct bcast_packet) ? sizeof(struct unicast_packet) : sizeof(struct bcast_packet))))
 
 
-static int max_mtu;
 static uint16_t bcast_seqno = 1; /* give own bcast messages seq numbers to avoid broadcast storms */
 static int32_t skb_packets = 0;
 static int32_t skb_bad_packets = 0;
@@ -116,10 +114,8 @@ void interface_setup(struct net_device *dev)
 	dev->destructor = free_netdev;
 
 	dev->features |= NETIF_F_NO_CSUM;
-	dev->mtu -= BAT_HEADER_LEN;
+	dev->mtu = hardif_min_mtu();
 	dev->hard_header_len = BAT_HEADER_LEN; /*reserve more space in the skbuff for our header */
-
-	max_mtu = dev->mtu;
 
 	/* generate random address */
 	*(u16 *)dev_addr = htons(0x00FF);
@@ -157,7 +153,7 @@ int interface_set_mac_addr(struct net_device *dev, void *addr)
 int interface_change_mtu(struct net_device *dev, int new_mtu)
 {
 	/* check ranges */
-	if ((new_mtu < 68) || (new_mtu > max_mtu))
+	if ((new_mtu < 68) || (new_mtu > hardif_min_mtu()))
 		return -EINVAL;
 
 	dev->mtu = new_mtu;
@@ -178,6 +174,9 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 	dev->trans_start = jiffies;
 	/* TODO: check this for locks */
 	hna_local_add(ethhdr->h_source);
+
+	if (module_state != MODULE_ACTIVE)
+		goto dropped;
 
 	/* ethernet packet should be broadcasted */
 	if (is_bcast(ethhdr->h_dest) || is_mcast(ethhdr->h_dest)) {

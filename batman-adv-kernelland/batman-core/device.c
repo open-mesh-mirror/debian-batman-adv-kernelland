@@ -28,11 +28,9 @@
 #include "types.h"
 #include "hash.h"
 
+#include "compat.h"
 
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-#include <linux/devfs_fs_kernel.h>
-#else
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0)
 static struct class *batman_class;
 #endif
 
@@ -85,7 +83,7 @@ void bat_device_setup(void)
 		debug_log(LOG_TYPE_WARN, "Could not register class 'batman-adv' \n");
 		return;
 	} else {
-		class_device_create(batman_class, NULL, MKDEV(tmp_major, 0), NULL, "batman-adv");
+		device_create_drvdata(batman_class, NULL, MKDEV(tmp_major, 0), NULL, "batman-adv");
 	}
 #endif
 
@@ -102,7 +100,7 @@ void bat_device_destroy(void)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
 	devfs_remove("batman-adv", 0);
 #else
-	class_device_destroy(batman_class, MKDEV(Major, 0));
+	device_destroy(batman_class, MKDEV(Major, 0));
 	class_destroy(batman_class);
 #endif
 
@@ -231,7 +229,9 @@ ssize_t bat_device_write(struct file *file, const char __user *buff, size_t len,
 	if (!access_ok(VERIFY_READ, buff, sizeof(struct icmp_packet)))
 		return -EFAULT;
 
-	__copy_from_user(&icmp_packet, buff, sizeof(icmp_packet));
+	if (__copy_from_user(&icmp_packet, buff, sizeof(icmp_packet))) {
+		return -EFAULT;
+	}
 
 	if ((icmp_packet.packet_type == BAT_ICMP) && (icmp_packet.msg_type == ECHO_REQUEST)) {
 
