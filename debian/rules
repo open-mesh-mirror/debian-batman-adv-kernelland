@@ -165,4 +165,8 @@ binary-indep: build install
 binary-arch:
 
 binary: binary-indep
-.PHONY: build clean binary-indep binary-arch binary install binary-modules kdist kdist_configure kdist_image kdist_clean
+
+get-orig-source:
+	$(CURDIR)/debian/get-orig-source.sh
+
+.PHONY: build clean binary-indep binary-arch binary install binary-modules kdist kdist_configure kdist_image kdist_clean get-orig-source
