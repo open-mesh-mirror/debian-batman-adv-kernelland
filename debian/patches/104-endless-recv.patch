@@ -1,0 +1,26 @@
+From ad7d02effb09ba98dbaa0d1e6b334f1e959728cf Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven.eckelmann@gmx.de>
+Date: Thu, 25 Jun 2009 00:35:23 +0200
+Subject: [PATCH] read packet even though it will be ignore to avoid endless call loop
+
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+---
+ routing.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/routing.c b/routing.c
+index 74e3cdb..94c6455 100644
+--- a/routing.c
++++ b/routing.c
+@@ -617,6 +617,7 @@ int packet_recv_thread(void *data)
+ 			while (1) {
+ 				if (batman_if->if_active != IF_ACTIVE) {
+ 					debug_log(LOG_TYPE_NOTICE, "Could not read from deactivated interface %s!\n", batman_if->dev);
++					receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE);
+ 					result = 0;
+ 					break;
+ 				}
+-- 
+1.6.3.1
+
