@@ -1,0 +1,76 @@
+From 5785c2780fe5f3f063d6518ecd966d1e225b1fea Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven.eckelmann@gmx.de>
+Date: Thu, 25 Jun 2009 00:59:09 +0200
+Subject: [PATCH] Check icmp for version before sending
+
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+---
+ device.c |   12 ++++++++++--
+ packet.h |    3 ++-
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/device.c b/device.c
+index dca1921..99556b0 100644
+--- a/device.c
++++ b/device.c
+@@ -233,6 +233,15 @@ ssize_t bat_device_write(struct file *file, const char __user *buff, size_t len,
+ 		return -EFAULT;
+ 	}
+ 
++	icmp_packet.uid = device_client->index;
++
++	if (icmp_packet.version != COMPAT_VERSION) {
++		icmp_packet.msg_type = PARAMETER_PROBLEM;
++		icmp_packet.ttl = COMPAT_VERSION;
++		bat_device_add_packet(device_client, &icmp_packet);
++		goto out;
++	}
++
+ 	if ((icmp_packet.packet_type == BAT_ICMP) && (icmp_packet.msg_type == ECHO_REQUEST)) {
+ 
+ 		spin_lock(&orig_hash_lock);
+@@ -241,14 +250,12 @@ ssize_t bat_device_write(struct file *file, const char __user *buff, size_t len,
+ 		if ((orig_node != NULL) && (orig_node->batman_if != NULL) && (orig_node->router != NULL)) {
+ 
+ 			memcpy(icmp_packet.orig, orig_node->batman_if->net_dev->dev_addr, ETH_ALEN);
+-			icmp_packet.uid = device_client->index;
+ 
+ 			send_raw_packet((unsigned char *)&icmp_packet, sizeof(struct icmp_packet), orig_node->batman_if->net_dev->dev_addr, orig_node->router->addr, orig_node->batman_if);
+ 
+ 		} else {
+ 
+ 			icmp_packet.msg_type = DESTINATION_UNREACHABLE;
+-			icmp_packet.uid = device_client->index;
+ 			bat_device_add_packet(device_client, &icmp_packet);
+ 
+ 		}
+@@ -262,6 +269,7 @@ ssize_t bat_device_write(struct file *file, const char __user *buff, size_t len,
+ 
+ 	}
+ 
++out:
+ 	return len;
+ }
+ 
+diff --git a/packet.h b/packet.h
+index 3c6c23b..b4b2528 100644
+--- a/packet.h
++++ b/packet.h
+@@ -29,11 +29,12 @@
+ 
+ 
+ 
++/* ICMP message types */
+ #define ECHO_REPLY 0
+ #define DESTINATION_UNREACHABLE 3
+ #define ECHO_REQUEST 8
+ #define TTL_EXCEEDED 11
+-
++#define PARAMETER_PROBLEM 12
+ 
+ 
+ struct batman_packet
+-- 
+1.6.3.1
+

@@ -11,6 +11,7 @@ batman-adv-kernelland (0.1-9) UNRELEASED; urgency=low
       userspace
     - Add 104-endless-recv.patch, consume even ignored packets to allow kernel
       receive thread to sleep
+    - Add 105-icmp-check.patch, check for correct icmp version before sending it
   * Convert debian/copyright to new dep5 version
   * Upgraded to policy 3.8.2, no changes required
   * Add debian/get-orig-source.sh to get source from svn or via uscan
