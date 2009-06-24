@@ -1,4 +1,4 @@
-batman-adv-kernelland (0.1-9) UNRELEASED; urgency=low
+batman-adv-kernelland (0.1-9) unstable; urgency=low
 
   * debian/rules:
     - Use the kernel makefiles directly to build the module to match
@@ -16,7 +16,7 @@ batman-adv-kernelland (0.1-9) UNRELEASED; urgency=low
   * Upgraded to policy 3.8.2, no changes required
   * Add debian/get-orig-source.sh to get source from svn or via uscan
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 13 May 2009 15:36:38 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 25 Jun 2009 01:08:41 +0200
 
 batman-adv-kernelland (0.1-8) unstable; urgency=low
 
