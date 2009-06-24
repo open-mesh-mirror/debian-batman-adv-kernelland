@@ -1,0 +1,36 @@
+From 4ad386e8ad47bb79d21201a45688da1f69548642 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven.eckelmann@gmx.de>
+Date: Thu, 25 Jun 2009 00:32:41 +0200
+Subject: [PATCH] Fix half copied icmp paket to userspace
+
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+---
+ device.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/device.c b/device.c
+index 028cf7d..dca1921 100644
+--- a/device.c
++++ b/device.c
+@@ -229,7 +229,7 @@ ssize_t bat_device_write(struct file *file, const char __user *buff, size_t len,
+ 	if (!access_ok(VERIFY_READ, buff, sizeof(struct icmp_packet)))
+ 		return -EFAULT;
+ 
+-	if (__copy_from_user(&icmp_packet, buff, sizeof(icmp_packet))) {
++	if (__copy_from_user(&icmp_packet, buff, sizeof(struct icmp_packet))) {
+ 		return -EFAULT;
+ 	}
+ 
+@@ -287,7 +287,7 @@ void bat_device_add_packet(struct device_client *device_client, struct icmp_pack
+ 		return;
+ 
+ 	INIT_LIST_HEAD(&device_packet->list);
+-	memcpy(&device_packet->icmp_packet, icmp_packet, sizeof(icmp_packet));
++	memcpy(&device_packet->icmp_packet, icmp_packet, sizeof(struct icmp_packet));
+ 
+ 	spin_lock(&device_client->lock);
+ 
+-- 
+1.6.3.1
+

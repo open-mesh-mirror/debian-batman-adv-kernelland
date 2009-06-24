@@ -7,6 +7,8 @@ batman-adv-kernelland (0.1-9) UNRELEASED; urgency=low
   * debian/patches:
     - 103-outoftree_kbuild.patch, remove due to different linux module build
       approach
+    - Add 103-icmp-userspace-read.patch, read complete icmp packet from
+      userspace
   * Convert debian/copyright to new dep5 version
   * Upgraded to policy 3.8.2, no changes required
   * Add debian/get-orig-source.sh to get source from svn or via uscan
