@@ -1,3 +1,11 @@
+batman-adv-kernelland (0.1-10) UNRELEASED; urgency=low
+
+  * debian/patches:
+    - Add 106-netdevice_ops.patch, fix compilation against linux-2.6.31-rc1
+      (Closes: #534631)
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 27 Jun 2009 01:20:42 +0200
+
 batman-adv-kernelland (0.1-9) unstable; urgency=low
 
   * debian/rules:
