@@ -1,6 +1,11 @@
 batman-adv-kernelland (0.2~beta~svn1336-1) UNRELEASED; urgency=low
 
   * New Upstream Snapshot (Closes: #xxxxx)
+  * debian/patches:
+    - Remove upstream merged patches 100-iface-after-forward-broadcast.patch,
+      101-rcu_iflist.patch, 102-log-irqenable-sleep.patch,
+      103-icmp-userspace-read.patch, 104-endless-recv.patch,
+      105-icmp-check.patch
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 13 Jul 2009 23:22:21 +0200
 
