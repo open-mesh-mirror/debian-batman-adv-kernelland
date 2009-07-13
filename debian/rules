@@ -15,8 +15,6 @@
 # Uncomment this to turn on verbose mode. 
 #export DH_VERBOSE=1
 
-include /usr/share/quilt/quilt.make
-
 # some default definitions, important!
 # 
 # Name of the source package
@@ -99,9 +97,9 @@ binary-modules: binary-modules-stamp
 	#$(MAKE)
 
 
-build: $(QUILT_STAMPFN)
+build:
 
-clean: unpatch
+clean:
 	dh_testdir
 	dh_testroot
 
