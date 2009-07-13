@@ -14,7 +14,7 @@ Build-Depends-Indep: bzip2
 Package: batman-adv-source
 Architecture: all
 Depends: module-assistant, debhelper (>= 7), make, bzip2
-Recommends: batman-adv-battool
+Recommends: batctl
 Description: Source for the batman-advanced kernel module
  This package provides the source code for the batman-adv-source kernel modules.
  Kernel source or headers are required to compile these modules.
