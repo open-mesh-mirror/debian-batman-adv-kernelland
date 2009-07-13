@@ -8,6 +8,7 @@ batman-adv-kernelland (0.2~beta~svn1336-1) UNRELEASED; urgency=low
       105-icmp-check.patch
   * Remove quilt due to removed patches
   * Recommend batctl instead of transitional package batman-adv-battool
+  * Update copyright years in debian/changelog
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 13 Jul 2009 23:22:21 +0200
 
