@@ -29,30 +29,33 @@
 #include "translation-table.h"
 #include "routing.h"
 #include "hash.h"
+#include "compat.h"
 
 #define MIN(x,y) ((x) < (y) ? (x):(y))
 
 
 
-static DECLARE_DELAYED_WORK(hardif_check_interfaces_wq, hardif_check_interfaces_status);
+static DECLARE_DELAYED_WORK(hardif_check_interfaces_wq, hardif_check_interfaces_status_wq);
 
 static char avail_ifs = 0;
 static char active_ifs = 0;
 
 static void hardif_free_interface(struct rcu_head *rcu);
 
-int hardif_min_mtu(void) 
+int hardif_min_mtu(void)
 {
 	struct batman_if *batman_if;
-	/* allow big frames if all devices are capable to do so 
+	/* allow big frames if all devices are capable to do so
 	 * (have MTU > 1500 + BAT_HEADER_LEN) */
-	int min_mtu = 1500;	
+	int min_mtu = 1500;
+
 	rcu_read_lock();
-	list_for_each_entry(batman_if, &if_list, list) {
-		if (batman_if->if_active == IF_ACTIVE) 
+	list_for_each_entry_rcu(batman_if, &if_list, list) {
+		if (batman_if->if_active == IF_ACTIVE)
 			min_mtu = MIN(batman_if->net_dev->mtu - BAT_HEADER_LEN, min_mtu);
 	}
 	rcu_read_unlock();
+
 	return min_mtu;
 }
 
@@ -156,13 +159,13 @@ void hardif_activate_interface(struct batman_if *batman_if)
 
 	addr_to_string(batman_if->addr_str, batman_if->net_dev->dev_addr);
 
-	memcpy(((struct batman_packet *)(batman_if->pack_buff))->orig, batman_if->net_dev->dev_addr, ETH_ALEN);
-	memcpy(((struct batman_packet *)(batman_if->pack_buff))->old_orig, batman_if->net_dev->dev_addr, ETH_ALEN);
+	memcpy(((struct batman_packet *)(batman_if->packet_buff))->orig, batman_if->net_dev->dev_addr, ETH_ALEN);
+	memcpy(((struct batman_packet *)(batman_if->packet_buff))->old_orig, batman_if->net_dev->dev_addr, ETH_ALEN);
 
 	batman_if->if_active = IF_ACTIVE;
 	active_ifs++;
 
-	/* save the mac address if it is out primary interface */
+	/* save the mac address if it is our primary interface */
 	if (batman_if->if_num == 0)
 		set_main_if_addr(batman_if->net_dev->dev_addr);
 
@@ -176,7 +179,7 @@ static void hardif_free_interface(struct rcu_head *rcu)
 {
 	struct batman_if *batman_if = container_of(rcu, struct batman_if, rcu);
 
-	kfree(batman_if->pack_buff);
+	kfree(batman_if->packet_buff);
 	kfree(batman_if->dev);
 	kfree(batman_if);
 }
@@ -193,7 +196,7 @@ void hardif_remove_interfaces(void)
 
 	avail_ifs = 0;
 
-	/* TODO: spinlock for the write here. */
+	/* no lock needed - we don't delete somewhere else */
 	list_for_each_entry(batman_if, &if_list, list) {
 
 		list_del_rcu(&batman_if->list);
@@ -226,13 +229,13 @@ int hardif_add_interface(char *dev, int if_num)
 	batman_if->net_dev = NULL;
 
 	if ((if_num == 0) && (num_hna > 0))
-		batman_if->pack_buff_len = sizeof(struct batman_packet) + num_hna * ETH_ALEN;
+		batman_if->packet_len = sizeof(struct batman_packet) + num_hna * ETH_ALEN;
 	else
-		batman_if->pack_buff_len = sizeof(struct batman_packet);
+		batman_if->packet_len = sizeof(struct batman_packet);
 
-	batman_if->pack_buff = kmalloc(batman_if->pack_buff_len, GFP_KERNEL);
+	batman_if->packet_buff = kmalloc(batman_if->packet_len, GFP_KERNEL);
 
-	if (!batman_if->pack_buff) {
+	if (!batman_if->packet_buff) {
 		debug_log(LOG_TYPE_WARN, "Can't add interface packet (%s): out of memory\n", dev);
 		goto out;
 	}
@@ -247,18 +250,17 @@ int hardif_add_interface(char *dev, int if_num)
 
 	INIT_LIST_HEAD(&batman_if->list);
 
-	batman_packet = (struct batman_packet *)(batman_if->pack_buff);
+	batman_packet = (struct batman_packet *)(batman_if->packet_buff);
 	batman_packet->packet_type = BAT_PACKET;
 	batman_packet->version = COMPAT_VERSION;
 	batman_packet->flags = 0x00;
 	batman_packet->ttl = (batman_if->if_num > 0 ? 2 : TTL);
-	batman_packet->gwflags = 0;
 	batman_packet->flags = 0;
 	batman_packet->tq = TQ_MAX_VALUE;
 	batman_packet->num_hna = 0;
 
-	if (batman_if->pack_buff_len != sizeof(struct batman_packet))
-		batman_packet->num_hna = hna_local_fill_buffer(batman_if->pack_buff + sizeof(struct batman_packet), batman_if->pack_buff_len - sizeof(struct batman_packet));
+	if (batman_if->packet_len != sizeof(struct batman_packet))
+		batman_packet->num_hna = hna_local_fill_buffer(batman_if->packet_buff + sizeof(struct batman_packet), batman_if->packet_len - sizeof(struct batman_packet));
 
 	atomic_set(&batman_if->seqno, 1);
 
@@ -282,12 +284,13 @@ int hardif_add_interface(char *dev, int if_num)
 
 	spin_unlock(&orig_hash_lock);
 
-
-
 	if (!hardif_is_interface_up(batman_if->dev))
 		debug_log(LOG_TYPE_WARN, "Not using interface %s (retrying later): interface not active\n", batman_if->dev);
 
 	list_add_tail_rcu(&batman_if->list, &if_list);
+
+	/* begin sending originator messages on that interface */
+	schedule_own_packet(batman_if);
 	return 1;
 
 out:
@@ -302,17 +305,18 @@ char hardif_get_active_if_num(void)
 }
 
 /* checks inactive interfaces and deactivates "to-be-deactivated" interfaces */
-void hardif_check_interfaces_status(struct work_struct *work)
+void hardif_check_interfaces_status(void)
 {
 	struct batman_if *batman_if;
 	int min_mtu;
 
 	if (module_state == MODULE_INACTIVE)
-		goto start_timer;
+		return;
 
-	/* wait for readers of the the interfaces, so update won't be a problem.
-	 *
-	 * this function is not time critical and can wait a bit ....*/
+	/**
+	 * wait for readers of the the interfaces, so update won't be a problem.
+	 * this function is not time critical and can wait a bit ....
+	 */
 	synchronize_rcu();
 
 	rcu_read_lock();
@@ -331,9 +335,14 @@ void hardif_check_interfaces_status(struct work_struct *work)
 
 	/* decrease the MTU if a new interface with a smaller MTU appeared. */
 	min_mtu = hardif_min_mtu();
-	if (soft_device->mtu > min_mtu) 
+	if (soft_device->mtu > min_mtu)
 		soft_device->mtu = min_mtu;
-start_timer:
+}
+
+/* checks inactive interfaces and deactivates "to-be-deactivated" interfaces */
+void hardif_check_interfaces_status_wq(struct work_struct *work)
+{
+	hardif_check_interfaces_status();
 	start_hardif_check_timer();
 }
 
@@ -344,6 +353,6 @@ void start_hardif_check_timer(void)
 
 void destroy_hardif_check_timer(void)
 {
-	cancel_rearming_delayed_work(&hardif_check_interfaces_wq);
+	cancel_delayed_work_sync(&hardif_check_interfaces_wq);
 }
 

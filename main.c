@@ -35,14 +35,18 @@
 
 
 struct list_head if_list;
+struct hlist_head forw_bat_list;
+struct hlist_head forw_bcast_list;
 struct hashtable_t *orig_hash;
 
-DEFINE_MUTEX(if_list_lock);
 DEFINE_SPINLOCK(orig_hash_lock);
+DEFINE_SPINLOCK(forw_bat_list_lock);
+DEFINE_SPINLOCK(forw_bcast_list_lock);
 static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
 
 atomic_t originator_interval;
 atomic_t vis_interval;
+atomic_t aggregation_enabled;
 int16_t num_hna = 0;
 int16_t num_ifs = 0;
 
@@ -64,10 +68,14 @@ int init_module(void)
 	int result;
 
 	INIT_LIST_HEAD(&if_list);
+	INIT_HLIST_HEAD(&forw_bat_list);
+	INIT_HLIST_HEAD(&forw_bcast_list);
 	atomic_set(&originator_interval, 1000);
 	atomic_set(&vis_interval, 1000);	/* TODO: raise this later, this is only for debugging now. */
+	atomic_set(&aggregation_enabled, 1);
 
-	bat_event_workqueue = create_singlethread_workqueue("bat_event_workqueue");
+	/* the name should not be longer than 10 chars - see http://lwn.net/Articles/23634/ */
+	bat_event_workqueue = create_singlethread_workqueue("bat_events");
 
 	if (!bat_event_workqueue)
 		return -ENOMEM;
@@ -106,7 +114,7 @@ int init_module(void)
 	hna_local_add(soft_device->dev_addr);
 
 	start_hardif_check_timer();
-	debug_log(LOG_TYPE_CRIT, "B.A.T.M.A.N. Advanced %s%s (compability version %i) loaded \n", SOURCE_VERSION, (strlen(REVISION_VERSION) > 3 ? REVISION_VERSION : ""), COMPAT_VERSION);
+	debug_log(LOG_TYPE_CRIT, "B.A.T.M.A.N. advanced %s%s (compability version %i) loaded \n", SOURCE_VERSION, (strlen(REVISION_VERSION) > 3 ? REVISION_VERSION : ""), COMPAT_VERSION);
 
 	return 0;
 /* for later use ...
@@ -157,7 +165,6 @@ void start_purge_timer(void)
 /* activates the module, creates bat device, starts timer ... */
 void activate_module(void)
 {
-
 	module_state = MODULE_ACTIVE;
 
 	/* (re)start kernel thread for packet processing */
@@ -173,14 +180,14 @@ void activate_module(void)
 	bat_device_setup();
 
 	vis_init();
-	start_bcast_timer();
 }
+
 /* shuts down the whole module.*/
 void shutdown_module(void)
 {
 	module_state = MODULE_INACTIVE;
 
-	stop_bcast_timer();
+	purge_outstanding_packets();
 	flush_workqueue(bat_event_workqueue);
 
 	vis_quit();
@@ -197,7 +204,7 @@ void shutdown_module(void)
 	rcu_read_lock();
 	if (!(list_empty(&if_list))) {
 		rcu_read_unlock();
-		cancel_rearming_delayed_work(&purge_orig_wq);
+		cancel_delayed_work_sync(&purge_orig_wq);
 	} else {
 		rcu_read_unlock();
 	}
@@ -257,7 +264,7 @@ int choose_orig(void *data, int32_t size)
 	hash ^= (hash >> 11);
 	hash += (hash << 15);
 
-	return (hash%size);
+	return (hash % size);
 }
 
 

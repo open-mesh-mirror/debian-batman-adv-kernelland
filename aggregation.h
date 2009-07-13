@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
  * Marek Lindner, Simon Wunderlich
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
@@ -20,19 +20,12 @@
 
 
 
+#include "main.h"
 
-#include "types.h"
-
-
-
-extern wait_queue_head_t thread_wait;
-extern atomic_t exit_cond;
+#define aggregated_packet(buff_pos, packet_len, num_hna) \
+		buff_pos + sizeof(struct batman_packet) + (num_hna * ETH_ALEN) <= packet_len && \
+		buff_pos + sizeof(struct batman_packet) + (num_hna * ETH_ALEN) <= MAX_AGGREGATION_BYTES
 
 
-
-void free_orig_node(void *data);
-void slide_own_bcast_window(struct batman_if *batman_if);
-void batman_data_ready(struct sock *sk, int len);
-void purge_orig(struct work_struct *work);
-int packet_recv_thread(void *data);
-void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_packet, unsigned char *hna_buff, int hna_buff_len, struct batman_if *if_incoming);
+void add_bat_packet_to_list(unsigned char *packet_buff, int packet_len, struct batman_if *if_outgoing, char own_packet, unsigned long send_time);
+void receive_aggr_bat_packet(struct ethhdr *ethhdr, unsigned char *packet_buff, int packet_len, struct batman_if *if_incoming);
