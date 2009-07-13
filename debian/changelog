@@ -1,3 +1,9 @@
+batman-adv-kernelland (0.2~beta~svn1336-1) UNRELEASED; urgency=low
+
+  * New Upstream Snapshot (Closes: #xxxxx)
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 13 Jul 2009 23:22:21 +0200
+
 batman-adv-kernelland (0.1-9) unstable; urgency=low
 
   * debian/rules:

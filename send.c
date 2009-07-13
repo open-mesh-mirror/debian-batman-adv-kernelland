@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
  * Marek Lindner, Simon Wunderlich
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
@@ -28,21 +28,11 @@
 #include "hard-interface.h"
 #include "types.h"
 #include "vis.h"
+#include "aggregation.h"
 
 #include "compat.h"
 
 
-static DECLARE_DELAYED_WORK(send_own_packet_wq, send_own_packet_work);
-
-void start_bcast_timer(void)
-{
-	queue_delayed_work(bat_event_workqueue, &send_own_packet_wq, (((atomic_read(&originator_interval) - JITTER + (random32() % 2*JITTER)) * HZ) / 1000));
-}
-
-void stop_bcast_timer(void)
-{
-	cancel_rearming_delayed_work(&send_own_packet_wq);
-}
 
 /* sends a raw packet. */
 void send_raw_packet(unsigned char *pack_buff, int pack_buff_len, uint8_t *src_addr, uint8_t *dst_addr, struct batman_if *batman_if)
@@ -89,95 +79,121 @@ void send_raw_packet(unsigned char *pack_buff, int pack_buff_len, uint8_t *src_a
 	}
 }
 
-/* send a batman packet. */
-static void send_packet(unsigned char *pack_buff, int pack_buff_len, struct batman_if *if_outgoing, char own_packet)
+/* send a batman packet */
+static void send_packet(struct forw_packet *forw_packet)
 {
 	struct batman_if *batman_if;
+	struct batman_packet *batman_packet = (struct batman_packet *)(forw_packet->packet_buff);
 	char orig_str[ETH_STR_LEN];
-	char directlink = (((struct batman_packet *)pack_buff)->flags & DIRECTLINK ? 1 : 0);
+	unsigned char directlink = (batman_packet->flags & DIRECTLINK ? 1 : 0);
+	uint8_t packet_num;
+	int16_t buff_pos;
 
-	/* according to calltree, outgoing iface should always be specified. */
-	if (if_outgoing == NULL) {
-		debug_log(LOG_TYPE_CRIT, "Error - can't forward packet: outgoing iface not specified\n");
+	/* according to calltree the incoming iface should always be specified. */
+	if (forw_packet->if_incoming == NULL) {
+		debug_log(LOG_TYPE_CRIT, "Error - can't forward packet: incoming iface not specified\n");
 		return;
 	}
-	if (if_outgoing->if_active != IF_ACTIVE)
+
+	if (forw_packet->if_incoming->if_active != IF_ACTIVE)
 		return;
 
-	addr_to_string(orig_str, ((struct batman_packet *)pack_buff)->orig);
+	addr_to_string(orig_str, batman_packet->orig);
 
 	/* multihomed peer assumed */
-	if (directlink && (((struct batman_packet *)pack_buff)->ttl == 1)) {
-		send_raw_packet(pack_buff, pack_buff_len, if_outgoing->net_dev->dev_addr, broadcastAddr, if_outgoing);
-	} else {
+	/* non-primary OGMs are only broadcasted on their interface */
+	if ((directlink && (batman_packet->ttl == 1)) ||
+		    (forw_packet->own && (forw_packet->if_incoming->if_num > 0))) {
 
-		/* non-primary OGMs are only broadcasted on their interface */
-		if (own_packet && (if_outgoing->if_num > 0)) {
-			debug_log(LOG_TYPE_BATMAN, "Sending own packet (originator %s, seqno %d, TTL %d) on interface %s [%s]\n", orig_str, ntohs(((struct batman_packet *)pack_buff)->seqno), ((struct batman_packet *)pack_buff)->ttl, if_outgoing->dev, if_outgoing->addr_str);
-			send_raw_packet(pack_buff, pack_buff_len, if_outgoing->net_dev->dev_addr, broadcastAddr, if_outgoing);
-		} else {
-			rcu_read_lock();
-			list_for_each_entry_rcu(batman_if, &if_list, list) {
-				if (batman_if->if_active != IF_ACTIVE)
-					continue;
+		/* FIXME: what about aggregated packets ? */
+		debug_log(LOG_TYPE_BATMAN, "%s packet (originator %s, seqno %d, TTL %d) on interface %s [%s]\n", (forw_packet->own ? "Sending own" : "Forwarding"), orig_str, ntohs(batman_packet->seqno), batman_packet->ttl, forw_packet->if_incoming->dev, forw_packet->if_incoming->addr_str);
 
-				if (directlink && (if_outgoing == batman_if))
-					((struct batman_packet *)pack_buff)->flags |= DIRECTLINK;
-				else
-					((struct batman_packet *)pack_buff)->flags &= ~DIRECTLINK;
-
-				debug_log(LOG_TYPE_BATMAN, "%s packet (originator %s, seqno %d, TTL %d) on interface %s [%s]\n", (own_packet ? "Sending own" : "Forwarding"), orig_str, ntohs(((struct batman_packet *)pack_buff)->seqno), ((struct batman_packet *)pack_buff)->ttl, batman_if->dev, batman_if->addr_str);
-
-				send_raw_packet(pack_buff, pack_buff_len, batman_if->net_dev->dev_addr, broadcastAddr, batman_if);
-			}
-			rcu_read_unlock();
-		}
+		send_raw_packet(forw_packet->packet_buff, forw_packet->packet_len, forw_packet->if_incoming->net_dev->dev_addr, broadcastAddr, forw_packet->if_incoming);
+		return;
 	}
-}
-void send_own_packet_work(struct work_struct *work)
-{
-	struct batman_if *batman_if;
 
+	/* broadcast on every interface */
 	rcu_read_lock();
-	list_for_each_entry_rcu(batman_if, &if_list, list)
-		send_own_packet(batman_if);
-	rcu_read_unlock();
+	list_for_each_entry_rcu(batman_if, &if_list, list) {
+		if (batman_if->if_active != IF_ACTIVE)
+			continue;
 
-	start_bcast_timer();
+		packet_num = buff_pos = 0;
+		batman_packet = (struct batman_packet *)(forw_packet->packet_buff);
+
+		/* adjust all flags and log packets */
+		while (aggregated_packet(buff_pos, forw_packet->packet_len, batman_packet->num_hna)) {
+
+			/* we might have aggregated direct link packets with an ordinary base packet */
+			if ((forw_packet->direct_link_flags & (1 << packet_num)) && (forw_packet->if_incoming == batman_if))
+				batman_packet->flags |= DIRECTLINK;
+			else
+				batman_packet->flags &= ~DIRECTLINK;
+
+			/* for later logging */
+			if (packet_num > 0)
+				addr_to_string(orig_str, batman_packet->orig);
+
+			/**
+			 * if the outgoing interface is a wifi interface and equal to the incoming interface
+			 * add extra penalty (own packets are to be ignored)
+			 */
+			if ((batman_if->net_dev->wireless_handlers) && (!forw_packet->own) &&
+					(forw_packet->if_incoming == batman_if))
+				batman_packet->tq = (batman_packet->tq * (TQ_MAX_VALUE - (2 * TQ_HOP_PENALTY))) / (TQ_MAX_VALUE);
+
+			debug_log(LOG_TYPE_BATMAN,
+					"%s %spacket (originator %s, seqno %d, TQ %d, TTL %d, IDF %s) on interface %s [%s]\n",
+					(packet_num > 0 ? "Forwarding" : (forw_packet->own ? "Sending own" : "Forwarding")),
+					(packet_num > 0 ? "aggregated " : ""), orig_str, ntohs(batman_packet->seqno),
+					batman_packet->tq, batman_packet->ttl,
+					(batman_packet->flags & DIRECTLINK ? "on" : "off"),
+					batman_if->dev, batman_if->addr_str);
+
+			buff_pos += sizeof(struct batman_packet) + (batman_packet->num_hna * ETH_ALEN);
+			packet_num++;
+			batman_packet = (struct batman_packet *)(forw_packet->packet_buff + buff_pos);
+		}
+
+		send_raw_packet(forw_packet->packet_buff, forw_packet->packet_len, batman_if->net_dev->dev_addr, broadcastAddr, batman_if);
+	}
+	rcu_read_unlock();
 }
 
-void send_own_packet(struct batman_if *batman_if)
+void schedule_own_packet(struct batman_if *batman_if)
 {
-	unsigned char *new_buf;
+	unsigned char *new_buff;
+	unsigned long send_time;
 	struct batman_packet *batman_packet;
 	int new_len;
 
-	batman_packet = (struct batman_packet *)batman_if->pack_buff;
+	batman_packet = (struct batman_packet *)batman_if->packet_buff;
 
 	/* if local hna has changed and interface is a primary interface */
 	if ((hna_local_changed) && (batman_if->if_num == 0)) {
 
 		new_len = sizeof(struct batman_packet) + (num_hna * ETH_ALEN);
-		new_buf = kmalloc(new_len, GFP_ATOMIC);
+		new_buff = kmalloc(new_len, GFP_ATOMIC);
 
 		/* keep old buffer if kmalloc should fail */
-		if (new_buf) {
-			memcpy(new_buf, batman_if->pack_buff, sizeof(struct batman_packet));
-			batman_packet = (struct batman_packet *) new_buf;
+		if (new_buff) {
+			memcpy(new_buff, batman_if->packet_buff, sizeof(struct batman_packet));
+			batman_packet = (struct batman_packet *)new_buff;
 
 			batman_packet->num_hna = hna_local_fill_buffer(
-						new_buf + sizeof(struct batman_packet),
+						new_buff + sizeof(struct batman_packet),
 						new_len - sizeof(struct batman_packet));
 
-			kfree(batman_if->pack_buff);
-			batman_if->pack_buff = new_buf;
-			batman_if->pack_buff_len = new_len;
+			kfree(batman_if->packet_buff);
+			batman_if->packet_buff = new_buff;
+			batman_if->packet_len = new_len;
 		}
 
 	}
 
 	/* change sequence number to network order */
-	batman_packet->seqno = htons((uint16_t) atomic_read(&batman_if->seqno));
+	batman_packet->seqno = htons((uint16_t)atomic_read(&batman_if->seqno));
+
 	if (is_vis_server())
 		batman_packet->flags = VIS_SERVER;
 	else
@@ -187,13 +203,14 @@ void send_own_packet(struct batman_if *batman_if)
 	atomic_inc(&batman_if->seqno);
 
 	slide_own_bcast_window(batman_if);
-	send_packet(batman_if->pack_buff, batman_if->pack_buff_len, batman_if, 1);
-
+	send_time = jiffies + (((atomic_read(&originator_interval) - JITTER + (random32() % 2*JITTER)) * HZ) / 1000);
+	add_bat_packet_to_list(batman_if->packet_buff, batman_if->packet_len, batman_if, 1, send_time);
 }
 
-void send_forward_packet(struct orig_node *orig_node, struct ethhdr *ethhdr, struct batman_packet *batman_packet, uint8_t idf, unsigned char *hna_buff, int hna_buff_len, struct batman_if *if_outgoing)
+void schedule_forward_packet(struct orig_node *orig_node, struct ethhdr *ethhdr, struct batman_packet *batman_packet, uint8_t directlink, unsigned char *hna_buff, int hna_buff_len, struct batman_if *if_incoming)
 {
 	unsigned char in_tq, in_ttl, tq_avg = 0;
+	unsigned long send_time;
 
 	if (batman_packet->ttl <= 1) {
 		debug_log(LOG_TYPE_BATMAN, "ttl exceeded \n");
@@ -228,10 +245,138 @@ void send_forward_packet(struct orig_node *orig_node, struct ethhdr *ethhdr, str
 
 	batman_packet->seqno = htons(batman_packet->seqno);
 
-	if (idf)
+	if (directlink)
 		batman_packet->flags |= DIRECTLINK;
 	else
 		batman_packet->flags &= ~DIRECTLINK;
 
-	send_packet((unsigned char *)batman_packet, sizeof(struct batman_packet) + hna_buff_len, if_outgoing, 0);
+	if (atomic_read(&aggregation_enabled))
+		send_time = jiffies + (((MAX_AGGREGATION_MS - (JITTER/2) + (random32() % JITTER)) * HZ) / 1000);
+	else
+		send_time = jiffies + (((random32() % (JITTER/2)) * HZ) / 1000);
+
+	add_bat_packet_to_list((unsigned char *)batman_packet, sizeof(struct batman_packet) + hna_buff_len, if_incoming, 0, send_time);
+}
+
+static void forw_packet_free(struct forw_packet *forw_packet)
+{
+	kfree(forw_packet->packet_buff);
+	kfree(forw_packet);
+}
+
+static void _add_bcast_packet_to_list(struct forw_packet *forw_packet, unsigned long send_time)
+{
+	INIT_HLIST_NODE(&forw_packet->list);
+
+	/* add new packet to packet list */
+	spin_lock(&forw_bcast_list_lock);
+	hlist_add_head(&forw_packet->list, &forw_bcast_list);
+	spin_unlock(&forw_bcast_list_lock);
+
+	/* start timer for this packet */
+	INIT_DELAYED_WORK(&forw_packet->delayed_work, send_outstanding_bcast_packet);
+	queue_delayed_work(bat_event_workqueue, &forw_packet->delayed_work, send_time);
+}
+
+void add_bcast_packet_to_list(unsigned char *packet_buff, int packet_len)
+{
+	struct forw_packet *forw_packet = NULL;
+
+	forw_packet = kmalloc(sizeof(struct forw_packet), GFP_ATOMIC);
+	forw_packet->packet_buff = kmalloc(packet_len, GFP_ATOMIC);
+
+	forw_packet->packet_len = packet_len;
+	memcpy(forw_packet->packet_buff, packet_buff, forw_packet->packet_len);
+
+	/* how often did we send the bcast packet ? */
+	forw_packet->num_packets = 0;
+
+	_add_bcast_packet_to_list(forw_packet, 1);
+}
+
+void send_outstanding_bcast_packet(struct work_struct *work)
+{
+	struct batman_if *batman_if;
+	struct delayed_work *delayed_work = container_of(work, struct delayed_work, work);
+	struct forw_packet *forw_packet = container_of(delayed_work, struct forw_packet, delayed_work);
+
+	spin_lock(&forw_bcast_list_lock);
+	hlist_del(&forw_packet->list);
+	spin_unlock(&forw_bcast_list_lock);
+
+	/* rebroadcast packet */
+	rcu_read_lock();
+	list_for_each_entry_rcu(batman_if, &if_list, list) {
+		send_raw_packet(forw_packet->packet_buff, forw_packet->packet_len,
+				batman_if->net_dev->dev_addr, broadcastAddr, batman_if);
+	}
+	rcu_read_unlock();
+
+	forw_packet->num_packets++;
+
+	/* if we still have some more bcasts to send and we are not shutting down */
+	if ((forw_packet->num_packets < 3) && (module_state != MODULE_INACTIVE))
+		_add_bcast_packet_to_list(forw_packet, ((5 * HZ) / 1000));
+	else
+		forw_packet_free(forw_packet);
+}
+
+void send_outstanding_bat_packet(struct work_struct *work)
+{
+	struct delayed_work *delayed_work = container_of(work, struct delayed_work, work);
+	struct forw_packet *forw_packet = container_of(delayed_work, struct forw_packet, delayed_work);
+
+	spin_lock(&forw_bat_list_lock);
+	hlist_del(&forw_packet->list);
+	spin_unlock(&forw_bat_list_lock);
+
+	send_packet(forw_packet);
+
+	/**
+	 * we have to have at least one packet in the queue
+	 * to determine the queues wake up time unless we are
+	 * shutting down
+	 */
+	if ((forw_packet->own) && (module_state != MODULE_INACTIVE))
+		schedule_own_packet(forw_packet->if_incoming);
+
+	forw_packet_free(forw_packet);
+}
+
+void purge_outstanding_packets(void)
+{
+	struct forw_packet *forw_packet;
+	struct hlist_node *tmp_node, *safe_tmp_node;
+
+	debug_log(LOG_TYPE_BATMAN, "purge_outstanding_packets()\n");
+
+	/* free bcast list */
+	spin_lock(&forw_bcast_list_lock);
+	hlist_for_each_entry_safe(forw_packet, tmp_node, safe_tmp_node, &forw_bcast_list, list) {
+
+		spin_unlock(&forw_bcast_list_lock);
+
+		/**
+		 * send_outstanding_bcast_packet() will lock the list to
+		 * delete the item from the list
+		 */
+		cancel_delayed_work_sync(&forw_packet->delayed_work);
+		spin_lock(&forw_bcast_list_lock);
+	}
+	spin_unlock(&forw_bcast_list_lock);
+
+	/* free batman packet list */
+	spin_lock(&forw_bat_list_lock);
+	hlist_for_each_entry_safe(forw_packet, tmp_node, safe_tmp_node, &forw_bat_list, list) {
+
+		spin_unlock(&forw_bat_list_lock);
+
+		/**
+		 * send_outstanding_bat_packet() will lock the list to
+		 * delete the item from the list
+		 */
+		cancel_delayed_work_sync(&forw_packet->delayed_work);
+		spin_lock(&forw_bat_list_lock);
+	}
+	spin_unlock(&forw_bat_list_lock);
 }

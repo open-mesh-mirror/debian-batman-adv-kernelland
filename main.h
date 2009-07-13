@@ -21,13 +21,10 @@
 #define LINUX
 
 #define DRIVER_AUTHOR "Marek Lindner <lindner_marek@yahoo.de>, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>"
-#define DRIVER_DESC   "B.A.T.M.A.N. Advanced"
+#define DRIVER_DESC   "B.A.T.M.A.N. advanced"
 #define DRIVER_DEVICE "batman-adv"
 
-#define SOURCE_VERSION "0.1"
-#define COMPAT_VERSION 6
-#define DIRECTLINK 0x40
-#define VIS_SERVER 0x20
+#define SOURCE_VERSION "0.2-beta"
 #define TQ_MAX_VALUE 255
 #define JITTER 20
 #define TTL 50		/* Time To Live of broadcast messages */
@@ -43,13 +40,16 @@
 #define TQ_LOCAL_BIDRECT_RECV_MINIMUM 1
 #define TQ_TOTAL_BIDRECT_LIMIT 1
 
-#define TQ_HOP_PENALTY 10
+#define TQ_HOP_PENALTY 5
 
 #define NUM_WORDS (TQ_LOCAL_WINDOW_SIZE / WORD_BIT_SIZE)
 
 #define PACKBUFF_SIZE 2000
 #define LOG_BUF_LEN 8192	/* has to be a power of 2 */
 #define ETH_STR_LEN 20
+
+#define MAX_AGGREGATION_BYTES 512   /* should not be bigger than 512 bytes or change the size of forw_packet->direct_link_flags */
+#define MAX_AGGREGATION_MS 100
 
 #define MODULE_INACTIVE 0
 #define MODULE_ACTIVE 1
@@ -79,23 +79,26 @@
 #include <linux/mutex.h>	/* mutex */
 #include <linux/module.h>	/* needed by all modules */
 #include <linux/netdevice.h>	/* netdevice */
-#include <linux/timer.h>	/* timer */
 #include <linux/if_ether.h>	/* ethernet header */
 #include <linux/poll.h>		/* poll_table */
 #include <linux/kthread.h>	/* kernel threads */
-#include <linux/pkt_sched.h>/* schedule types */
-#include <linux/workqueue.h>/* workqueue */
+#include <linux/pkt_sched.h>	/* schedule types */
+#include <linux/workqueue.h>	/* workqueue */
 #include <net/sock.h>		/* struct sock */
 #include "types.h"
 
 extern struct list_head if_list;
+extern struct hlist_head forw_bat_list;
+extern struct hlist_head forw_bcast_list;
 extern struct hashtable_t *orig_hash;
 
-extern struct mutex if_list_lock;
 extern spinlock_t orig_hash_lock;
+extern spinlock_t forw_bat_list_lock;
+extern spinlock_t forw_bcast_list_lock;
 
 extern atomic_t originator_interval;
 extern atomic_t vis_interval;
+extern atomic_t aggregation_enabled;
 extern int16_t num_hna;
 extern int16_t num_ifs;
 
