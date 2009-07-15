@@ -1,6 +1,6 @@
-batman-adv-kernelland (0.2~beta~svn1336-1) UNRELEASED; urgency=low
+batman-adv-kernelland (0.2~beta~svn1336-1) experimental; urgency=low
 
-  * New Upstream Snapshot (Closes: #xxxxx)
+  * New Upstream Snapshot (Closes: #537149)
   * debian/patches:
     - Remove upstream merged patches 100-iface-after-forward-broadcast.patch,
       101-rcu_iflist.patch, 102-log-irqenable-sleep.patch,
@@ -10,7 +10,7 @@ batman-adv-kernelland (0.2~beta~svn1336-1) UNRELEASED; urgency=low
   * Recommend batctl instead of transitional package batman-adv-battool
   * Update copyright years in debian/changelog
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 13 Jul 2009 23:22:21 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 15 Jul 2009 17:35:14 +0200
 
 batman-adv-kernelland (0.1-9) unstable; urgency=low
 
