@@ -76,7 +76,7 @@ void free_orig_node(void *data)
 		kfree(neigh_node);
 	}
 
-	hna_global_del_orig(orig_node, "originator timeouted");
+	hna_global_del_orig(orig_node, "originator timed out");
 
 	kfree(orig_node->bcast_own);
 	kfree(orig_node->bcast_own_sum);
@@ -158,7 +158,7 @@ static void update_routes(struct orig_node *orig_node, struct neigh_node *neigh_
 		if ((orig_node->router != NULL) && (neigh_node == NULL)) {
 
 			debug_log(LOG_TYPE_ROUTES, "Deleting route towards: %s\n", orig_str);
-			hna_global_del_orig(orig_node, "originator timeouted");
+			hna_global_del_orig(orig_node, "originator timed out");
 
 		/* route added */
 		} else if ((orig_node->router == NULL) && (neigh_node != NULL)) {
@@ -186,7 +186,7 @@ static void update_routes(struct orig_node *orig_node, struct neigh_node *neigh_
 	/* may be just HNA changed */
 	} else {
 
-		if ((hna_buff_len != orig_node->hna_buff_len) || ((hna_buff_len > 0 ) && (orig_node->hna_buff_len > 0) && (memcmp(orig_node->hna_buff, hna_buff, hna_buff_len) != 0))) {
+		if ((hna_buff_len != orig_node->hna_buff_len) || ((hna_buff_len > 0) && (orig_node->hna_buff_len > 0) && (memcmp(orig_node->hna_buff, hna_buff, hna_buff_len) != 0))) {
 
 			if (orig_node->hna_buff_len > 0)
 				hna_global_del_orig(orig_node, "originator changed hna");
@@ -227,7 +227,7 @@ static int isBidirectionalNeigh(struct orig_node *orig_node, struct orig_node *o
 				neigh_node = tmp_neigh_node;
 		}
 
-		if ( neigh_node == NULL )
+		if (neigh_node == NULL)
 			neigh_node = create_neighbor(orig_neigh_node, orig_neigh_node, orig_neigh_node->orig, if_incoming);
 	}
 
@@ -247,7 +247,7 @@ static int isBidirectionalNeigh(struct orig_node *orig_node, struct orig_node *o
 	/*
 	 * 1 - ((1-x) ** 3), normalized to TQ_MAX_VALUE
 	 * this does affect the nearly-symmetric links only a little,
-	 * but punishes asymetric links more.
+	 * but punishes asymmetric links more.
 	 * this will give a value between 0 and TQ_MAX_VALUE
 	 */
 	orig_neigh_node->tq_asym_penalty = TQ_MAX_VALUE - (TQ_MAX_VALUE *
@@ -258,7 +258,7 @@ static int isBidirectionalNeigh(struct orig_node *orig_node, struct orig_node *o
 
 	batman_packet->tq = ((batman_packet->tq * orig_neigh_node->tq_own * orig_neigh_node->tq_asym_penalty) / (TQ_MAX_VALUE *  TQ_MAX_VALUE));
 
-	debug_log(LOG_TYPE_BATMAN, "bidirectional: orig = %-15s neigh = %-15s => own_bcast = %2i, real recv = %2i, local tq: %3i, asym_penality: %3i, total tq: %3i \n",
+	debug_log(LOG_TYPE_BATMAN, "bidirectional: orig = %-15s neigh = %-15s => own_bcast = %2i, real recv = %2i, local tq: %3i, asym_penalty: %3i, total tq: %3i \n",
 		  orig_str, neigh_str, total_count, neigh_node->real_packet_count, orig_neigh_node->tq_own, orig_neigh_node->tq_asym_penalty, batman_packet->tq);
 
 	/* if link has the minimum required transmission quality consider it bidirectional */
@@ -270,31 +270,22 @@ static int isBidirectionalNeigh(struct orig_node *orig_node, struct orig_node *o
 
 static void update_orig(struct orig_node *orig_node, struct ethhdr *ethhdr, struct batman_packet *batman_packet, struct batman_if *if_incoming, unsigned char *hna_buff, int hna_buff_len, char is_duplicate)
 {
-	struct neigh_node *neigh_node = NULL, *tmp_neigh_node = NULL, *best_neigh_node = NULL;
-	unsigned char max_tq = 0, max_bcast_own = 0;
+	struct neigh_node *neigh_node = NULL, *tmp_neigh_node = NULL;
 	int tmp_hna_buff_len;
 
 	debug_log(LOG_TYPE_BATMAN, "update_originator(): Searching and updating originator entry of received packet \n");
 
 	list_for_each_entry(tmp_neigh_node, &orig_node->neigh_list, list) {
-
 		if (compare_orig(tmp_neigh_node->addr, ethhdr->h_source) && (tmp_neigh_node->if_incoming == if_incoming)) {
 			neigh_node = tmp_neigh_node;
-		} else {
-
-			if (!is_duplicate) {
-				ring_buffer_set(tmp_neigh_node->tq_recv, &tmp_neigh_node->tq_index, 0);
-				tmp_neigh_node->tq_avg = ring_buffer_avg(tmp_neigh_node->tq_recv);
-			}
-
-			/* if we got have a better tq value via this neighbour or same tq value if it is currently our best neighbour (to avoid route flipping) */
-			if ((tmp_neigh_node->tq_avg > max_tq) || ((tmp_neigh_node->tq_avg == max_tq) && (tmp_neigh_node->orig_node->bcast_own_sum[if_incoming->if_num] > max_bcast_own)) || ((orig_node->router == tmp_neigh_node) && (tmp_neigh_node->tq_avg == max_tq))) {
-
-				max_tq = tmp_neigh_node->tq_avg;
-				max_bcast_own = tmp_neigh_node->orig_node->bcast_own_sum[if_incoming->if_num];
-				best_neigh_node = tmp_neigh_node;
-			}
+			continue;
 		}
+
+		if (is_duplicate)
+			continue;
+
+		ring_buffer_set(tmp_neigh_node->tq_recv, &tmp_neigh_node->tq_index, 0);
+		tmp_neigh_node->tq_avg = ring_buffer_avg(tmp_neigh_node->tq_recv);
 	}
 
 	if (neigh_node == NULL)
@@ -313,17 +304,20 @@ static void update_orig(struct orig_node *orig_node, struct ethhdr *ethhdr, stru
 		neigh_node->last_ttl = batman_packet->ttl;
 	}
 
-	if ((neigh_node->tq_avg > max_tq) || ((neigh_node->tq_avg == max_tq) && (neigh_node->orig_node->bcast_own_sum[if_incoming->if_num] > max_bcast_own)) || ((orig_node->router == neigh_node) && (neigh_node->tq_avg == max_tq))) {
-
-		max_tq = neigh_node->tq_avg;
-		max_bcast_own = neigh_node->orig_node->bcast_own_sum[if_incoming->if_num];
-		best_neigh_node = neigh_node;
-
-	}
-
 	tmp_hna_buff_len = (hna_buff_len > batman_packet->num_hna * ETH_ALEN ? batman_packet->num_hna * ETH_ALEN : hna_buff_len);
 
-	update_routes(orig_node, best_neigh_node, hna_buff, tmp_hna_buff_len);
+	/**
+	 * if we got have a better tq value via this neighbour or
+	 * same tq value but the link is more symetric change the next hop
+	 * router
+	 */
+	if ((orig_node->router != neigh_node) && ((!orig_node->router) ||
+	    (neigh_node->tq_avg > orig_node->router->tq_avg) ||
+	    ((neigh_node->tq_avg == orig_node->router->tq_avg) &&
+	     (neigh_node->orig_node->bcast_own_sum[if_incoming->if_num] > orig_node->router->orig_node->bcast_own_sum[if_incoming->if_num]))))
+		update_routes(orig_node, neigh_node, hna_buff, tmp_hna_buff_len);
+	else
+		update_routes(orig_node, orig_node->router, hna_buff, tmp_hna_buff_len);
 }
 
 static char count_real_packets(struct ethhdr *ethhdr, struct batman_packet *batman_packet, struct batman_if *if_incoming)
@@ -451,9 +445,9 @@ void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_pack
 	if (orig_neigh_node == NULL)
 		return;
 
-	/* drop packet if sender is not a direct neighbor and if we no route towards it */
+	/* drop packet if sender is not a direct neighbor and if we don't route towards it */
 	if (!is_single_hop_neigh && (orig_neigh_node->router == NULL)) {
-		debug_log(LOG_TYPE_BATMAN, "Drop packet: OGM via unkown neighbor! \n");
+		debug_log(LOG_TYPE_BATMAN, "Drop packet: OGM via unknown neighbor! \n");
 		return;
 	}
 
@@ -469,7 +463,7 @@ void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_pack
 	if (is_single_hop_neigh) {
 
 		/* mark direct link on incoming interface */
-		schedule_forward_packet(orig_node, ethhdr, batman_packet, 1, hna_buff, hna_buff_len, if_incoming);
+		schedule_forward_packet(orig_node, ethhdr, batman_packet, 1, hna_buff_len, if_incoming);
 
 		debug_log(LOG_TYPE_BATMAN, "Forwarding packet: rebroadcast neighbour packet with direct link flag \n");
 		return;
@@ -487,7 +481,7 @@ void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_pack
 	}
 
 	debug_log(LOG_TYPE_BATMAN, "Forwarding packet: rebroadcast originator packet \n");
-	schedule_forward_packet(orig_node, ethhdr, batman_packet, 0, hna_buff, hna_buff_len, if_incoming);
+	schedule_forward_packet(orig_node, ethhdr, batman_packet, 0, hna_buff_len, if_incoming);
 }
 
 void purge_orig(struct work_struct *work)
@@ -612,8 +606,8 @@ int packet_recv_thread(void *data)
 					result = 0;
 					break;
 				}
-
-				if ((result = receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE)) <= 0)
+				result = receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE);
+				if (result <= 0)
 					break;
 
 				if (result < sizeof(struct ethhdr) + 2)
@@ -662,7 +656,7 @@ int packet_recv_thread(void *data)
 					if (!is_my_mac(ethhdr->h_dest))
 						continue;
 
-					/* drop packet if it has not neccessary minimum size */
+					/* drop packet if it has not necessary minimum size */
 					if (result < sizeof(struct ethhdr) + sizeof(struct icmp_packet))
 						continue;
 
@@ -761,7 +755,7 @@ int packet_recv_thread(void *data)
 					if (!is_my_mac(ethhdr->h_dest))
 						continue;
 
-					/* drop packet if it has not neccessary minimum size */
+					/* drop packet if it has not necessary minimum size */
 					if (result < sizeof(struct ethhdr) + sizeof(struct unicast_packet))
 						continue;
 
@@ -809,7 +803,7 @@ int packet_recv_thread(void *data)
 					if (is_bcast(ethhdr->h_source))
 						continue;
 
-					/* drop packet if it has not neccessary minimum size */
+					/* drop packet if it has not necessary minimum size */
 					if (result < sizeof(struct ethhdr) + sizeof(struct bcast_packet))
 						continue;
 
