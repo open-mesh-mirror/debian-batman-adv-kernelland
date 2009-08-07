@@ -1,0 +1,241 @@
+From e4674164864f467496002feecc160100ad979f92 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven.eckelmann@gmx.de>
+Date: Fri, 7 Aug 2009 21:21:33 +0200
+Subject: [PATCH] Backport to 2.6.19
+
+linux v2.6.19-rc6-118-g52bad64 splitted the the structure in delayed
+and non-delayed structures. This was the first time the
+DECLARE_DELAYED_WORK and related structures were introduced. We must
+rebuild this macros on top of the unsplitted version of the structure.
+v2.6.19-rc6-119-g6bb49e5 changed the way the function pointer of the
+worker function has to look. The given parameters are ignored in all
+functions so we can change it to a dummy parameter.
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+---
+ compat.h            |   14 ++++++++++++++
+ hard-interface.c    |    2 +-
+ hard-interface.h    |    3 ++-
+ routing.c           |    2 +-
+ routing.h           |    4 ++--
+ send.c              |    4 +---
+ send.h              |    3 ++-
+ translation-table.c |    3 ++-
+ translation-table.h |    3 ++-
+ vis.c               |    2 +-
+ vis.h               |    4 +++-
+ 11 files changed, 31 insertions(+), 13 deletions(-)
+
+diff --git a/compat.h b/compat.h
+index 33deec6..0ea2655 100644
+--- a/compat.h
++++ b/compat.h
+@@ -22,6 +22,20 @@
+ 
+ #include <linux/version.h>	/* LINUX_VERSION_CODE */
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
++
++#define delayed_work work_struct
++#define delayed_workdata void*
++
++#define DECLARE_DELAYED_WORK(n, f)				\
++	struct delayed_work n = __WORK_INITIALIZER(n, f, NULL)
++
++#else /* LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20) */
++
++#define delayed_workdata struct work_struct *
++
++#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20) */
++
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22)
+ 
+ #define skb_set_network_header(_skb, _offset) \
+diff --git a/hard-interface.c b/hard-interface.c
+index c182c79..f3bce7b 100644
+--- a/hard-interface.c
++++ b/hard-interface.c
+@@ -302,7 +302,7 @@ char hardif_get_active_if_num(void)
+ }
+ 
+ /* checks inactive interfaces and deactivates "to-be-deactivated" interfaces */
+-void hardif_check_interfaces_status(struct work_struct *work)
++void hardif_check_interfaces_status(delayed_workdata work)
+ {
+ 	struct batman_if *batman_if;
+ 	int min_mtu;
+diff --git a/hard-interface.h b/hard-interface.h
+index a0ca6af..b924402 100644
+--- a/hard-interface.h
++++ b/hard-interface.h
+@@ -18,6 +18,7 @@
+  */
+ 
+ 
++#include "compat.h"
+ 
+ #define IF_INACTIVE 0
+ #define IF_ACTIVE 1
+@@ -29,7 +30,7 @@ void hardif_remove_interfaces(void);
+ int hardif_add_interface(char *dev, int if_num);
+ void hardif_deactivate_interface(struct batman_if *batman_if);
+ char hardif_get_active_if_num(void);
+-void hardif_check_interfaces_status(struct work_struct *work);
++void hardif_check_interfaces_status(delayed_workdata work);
+ void start_hardif_check_timer(void);
+ void destroy_hardif_check_timer(void);
+ int hardif_min_mtu(void);
+diff --git a/routing.c b/routing.c
+index 94c6455..03d9751 100644
+--- a/routing.c
++++ b/routing.c
+@@ -498,7 +498,7 @@ static void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batm
+ 	}
+ }
+ 
+-void purge_orig(struct work_struct *work)
++void purge_orig(delayed_workdata work)
+ {
+ 	struct list_head *list_pos, *list_pos_tmp;
+ 	struct hash_it_t *hashit = NULL;
+diff --git a/routing.h b/routing.h
+index e024d19..23e84eb 100644
+--- a/routing.h
++++ b/routing.h
+@@ -22,7 +22,7 @@
+ 
+ 
+ #include "types.h"
+-
++#include "compat.h"
+ 
+ 
+ extern wait_queue_head_t thread_wait;
+@@ -33,6 +33,6 @@ extern atomic_t exit_cond;
+ void free_orig_node(void *data);
+ void slide_own_bcast_window(struct batman_if *batman_if);
+ void batman_data_ready(struct sock *sk, int len);
+-void purge_orig(struct work_struct *work);
++void purge_orig(delayed_workdata work);
+ int packet_recv_thread(void *data);
+ 
+diff --git a/send.c b/send.c
+index bd62295..a505302 100644
+--- a/send.c
++++ b/send.c
+@@ -29,8 +29,6 @@
+ #include "types.h"
+ #include "vis.h"
+ 
+-#include "compat.h"
+-
+ 
+ static DECLARE_DELAYED_WORK(send_own_packet_wq, send_own_packet_work);
+ 
+@@ -134,7 +132,7 @@ static void send_packet(unsigned char *pack_buff, int pack_buff_len, struct batm
+ 		}
+ 	}
+ }
+-void send_own_packet_work(struct work_struct *work)
++void send_own_packet_work(delayed_workdata work)
+ {
+ 	struct batman_if *batman_if;
+ 
+diff --git a/send.h b/send.h
+index 76fb1e1..bedf444 100644
+--- a/send.h
++++ b/send.h
+@@ -22,12 +22,13 @@
+ 
+ 
+ #include "types.h"
++#include "compat.h"
+ 
+ 
+ 
+ void start_bcast_timer(void);
+ void stop_bcast_timer(void);
+-void send_own_packet_work(struct work_struct *work);
++void send_own_packet_work(delayed_workdata work);
+ void send_raw_packet(unsigned char *pack_buff, int pack_buff_len, uint8_t *src_addr, uint8_t *dst_addr, struct batman_if *batman_if);
+ void send_own_packet(struct batman_if *batman_if);
+ void send_forward_packet(struct orig_node *orig_node, struct ethhdr *ethhdr, struct batman_packet *batman_packet, uint8_t idf, unsigned char *hna_buff, int hna_buff_len, struct batman_if *if_outgoing);
+diff --git a/translation-table.c b/translation-table.c
+index 31de794..3a70c9b 100644
+--- a/translation-table.c
++++ b/translation-table.c
+@@ -27,6 +27,7 @@
+ #include "soft-interface.h"
+ #include "types.h"
+ #include "hash.h"
++#include "compat.h"
+ 
+ 
+ 
+@@ -199,7 +200,7 @@ static void hna_local_del(struct hna_local_entry *hna_local_entry, char *message
+ 	_hna_local_del(hna_local_entry);
+ }
+ 
+-void hna_local_purge(struct work_struct *work)
++void hna_local_purge(delayed_workdata work)
+ {
+ 	struct hna_local_entry *hna_local_entry;
+ 	struct hash_it_t *hashit = NULL;
+diff --git a/translation-table.h b/translation-table.h
+index 14d0870..e419c44 100644
+--- a/translation-table.h
++++ b/translation-table.h
+@@ -22,6 +22,7 @@
+ 
+ 
+ #include "types.h"
++#include "compat.h"
+ 
+ 
+ 
+@@ -29,7 +30,7 @@ int hna_local_init(void);
+ void hna_local_add(uint8_t *addr);
+ int hna_local_fill_buffer(unsigned char *buff, int buff_len);
+ int hna_local_fill_buffer_text(unsigned char *buff, int buff_len);
+-void hna_local_purge(struct work_struct *work);
++void hna_local_purge(delayed_workdata work);
+ void hna_local_free(void);
+ int hna_global_init(void);
+ void hna_global_add_orig(struct orig_node *orig_node, unsigned char *hna_buff, int hna_buff_len);
+diff --git a/vis.c b/vis.c
+index eaab222..85ae3bf 100644
+--- a/vis.c
++++ b/vis.c
+@@ -355,7 +355,7 @@ void purge_vis_packets(void)
+ }
+ 
+ /* called from timer; send (and maybe generate) vis packet. */
+-void send_vis_packets(struct work_struct *work)
++void send_vis_packets(delayed_workdata work)
+ {
+ 	struct vis_info *info, *temp;
+ 
+diff --git a/vis.h b/vis.h
+index 58061b1..00f6b3a 100644
+--- a/vis.h
++++ b/vis.h
+@@ -17,6 +17,8 @@
+  *
+  */
+ 
++#include "compat.h"
++
+ #define VIS_TIMEOUT		200000
+ 
+ struct vis_info {
+@@ -49,6 +51,6 @@ int is_vis_server(void);
+ int is_vis_server_locked(void);
+ void receive_server_sync_packet(struct vis_packet *vis_packet, int vis_info_len);
+ void receive_client_update_packet(struct vis_packet *vis_packet, int vis_info_len);
+-void send_vis_packets(struct work_struct *work);
++void send_vis_packets(delayed_workdata work);
+ int vis_init(void);
+ int vis_quit(void);
+-- 
+1.6.3.3
+

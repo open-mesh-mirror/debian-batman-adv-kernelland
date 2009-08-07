@@ -1,0 +1,42 @@
+From 31a70c22e05c82e2b9a861e1b8befac1c2409fa2 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven.eckelmann@gmx.de>
+Date: Fri, 7 Aug 2009 21:57:56 +0200
+Subject: [PATCH] Backport to 2.6.17
+
+Linux v2.6.17-4588-ge4d9191 introduced __SPIN_LOCK_UNLOCKED to extend
+the new debugging facility.
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+---
+ compat.h |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/compat.h b/compat.h
+index 53c1749..488a40b 100644
+--- a/compat.h
++++ b/compat.h
+@@ -22,6 +22,21 @@
+ 
+ #include <linux/version.h>	/* LINUX_VERSION_CODE */
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18)
++
++#ifdef CONFIG_DEBUG_SPINLOCK
++#define __SPIN_LOCK_UNLOCKED(lockname)					\
++	(spinlock_t)	{	.raw_lock = __RAW_SPIN_LOCK_UNLOCKED,	\
++				.magic = SPINLOCK_MAGIC,		\
++				.owner = SPINLOCK_OWNER_INIT,		\
++				.owner_cpu = -1}
++#else
++# define __SPIN_LOCK_UNLOCKED(lockname) \
++	(spinlock_t)	{	.raw_lock = __RAW_SPIN_LOCK_UNLOCKED }
++#endif
++
++#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 18) */
++
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
+ 
+ #define random32() net_random()
+-- 
+1.6.3.3
+

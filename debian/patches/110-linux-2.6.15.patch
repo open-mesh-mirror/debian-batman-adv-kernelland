@@ -1,0 +1,47 @@
+From 65ca345359186a69cd1a123a8e56a61b48e91c97 Mon Sep 17 00:00:00 2001
+From: Sven Eckelmann <sven.eckelmann@gmx.de>
+Date: Fri, 7 Aug 2009 22:35:55 +0200
+Subject: [PATCH] Remove unused if_list_lock
+
+
+Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+---
+ main.c |    1 -
+ main.h |    2 --
+ 2 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/main.c b/main.c
+index 26cd6b2..d239dbb 100644
+--- a/main.c
++++ b/main.c
+@@ -37,7 +37,6 @@
+ struct list_head if_list;
+ struct hashtable_t *orig_hash;
+ 
+-DEFINE_MUTEX(if_list_lock);
+ DEFINE_SPINLOCK(orig_hash_lock);
+ static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
+ 
+diff --git a/main.h b/main.h
+index 3acd2d5..714d06c 100644
+--- a/main.h
++++ b/main.h
+@@ -76,7 +76,6 @@
+ #define REVISION_VERSION "0"
+ #endif
+ 
+-#include <linux/mutex.h>	/* mutex */
+ #include <linux/module.h>	/* needed by all modules */
+ #include <linux/netdevice.h>	/* netdevice */
+ #include <linux/timer.h>	/* timer */
+@@ -91,7 +90,6 @@
+ extern struct list_head if_list;
+ extern struct hashtable_t *orig_hash;
+ 
+-extern struct mutex if_list_lock;
+ extern spinlock_t orig_hash_lock;
+ 
+ extern atomic_t originator_interval;
+-- 
+1.6.3.3
+
