@@ -38,11 +38,39 @@
 
 
 DECLARE_WAIT_QUEUE_HEAD(thread_wait);
+static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
 
 static atomic_t data_ready_cond;
 atomic_t exit_cond;
 
+void start_purge_timer(void)
+{
+	queue_delayed_work(bat_event_workqueue, &purge_orig_wq, 1 * HZ);
+}
 
+int originator_init(void)
+{
+	if (orig_hash)
+		return 1;
+
+	orig_hash = hash_new(128, compare_orig, choose_orig);
+
+	if (!orig_hash)
+		return 0;
+
+	start_purge_timer();
+	return 1;
+}
+
+void originator_free(void)
+{
+	if (!orig_hash)
+		return;
+
+	cancel_delayed_work_sync(&purge_orig_wq);
+	hash_delete(orig_hash, free_orig_node);
+	orig_hash = NULL;
+}
 
 static struct neigh_node *create_neighbor(struct orig_node *orig_node, struct orig_node *orig_neigh_node, uint8_t *neigh, struct batman_if *if_incoming)
 {
@@ -601,11 +629,16 @@ int packet_recv_thread(void *data)
 
 			while (1) {
 				if (batman_if->if_active != IF_ACTIVE) {
-					debug_log(LOG_TYPE_NOTICE, "Could not read from deactivated interface %s!\n", batman_if->dev);
+					if (batman_if->if_active != IF_TO_BE_ACTIVATED)
+						debug_log(LOG_TYPE_NOTICE,
+						          "Could not read from deactivated interface %s!\n",
+						          batman_if->dev);
+
 					receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE);
 					result = 0;
 					break;
 				}
+
 				result = receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE);
 				if (result <= 0)
 					break;
@@ -637,7 +670,10 @@ int packet_recv_thread(void *data)
 						continue;
 
 					spin_lock(&orig_hash_lock);
-					receive_aggr_bat_packet(ethhdr, packet_buff + sizeof(struct ethhdr), result - sizeof(struct ethhdr), batman_if);
+					receive_aggr_bat_packet(ethhdr,
+					                        packet_buff + sizeof(struct ethhdr),
+					                        result - sizeof(struct ethhdr),
+					                        batman_if);
 					spin_unlock(&orig_hash_lock);
 
 					break;
@@ -683,7 +719,10 @@ int packet_recv_thread(void *data)
 							icmp_packet->msg_type = ECHO_REPLY;
 							icmp_packet->ttl = TTL;
 
-							send_raw_packet(packet_buff + sizeof(struct ethhdr), result - sizeof(struct ethhdr), orig_node->batman_if->net_dev->dev_addr, orig_node->router->addr, orig_node->batman_if);
+							send_raw_packet(packet_buff + sizeof(struct ethhdr),
+							                result - sizeof(struct ethhdr),
+							                orig_node->batman_if,
+							                orig_node->router->addr);
 
 						}
 
@@ -715,7 +754,10 @@ int packet_recv_thread(void *data)
 							icmp_packet->msg_type = TTL_EXCEEDED;
 							icmp_packet->ttl = TTL;
 
-							send_raw_packet(packet_buff + sizeof(struct ethhdr), result - sizeof(struct ethhdr), orig_node->batman_if->net_dev->dev_addr, orig_node->router->addr, orig_node->batman_if);
+							send_raw_packet(packet_buff + sizeof(struct ethhdr),
+							                result - sizeof(struct ethhdr),
+							                orig_node->batman_if,
+							                orig_node->router->addr);
 
 						}
 
@@ -734,8 +776,10 @@ int packet_recv_thread(void *data)
 						icmp_packet->ttl--;
 
 						/* route it */
-						send_raw_packet(packet_buff + sizeof(struct ethhdr), result - sizeof(struct ethhdr), orig_node->batman_if->net_dev->dev_addr, orig_node->router->addr, orig_node->batman_if);
-
+						send_raw_packet(packet_buff + sizeof(struct ethhdr),
+						                result - sizeof(struct ethhdr),
+						                orig_node->batman_if,
+						                orig_node->router->addr);
 					}
 
 					spin_unlock(&orig_hash_lock);
@@ -787,7 +831,10 @@ int packet_recv_thread(void *data)
 						unicast_packet->ttl--;
 
 						/* route it */
-						send_raw_packet(packet_buff + sizeof(struct ethhdr), result - sizeof(struct ethhdr), orig_node->batman_if->net_dev->dev_addr, orig_node->router->addr, orig_node->batman_if);
+						send_raw_packet(packet_buff + sizeof(struct ethhdr),
+						                result - sizeof(struct ethhdr),
+						                orig_node->batman_if,
+						                orig_node->router->addr);
 					}
 
 					spin_unlock(&orig_hash_lock);

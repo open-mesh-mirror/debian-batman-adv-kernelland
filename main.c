@@ -39,7 +39,6 @@ struct hashtable_t *orig_hash;
 DEFINE_SPINLOCK(orig_hash_lock);
 DEFINE_SPINLOCK(forw_bat_list_lock);
 DEFINE_SPINLOCK(forw_bcast_list_lock);
-static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
 
 atomic_t originator_interval;
 atomic_t vis_interval;
@@ -52,19 +51,20 @@ struct net_device *soft_device;
 static struct task_struct *kthread_task;
 
 unsigned char broadcastAddr[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-char hna_local_changed;
-char module_state = MODULE_INACTIVE;
+atomic_t module_state;
 
 struct workqueue_struct *bat_event_workqueue;
 
 int init_module(void)
 {
 	int retval;
-	int result;
 
 	INIT_LIST_HEAD(&if_list);
 	INIT_HLIST_HEAD(&forw_bat_list);
 	INIT_HLIST_HEAD(&forw_bcast_list);
+
+	atomic_set(&module_state, MODULE_INACTIVE);
+
 	atomic_set(&originator_interval, 1000);
 	atomic_set(&vis_interval, 1000);/* TODO: raise this later, this is only
 					 * for debugging now. */
@@ -81,17 +81,6 @@ int init_module(void)
 	if (retval < 0)
 		return retval;
 
-	orig_hash = hash_new(128, compare_orig, choose_orig);
-
-	if (orig_hash == NULL)
-		goto clean_proc;
-
-	if (hna_local_init() < 0)
-		goto free_orig_hash;
-
-	if (hna_global_init() < 0)
-		goto free_lhna_hash;
-
 	bat_device_init();
 
 	/* initialize layer 2 interface */
@@ -100,91 +89,87 @@ int init_module(void)
 
 	if (!soft_device) {
 		debug_log(LOG_TYPE_CRIT, "Unable to allocate the batman interface\n");
-		goto free_lhna_hash;
+		goto end;
 	}
 
-	result = register_netdev(soft_device);
+	retval = register_netdev(soft_device);
 
-	if (result < 0) {
-		debug_log(LOG_TYPE_CRIT, "Unable to register the batman interface: %i\n", result);
+	if (retval < 0) {
+		debug_log(LOG_TYPE_CRIT, "Unable to register the batman interface: %i\n", retval);
 		goto free_soft_device;
 	}
-
-	hna_local_add(soft_device->dev_addr);
 
 	start_hardif_check_timer();
 
 	debug_log(LOG_TYPE_CRIT, "B.A.T.M.A.N. advanced %s%s (compatibility version %i) loaded \n",
-		  SOURCE_VERSION,
-		  (strlen(REVISION_VERSION) > 3 ? REVISION_VERSION : ""),
-		  COMPAT_VERSION);
+	          SOURCE_VERSION, REVISION_VERSION_STR, COMPAT_VERSION);
 
 	return 0;
 
 free_soft_device:
 	free_netdev(soft_device);
 	soft_device = NULL;
-free_lhna_hash:
-	hna_local_free();
-
-free_orig_hash:
-	hash_delete(orig_hash, free_orig_node);
-
-clean_proc:
-	cleanup_procfs();
+end:
 	return -ENOMEM;
 }
 
 void cleanup_module(void)
 {
 	shutdown_module();
+
 	if (soft_device) {
 		unregister_netdev(soft_device);
 		soft_device = NULL;
 	}
 
 	destroy_hardif_check_timer();
-
-	spin_lock(&orig_hash_lock);
-	hash_delete(orig_hash, free_orig_node);
-	spin_unlock(&orig_hash_lock);
-
-	hna_local_free();
-	hna_global_free();
 	cleanup_procfs();
+
 	destroy_workqueue(bat_event_workqueue);
 	bat_event_workqueue = NULL;
-}
-
-void start_purge_timer(void)
-{
-	queue_delayed_work(bat_event_workqueue, &purge_orig_wq, 1 * HZ);
 }
 
 /* activates the module, creates bat device, starts timer ... */
 void activate_module(void)
 {
-	module_state = MODULE_ACTIVE;
+	if (originator_init() < 1)
+		goto err;
 
-	/* (re)start kernel thread for packet processing */
-	kthread_task = kthread_run(packet_recv_thread, NULL, "batman-adv");
+	if (hna_local_init() < 1)
+		goto err;
 
-	if (IS_ERR(kthread_task)) {
-		debug_log(LOG_TYPE_CRIT, "Unable to start packet receive thread\n");
-		kthread_task = NULL;
-	}
+	if (hna_global_init() < 1)
+		goto err;
 
-	start_purge_timer();
+	hna_local_add(soft_device->dev_addr);
 
 	bat_device_setup();
-
 	vis_init();
+
+	/* (re)start kernel thread for packet processing */
+	if (!kthread_task) {
+		kthread_task = kthread_run(packet_recv_thread, NULL, "batman-adv");
+
+		if (IS_ERR(kthread_task)) {
+			debug_log(LOG_TYPE_CRIT, "Unable to start packet receive thread\n");
+			kthread_task = NULL;
+		}
+	}
+
+	atomic_set(&module_state, MODULE_ACTIVE);
+	goto end;
+
+err:
+	debug_log(LOG_TYPE_CRIT, "Unable to allocate memory for mesh information structures: out of mem ?\n");
+	shutdown_module();
+end:
+	return;
 }
 
 /* shuts down the whole module.*/
 void shutdown_module(void)
 {
-	module_state = MODULE_INACTIVE;
+	atomic_set(&module_state, MODULE_INACTIVE);
 
 	purge_outstanding_packets();
 	flush_workqueue(bat_event_workqueue);
@@ -200,13 +185,10 @@ void shutdown_module(void)
 		kthread_task = NULL;
 	}
 
-	rcu_read_lock();
-	if (!(list_empty(&if_list))) {
-		rcu_read_unlock();
-		cancel_delayed_work_sync(&purge_orig_wq);
-	} else {
-		rcu_read_unlock();
-	}
+	originator_free();
+
+	hna_local_free();
+	hna_global_free();
 
 	synchronize_net();
 	bat_device_destroy();
@@ -296,3 +278,8 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);
 MODULE_SUPPORTED_DEVICE(DRIVER_DEVICE);
+#ifdef REVISION_VERSION
+MODULE_VERSION(SOURCE_VERSION "-" REVISION_VERSION);
+#else
+MODULE_VERSION(SOURCE_VERSION);
+#endif

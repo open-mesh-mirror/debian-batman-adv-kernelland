@@ -27,6 +27,7 @@
 
 struct hashtable_t *hna_local_hash;
 static struct hashtable_t *hna_global_hash;
+atomic_t hna_local_changed;
 
 DEFINE_SPINLOCK(hna_local_hash_lock);
 DEFINE_SPINLOCK(hna_global_hash_lock);
@@ -40,11 +41,15 @@ static void hna_local_start_timer(void)
 
 int hna_local_init(void)
 {
+	if (hna_local_hash)
+		return 1;
+
 	hna_local_hash = hash_new(128, compare_orig, choose_orig);
 
-	if (hna_local_hash == NULL)
+	if (!hna_local_hash)
 		return 0;
 
+	atomic_set(&hna_local_changed, 0);
 	hna_local_start_timer();
 
 	return 1;
@@ -99,7 +104,7 @@ void hna_local_add(uint8_t *addr)
 
 	hash_add(hna_local_hash, hna_local_entry);
 	num_hna++;
-	hna_local_changed = 1;
+	atomic_set(&hna_local_changed, 1);
 
 	if (hna_local_hash->elements * 4 > hna_local_hash->size) {
 		swaphash = hash_resize(hna_local_hash,
@@ -147,7 +152,7 @@ int hna_local_fill_buffer(unsigned char *buff, int buff_len)
 
 	/* if we did not get all new local hnas see you next time  ;-) */
 	if (i == num_hna)
-		hna_local_changed = 0;
+		atomic_set(&hna_local_changed, 0);
 
 	spin_unlock_irqrestore(&hna_local_hash_lock, flags);
 
@@ -189,7 +194,7 @@ static void _hna_local_del(void *data)
 {
 	kfree(data);
 	num_hna--;
-	hna_local_changed = 1;
+	atomic_set(&hna_local_changed, 1);
 }
 
 static void hna_local_del(struct hna_local_entry *hna_local_entry,
@@ -230,17 +235,22 @@ void hna_local_purge(struct work_struct *work)
 
 void hna_local_free(void)
 {
-	if (hna_local_hash != NULL) {
-		cancel_delayed_work_sync(&hna_local_purge_wq);
-		hash_delete(hna_local_hash, _hna_local_del);
-	}
+	if (!hna_local_hash)
+		return;
+
+	cancel_delayed_work_sync(&hna_local_purge_wq);
+	hash_delete(hna_local_hash, _hna_local_del);
+	hna_local_hash = NULL;
 }
 
 int hna_global_init(void)
 {
+	if (hna_global_hash)
+		return 1;
+
 	hna_global_hash = hash_new(128, compare_orig, choose_orig);
 
-	if (hna_global_hash == NULL)
+	if (!hna_global_hash)
 		return 0;
 
 	return 1;
@@ -418,8 +428,11 @@ static void hna_global_del(void *data)
 
 void hna_global_free(void)
 {
-	if (hna_global_hash != NULL)
-		hash_delete(hna_global_hash, hna_global_del);
+	if (!hna_global_hash)
+		return;
+
+	hash_delete(hna_global_hash, hna_global_del);
+	hna_global_hash = NULL;
 }
 
 struct orig_node *transtable_search(uint8_t *addr)

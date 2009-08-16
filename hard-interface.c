@@ -42,7 +42,7 @@ int hardif_min_mtu(void)
 	struct batman_if *batman_if;
 	/* allow big frames if all devices are capable to do so
 	 * (have MTU > 1500 + BAT_HEADER_LEN) */
-	int min_mtu = 1500;
+	int min_mtu = ETH_DATA_LEN;
 
 	rcu_read_lock();
 	list_for_each_entry_rcu(batman_if, &if_list, list) {
@@ -72,6 +72,7 @@ int hardif_is_interface_up(char *dev)
 	if ((!list_empty(&if_list)) &&
 	    strncmp(((struct batman_if *)if_list.next)->dev, dev, IFNAMSIZ) &&
 	    !(((struct batman_if *)if_list.next)->if_active == IF_ACTIVE) &&
+	    !(((struct batman_if *)if_list.next)->if_active == IF_TO_BE_ACTIVATED) &&
 	    (!main_if_was_up())) {
 		rcu_read_unlock();
 		goto end;
@@ -170,7 +171,7 @@ void hardif_activate_interface(struct batman_if *batman_if)
 	memcpy(((struct batman_packet *)(batman_if->packet_buff))->old_orig,
 	       batman_if->net_dev->dev_addr, ETH_ALEN);
 
-	batman_if->if_active = IF_ACTIVE;
+	batman_if->if_active = IF_TO_BE_ACTIVATED;
 	active_ifs++;
 
 	/* save the mac address if it is our primary interface */
@@ -305,6 +306,7 @@ int hardif_add_interface(char *dev, int if_num)
 		batman_packet->num_hna = hna_local_fill_buffer(hna_buff,
 							       hna_len);
 	}
+
 	atomic_set(&batman_if->seqno, 1);
 
 	/* resize all orig nodes because orig_node->bcast_own(_sum) depend on
@@ -347,7 +349,7 @@ void hardif_check_interfaces_status(void)
 	struct batman_if *batman_if;
 	int min_mtu;
 
-	if (module_state == MODULE_INACTIVE)
+	if (atomic_read(&module_state) == MODULE_INACTIVE)
 		return;
 
 	/**
@@ -369,7 +371,7 @@ void hardif_check_interfaces_status(void)
 
 	/* waiting for activation? if interfaces are available now, we can
 	 * activate. */
-	if ((module_state == MODULE_WAITING) &&
+	if ((atomic_read(&module_state) == MODULE_WAITING) &&
 	    (hardif_get_active_if_num() > 0))
 		activate_module();
 

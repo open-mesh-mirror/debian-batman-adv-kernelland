@@ -172,12 +172,12 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 	struct bat_priv *priv = netdev_priv(dev);
 	int data_len = skb->len;
 
+	if (atomic_read(&module_state) != MODULE_ACTIVE)
+		goto dropped;
+
 	dev->trans_start = jiffies;
 	/* TODO: check this for locks */
 	hna_local_add(ethhdr->h_source);
-
-	if (module_state != MODULE_ACTIVE)
-		goto dropped;
 
 	/* ethernet packet should be broadcasted */
 	if (is_bcast(ethhdr->h_dest) || is_mcast(ethhdr->h_dest)) {
@@ -245,9 +245,8 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 				goto unlock;
 
 			send_raw_packet(skb->data, skb->len,
-					orig_node->batman_if->net_dev->dev_addr,
-					orig_node->router->addr,
-					orig_node->batman_if);
+					orig_node->batman_if,
+					orig_node->router->addr);
 		} else {
 			goto unlock;
 		}

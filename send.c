@@ -29,12 +29,6 @@
 
 #include "compat.h"
 
-/* apply the hop penalty for a wireless link */
-static uint8_t wireless_hop_penalty(const uint8_t tq)
-{
-	return (tq * (TQ_MAX_VALUE - (2 * TQ_HOP_PENALTY))) / (TQ_MAX_VALUE);
-}
-
 /* apply hop penalty for a normal link */
 static uint8_t hop_penalty(const uint8_t tq)
 {
@@ -65,8 +59,7 @@ static unsigned long forward_send_time(void)
 
 /* sends a raw packet. */
 void send_raw_packet(unsigned char *pack_buff, int pack_buff_len,
-		     uint8_t *src_addr, uint8_t *dst_addr,
-		     struct batman_if *batman_if)
+		     struct batman_if *batman_if, uint8_t *dst_addr)
 {
 	struct ethhdr *ethhdr;
 	struct sk_buff *skb;
@@ -142,21 +135,7 @@ static void send_packet_to_if(struct forw_packet *forw_packet,
 		else
 			batman_packet->flags &= ~DIRECTLINK;
 
-		/* for later logging */
-		if (packet_num > 0)
-			addr_to_string(orig_str, batman_packet->orig);
-
-		/**
-		 * if the outgoing interface is a wifi interface and
-		 * equal to the incoming interface add extra penalty
-		 * (own packets are to be ignored)
-		 */
-		if ((batman_if->net_dev->wireless_handlers) &&
-		    (!forw_packet->own) &&
-		    (forw_packet->if_incoming == batman_if))
-			batman_packet->tq =
-				wireless_hop_penalty(batman_packet->tq);
-
+		addr_to_string(orig_str, batman_packet->orig);
 		fwd_str = (packet_num > 0 ? "Forwarding" : (forw_packet->own ?
 							    "Sending own" :
 							    "Forwarding"));
@@ -179,8 +158,7 @@ static void send_packet_to_if(struct forw_packet *forw_packet,
 
 	send_raw_packet(forw_packet->packet_buff,
 			forw_packet->packet_len,
-			batman_if->net_dev->dev_addr,
-			broadcastAddr, batman_if);
+			batman_if, broadcastAddr);
 }
 
 /* send a batman packet */
@@ -218,8 +196,8 @@ static void send_packet(struct forw_packet *forw_packet)
 
 		send_raw_packet(forw_packet->packet_buff,
 				forw_packet->packet_len,
-				forw_packet->if_incoming->net_dev->dev_addr,
-				broadcastAddr, forw_packet->if_incoming);
+				forw_packet->if_incoming,
+				broadcastAddr);
 		return;
 	}
 
@@ -260,11 +238,25 @@ void schedule_own_packet(struct batman_if *batman_if)
 	unsigned long send_time;
 	struct batman_packet *batman_packet;
 
-	batman_packet = (struct batman_packet *)batman_if->packet_buff;
+	/**
+	 * the interface gets activated here to avoid race conditions between
+	 * the moment of activating the interface in
+	 * hardif_activate_interface() where the originator mac is set and
+	 * outdated packets (especially uninitialized mac addresses) in the
+	 * packet queue
+	 */
+	if (batman_if->if_active == IF_TO_BE_ACTIVATED)
+		batman_if->if_active = IF_ACTIVE;
 
 	/* if local hna has changed and interface is a primary interface */
-	if ((hna_local_changed) && (batman_if->if_num == 0))
+	if ((atomic_read(&hna_local_changed)) && (batman_if->if_num == 0))
 		rebuild_batman_packet(batman_if);
+
+	/**
+	 * NOTE: packet_buff might just have been re-allocated in
+	 * rebuild_batman_packet()
+	 */
+	batman_packet = (struct batman_packet *)batman_if->packet_buff;
 
 	/* change sequence number to network order */
 	batman_packet->seqno = htons((uint16_t)atomic_read(&batman_if->seqno));
@@ -397,8 +389,7 @@ void send_outstanding_bcast_packet(struct work_struct *work)
 	list_for_each_entry_rcu(batman_if, &if_list, list) {
 		send_raw_packet(forw_packet->packet_buff,
 				forw_packet->packet_len,
-				batman_if->net_dev->dev_addr,
-				broadcastAddr, batman_if);
+				batman_if, broadcastAddr);
 	}
 	rcu_read_unlock();
 
@@ -407,7 +398,7 @@ void send_outstanding_bcast_packet(struct work_struct *work)
 	/* if we still have some more bcasts to send and we are not shutting
 	 * down */
 	if ((forw_packet->num_packets < 3) &&
-	    (module_state != MODULE_INACTIVE))
+	    (atomic_read(&module_state) != MODULE_INACTIVE))
 		_add_bcast_packet_to_list(forw_packet, ((5 * HZ) / 1000));
 	else
 		forw_packet_free(forw_packet);
@@ -431,7 +422,8 @@ void send_outstanding_bat_packet(struct work_struct *work)
 	 * to determine the queues wake up time unless we are
 	 * shutting down
 	 */
-	if ((forw_packet->own) && (module_state != MODULE_INACTIVE))
+	if ((forw_packet->own) &&
+	    (atomic_read(&module_state) != MODULE_INACTIVE))
 		schedule_own_packet(forw_packet->if_incoming);
 
 	forw_packet_free(forw_packet);
