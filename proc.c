@@ -94,41 +94,35 @@ static ssize_t proc_interfaces_write(struct file *instance,
 
 	if (strlen(if_string) == 0) {
 		shutdown_module();
-
-		spin_lock(&orig_hash_lock);
-		hash_delete(orig_hash, free_orig_node);
-		orig_hash = hash_new(128, compare_orig, choose_orig);
-		spin_unlock(&orig_hash_lock);
-
 		num_ifs = 0;
 		goto end;
-	} else {
-		/* add interface */
-		rcu_read_lock();
-		list_for_each_entry_rcu(batman_if, &if_list, list) {
-			if (strncmp(batman_if->dev, if_string, count) == 0) {
-				debug_log(LOG_TYPE_WARN, "Given interface is already active: %s\n", if_string);
-				rcu_read_unlock();
-				goto end;
+	}
 
-			}
+	/* add interface */
+	rcu_read_lock();
+	list_for_each_entry_rcu(batman_if, &if_list, list) {
+		if (strncmp(batman_if->dev, if_string, count) == 0) {
+			debug_log(LOG_TYPE_WARN, "Given interface is already active: %s\n", if_string);
+			rcu_read_unlock();
+			goto end;
 
-			if_num++;
 		}
-		rcu_read_unlock();
 
-		if (module_state == MODULE_INACTIVE)
-			module_state = MODULE_WAITING;
+		if_num++;
+	}
+	rcu_read_unlock();
 
-		hardif_add_interface(if_string, if_num);
-		hardif_check_interfaces_status();
+	if (atomic_read(&module_state) == MODULE_INACTIVE)
+		atomic_set(&module_state, MODULE_WAITING);
 
-		if (module_state == MODULE_WAITING) {
-			if (hardif_get_active_if_num() > 0)
-				activate_module();
-			else
-				debug_log(LOG_TYPE_WARN, "Can't activate module: the primary interface is not active\n");
-		}
+	hardif_add_interface(if_string, if_num);
+	hardif_check_interfaces_status();
+
+	if (atomic_read(&module_state) == MODULE_WAITING) {
+		if (hardif_get_active_if_num() > 0)
+			activate_module();
+		else
+			debug_log(LOG_TYPE_WARN, "Can't activate module: the primary interface is not active\n");
 	}
 
 	rcu_read_lock();
@@ -223,8 +217,7 @@ static int proc_originators_read(struct seq_file *seq, void *offset)
 	seq_printf(seq,
 		   "  %-14s (%s/%i) %17s [%10s]: %20s ... [B.A.T.M.A.N. adv %s%s, MainIF/MAC: %s/%s] \n",
 		   "Originator", "#", TQ_MAX_VALUE, "Nexthop", "outgoingIF",
-		   "Potential nexthops", SOURCE_VERSION,
-		   (strlen(REVISION_VERSION) > 3 ? REVISION_VERSION : ""),
+		   "Potential nexthops", SOURCE_VERSION, REVISION_VERSION_STR,
 		   ((struct batman_if *)if_list.next)->dev,
 		   ((struct batman_if *)if_list.next)->addr_str);
 

@@ -44,7 +44,7 @@
 #define TQ_LOCAL_BIDRECT_RECV_MINIMUM 1
 #define TQ_TOTAL_BIDRECT_LIMIT 1
 
-#define TQ_HOP_PENALTY 5
+#define TQ_HOP_PENALTY 10
 
 #define NUM_WORDS (TQ_LOCAL_WINDOW_SIZE / WORD_BIT_SIZE)
 
@@ -82,11 +82,6 @@
 #define LOG_TYPE_BATMAN_NAME	"batman"
 #define LOG_TYPE_ROUTES_NAME	"routes"
 
-
-#ifndef REVISION_VERSION
-#define REVISION_VERSION "0"
-#endif
-
 #include <linux/mutex.h>	/* mutex */
 #include <linux/module.h>	/* needed by all modules */
 #include <linux/netdevice.h>	/* netdevice */
@@ -98,6 +93,12 @@
 #include <net/sock.h>		/* struct sock */
 #include <linux/jiffies.h>
 #include "types.h"
+
+#ifndef REVISION_VERSION
+#define REVISION_VERSION_STR ""
+#else
+#define REVISION_VERSION_STR " "REVISION_VERSION
+#endif
 
 extern struct list_head if_list;
 extern struct hlist_head forw_bat_list;
@@ -117,11 +118,9 @@ extern int16_t num_ifs;
 extern struct net_device *soft_device;
 
 extern unsigned char broadcastAddr[];
-extern char hna_local_changed;
-extern char module_state;
+extern atomic_t module_state;
 extern struct workqueue_struct *bat_event_workqueue;
 
-void start_purge_timer(void);
 void activate_module(void);
 void shutdown_module(void);
 void inc_module_count(void);

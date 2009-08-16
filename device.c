@@ -225,6 +225,7 @@ ssize_t bat_device_write(struct file *file, const char __user *buff,
 		(struct device_client *)file->private_data;
 	struct icmp_packet icmp_packet;
 	struct orig_node *orig_node;
+	struct batman_if *batman_if;
 
 	if (len < sizeof(struct icmp_packet)) {
 		debug_log(LOG_TYPE_NOTICE, "Error - can't send packet from char device: invalid packet size\n");
@@ -256,25 +257,39 @@ ssize_t bat_device_write(struct file *file, const char __user *buff,
 		goto out;
 	}
 
+	if (atomic_read(&module_state) != MODULE_ACTIVE)
+		goto dst_unreach;
+
 	spin_lock(&orig_hash_lock);
 	orig_node = ((struct orig_node *)hash_find(orig_hash, icmp_packet.dst));
 
-	if ((orig_node) &&
-	    (orig_node->batman_if) && (orig_node->router)) {
-		memcpy(icmp_packet.orig,
-		       orig_node->batman_if->net_dev->dev_addr, ETH_ALEN);
+	if (!orig_node)
+		goto unlock;
 
-		send_raw_packet((unsigned char *)&icmp_packet,
-				sizeof(struct icmp_packet),
-				orig_node->batman_if->net_dev->dev_addr,
-				orig_node->router->addr, orig_node->batman_if);
-	} else {
-		icmp_packet.msg_type = DESTINATION_UNREACHABLE;
-		bat_device_add_packet(device_client, &icmp_packet);
-	}
+	if (!orig_node->router)
+		goto unlock;
+
+	batman_if = orig_node->batman_if;
+
+	if (!batman_if)
+		goto unlock;
+
+	memcpy(icmp_packet.orig,
+	       batman_if->net_dev->dev_addr,
+	       ETH_ALEN);
+
+	send_raw_packet((unsigned char *)&icmp_packet,
+	                sizeof(struct icmp_packet),
+	                batman_if, orig_node->router->addr);
 
 	spin_unlock(&orig_hash_lock);
+	goto out;
 
+unlock:
+	spin_unlock(&orig_hash_lock);
+dst_unreach:
+	icmp_packet.msg_type = DESTINATION_UNREACHABLE;
+	bat_device_add_packet(device_client, &icmp_packet);
 out:
 	return len;
 }
