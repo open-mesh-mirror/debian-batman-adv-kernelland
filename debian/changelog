@@ -1,3 +1,9 @@
+batman-adv-kernelland (0.1-11) UNRELEASED; urgency=low
+
+  * Upgraded to policy 3.8.3, no changes required
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 16 Aug 2009 02:42:02 +0200
+
 batman-adv-kernelland (0.1-10) unstable; urgency=low
 
   * debian/patches:
