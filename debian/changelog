@@ -4,6 +4,7 @@ batman-adv-kernelland (0.1-11) UNRELEASED; urgency=low
   * Add README.source with informations about patch management
   * debian/patches:
     - Change to dep3 patch tagging guidelines
+    - Remove number before patches as order is given by debian/patches/series
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 16 Aug 2009 02:42:02 +0200
 
