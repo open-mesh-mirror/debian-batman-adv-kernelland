@@ -1,14 +1,10 @@
-From 8073053ca04ea8c9a62e16c882cea5b90f05b048 Mon Sep 17 00:00:00 2001
-From: Sven Eckelmann <sven.eckelmann@gmx.de>
-Date: Fri, 7 Aug 2009 21:45:23 +0200
-Subject: [PATCH] Backport to 2.6.18
-
-The function random32 was first introduced in v2.6.19-rc2-109-gaaa248f
-were it was renamed from net_random.
-The in-kernel socket api was first introduced in v2.6.18-310-gac5a488.
-It is leightweight enough to implement needed functions as wrapper.
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+Description: Backport to 2.6.18
+ The function random32 was first introduced in v2.6.19-rc2-109-gaaa248f
+ were it was renamed from net_random.
+ The in-kernel socket api was first introduced in v2.6.18-310-gac5a488.
+ It is leightweight enough to implement needed functions as wrapper.
+Forwarded: no
+Author: Sven Eckelmann <sven.eckelmann@gmx.de>
 ---
  compat.h |    9 +++++++++
  1 files changed, 9 insertions(+), 0 deletions(-)

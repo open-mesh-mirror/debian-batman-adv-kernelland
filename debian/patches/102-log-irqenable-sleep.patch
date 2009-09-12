@@ -1,8 +1,6 @@
-From b170b1d8c8601139dd2efe1f05ee68c919aa9d84 Mon Sep 17 00:00:00 2001
-From: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Date: Thu, 2 Apr 2009 12:34:51 +0200
-Subject: [PATCH] restore irqs when putting a character because __put_user might sleep (thanks sven)
-
+Description: restore irqs when putting a character because __put_user might sleep (thanks sven)
+Origin: upstream, http://open-mesh.net/changeset/1242
+Author: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 ---
  log.c |    5 +++--
  1 files changed, 3 insertions(+), 2 deletions(-)

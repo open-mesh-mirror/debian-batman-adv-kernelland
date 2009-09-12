@@ -1,10 +1,6 @@
-From 5785c2780fe5f3f063d6518ecd966d1e225b1fea Mon Sep 17 00:00:00 2001
-From: Sven Eckelmann <sven.eckelmann@gmx.de>
-Date: Thu, 25 Jun 2009 00:59:09 +0200
-Subject: [PATCH] Check icmp for version before sending
-
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+Description: Check icmp for version before sending
+Origin: backport, http://open-mesh.net/changeset/1314
+Author: Marek Lindner <lindner_marek@yahoo.de>
 ---
  device.c |   12 ++++++++++--
  packet.h |    3 ++-

@@ -1,8 +1,6 @@
-From 66759f19ded731824c46d9b01cbef52c81e41209 Mon Sep 17 00:00:00 2001
-From: Marek Lindner <lindner_marek@yahoo.de>
-Date: Thu, 2 Apr 2009 20:52:36 +0200
-Subject: [PATCH] Add forgotten rcu for if_list
-
+Description: Add forgotten rcu for if_list
+Origin: backport, http://open-mesh.net/changeset/1216
+Author: Marek Lindner <lindner_marek@yahoo.de>
 ---
  hard-interface.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)

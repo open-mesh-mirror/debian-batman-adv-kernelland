@@ -1,10 +1,6 @@
-From 65ca345359186a69cd1a123a8e56a61b48e91c97 Mon Sep 17 00:00:00 2001
-From: Sven Eckelmann <sven.eckelmann@gmx.de>
-Date: Fri, 7 Aug 2009 22:35:55 +0200
-Subject: [PATCH] Remove unused if_list_lock
-
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+Description: Remove unused if_list_lock
+Forwarded: no
+Author: Sven Eckelmann <sven.eckelmann@gmx.de>
 ---
  main.c |    1 -
  main.h |    2 --

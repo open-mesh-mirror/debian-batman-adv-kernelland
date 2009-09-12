@@ -1,10 +1,6 @@
-From 4ad386e8ad47bb79d21201a45688da1f69548642 Mon Sep 17 00:00:00 2001
-From: Sven Eckelmann <sven.eckelmann@gmx.de>
-Date: Thu, 25 Jun 2009 00:32:41 +0200
-Subject: [PATCH] Fix half copied icmp paket to userspace
-
-
-Signed-off-by: Sven Eckelmann <sven.eckelmann@gmx.de>
+Description: Fix half copied icmp paket to userspace
+Origin: backport, http://open-mesh.net/changeset/1329
+Author: Marek Lindner <lindner_marek@yahoo.de>
 ---
  device.c |    4 ++--
  1 files changed, 2 insertions(+), 2 deletions(-)
