@@ -1,12 +1,10 @@
 Description: restore irqs when putting a character because __put_user might sleep (thanks sven)
 Origin: upstream, http://open-mesh.net/changeset/1242
 Author: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- log.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
 
+---
 diff --git a/log.c b/log.c
-index 400dbce..3892e31 100644
+index 400dbce5e13e3ff9354b9a442debe0fa7af5c55e..3892e3187fbee817fa82239c229b3e73d4cc0d6c 100644
 --- a/log.c
 +++ b/log.c
 @@ -148,14 +148,15 @@ ssize_t log_read(struct file *file, char __user *buf, size_t count, loff_t *ppos
@@ -27,6 +25,3 @@ index 400dbce..3892e31 100644
  	}
  
  	spin_unlock_irqrestore(&logbuf_lock, flags);
--- 
-1.6.2.1
-

@@ -8,22 +8,10 @@ Description: Backport to 2.6.19
  functions so we can change it to a dummy parameter.
 Forwarded: no
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
----
- compat.h            |   14 ++++++++++++++
- hard-interface.c    |    2 +-
- hard-interface.h    |    3 ++-
- routing.c           |    2 +-
- routing.h           |    4 ++--
- send.c              |    4 +---
- send.h              |    3 ++-
- translation-table.c |    3 ++-
- translation-table.h |    3 ++-
- vis.c               |    2 +-
- vis.h               |    4 +++-
- 11 files changed, 31 insertions(+), 13 deletions(-)
 
+---
 diff --git a/compat.h b/compat.h
-index 33deec6..0ea2655 100644
+index 33deec6d0208a5a8194f77778b0d33908b247d04..0ea2655d564238307df3edbe93cabf7f4d78ad27 100644
 --- a/compat.h
 +++ b/compat.h
 @@ -22,6 +22,20 @@
@@ -48,7 +36,7 @@ index 33deec6..0ea2655 100644
  
  #define skb_set_network_header(_skb, _offset) \
 diff --git a/hard-interface.c b/hard-interface.c
-index c182c79..f3bce7b 100644
+index c182c7998987153b52d4c5ff6c6d2beeeda1159b..f3bce7b4ecc63b0b6858820ba923c16f986b0e35 100644
 --- a/hard-interface.c
 +++ b/hard-interface.c
 @@ -302,7 +302,7 @@ char hardif_get_active_if_num(void)
@@ -61,7 +49,7 @@ index c182c79..f3bce7b 100644
  	struct batman_if *batman_if;
  	int min_mtu;
 diff --git a/hard-interface.h b/hard-interface.h
-index a0ca6af..b924402 100644
+index a0ca6af9544494a70e823e37ecf55e77832f7790..b9244027a53d29e59bde980b62653dbac2eba2c9 100644
 --- a/hard-interface.h
 +++ b/hard-interface.h
 @@ -18,6 +18,7 @@
@@ -82,7 +70,7 @@ index a0ca6af..b924402 100644
  void destroy_hardif_check_timer(void);
  int hardif_min_mtu(void);
 diff --git a/routing.c b/routing.c
-index 94c6455..03d9751 100644
+index 94c6455c458a0bfe2fa3ee14320faef89ac177d4..03d9751532a361e72519c351ffde44971cc7bbf9 100644
 --- a/routing.c
 +++ b/routing.c
 @@ -498,7 +498,7 @@ static void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batm
@@ -95,7 +83,7 @@ index 94c6455..03d9751 100644
  	struct list_head *list_pos, *list_pos_tmp;
  	struct hash_it_t *hashit = NULL;
 diff --git a/routing.h b/routing.h
-index e024d19..23e84eb 100644
+index e024d192b9594578339b0d5290195d768cc4482d..23e84ebb0b0c69f0dd0832bf713268b9219f1018 100644
 --- a/routing.h
 +++ b/routing.h
 @@ -22,7 +22,7 @@
@@ -116,7 +104,7 @@ index e024d19..23e84eb 100644
  int packet_recv_thread(void *data);
  
 diff --git a/send.c b/send.c
-index bd62295..a505302 100644
+index bd62295f943bbc92ba67f6afeee0add60b526fe7..a5053026cc86753fb8e739d05d13582746b99340 100644
 --- a/send.c
 +++ b/send.c
 @@ -29,8 +29,6 @@
@@ -138,7 +126,7 @@ index bd62295..a505302 100644
  	struct batman_if *batman_if;
  
 diff --git a/send.h b/send.h
-index 76fb1e1..bedf444 100644
+index 76fb1e16276a6fdb7507cfb06440c3d5c1c96570..bedf444d3eab2346d718e4087447ea8bfbd2a364 100644
 --- a/send.h
 +++ b/send.h
 @@ -22,12 +22,13 @@
@@ -157,7 +145,7 @@ index 76fb1e1..bedf444 100644
  void send_own_packet(struct batman_if *batman_if);
  void send_forward_packet(struct orig_node *orig_node, struct ethhdr *ethhdr, struct batman_packet *batman_packet, uint8_t idf, unsigned char *hna_buff, int hna_buff_len, struct batman_if *if_outgoing);
 diff --git a/translation-table.c b/translation-table.c
-index 31de794..3a70c9b 100644
+index 31de794b3fbcf5f1b8d4808f56e47522511fc663..3a70c9b0832e22db640e0047818f87c6a40518f9 100644
 --- a/translation-table.c
 +++ b/translation-table.c
 @@ -27,6 +27,7 @@
@@ -178,7 +166,7 @@ index 31de794..3a70c9b 100644
  	struct hna_local_entry *hna_local_entry;
  	struct hash_it_t *hashit = NULL;
 diff --git a/translation-table.h b/translation-table.h
-index 14d0870..e419c44 100644
+index 14d087005b7cd7240904c15d935f2d2f4a2d6cd9..e419c44cba014e7bdce15be382cb520f82644af9 100644
 --- a/translation-table.h
 +++ b/translation-table.h
 @@ -22,6 +22,7 @@
@@ -199,7 +187,7 @@ index 14d0870..e419c44 100644
  int hna_global_init(void);
  void hna_global_add_orig(struct orig_node *orig_node, unsigned char *hna_buff, int hna_buff_len);
 diff --git a/vis.c b/vis.c
-index eaab222..85ae3bf 100644
+index eaab222ddfcadd21249db6eed945a3df28eb7c2d..85ae3bfa9943cf2931981074ba1c11ca99731df8 100644
 --- a/vis.c
 +++ b/vis.c
 @@ -355,7 +355,7 @@ void purge_vis_packets(void)
@@ -212,7 +200,7 @@ index eaab222..85ae3bf 100644
  	struct vis_info *info, *temp;
  
 diff --git a/vis.h b/vis.h
-index 58061b1..00f6b3a 100644
+index 58061b1b49ffe37b9f305459ae45acff43b00cd1..00f6b3a629bdb96c66bfa1604af8833d21ba1130 100644
 --- a/vis.h
 +++ b/vis.h
 @@ -17,6 +17,8 @@
@@ -232,6 +220,3 @@ index 58061b1..00f6b3a 100644
 +void send_vis_packets(delayed_workdata work);
  int vis_init(void);
  int vis_quit(void);
--- 
-1.6.3.3
-

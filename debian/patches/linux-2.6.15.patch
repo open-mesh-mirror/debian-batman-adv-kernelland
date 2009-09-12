@@ -1,13 +1,10 @@
 Description: Remove unused if_list_lock
 Forwarded: no
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
----
- main.c |    1 -
- main.h |    2 --
- 2 files changed, 0 insertions(+), 3 deletions(-)
 
+---
 diff --git a/main.c b/main.c
-index 26cd6b2..d239dbb 100644
+index 26cd6b2c46a920d07164709653713d240ab672dc..d239dbba07fbfcc263a0b441db30522f841c1f80 100644
 --- a/main.c
 +++ b/main.c
 @@ -37,7 +37,6 @@
@@ -19,7 +16,7 @@ index 26cd6b2..d239dbb 100644
  static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
  
 diff --git a/main.h b/main.h
-index 3acd2d5..714d06c 100644
+index 3acd2d56f168283dbd18166afc8f628c395c8c19..714d06cee42c88e520a7c90897bbe2ccbb1b7207 100644
 --- a/main.h
 +++ b/main.h
 @@ -76,7 +76,6 @@
@@ -38,6 +35,3 @@ index 3acd2d5..714d06c 100644
  extern spinlock_t orig_hash_lock;
  
  extern atomic_t originator_interval;
--- 
-1.6.3.3
-

@@ -15,12 +15,10 @@ Description: Don't access random memory after forwarding broadcast
 Bug: http://open-mesh.net/ticket/125
 Forwarded: https://lists.open-mesh.net/pipermail/b.a.t.m.a.n/2009-April/002502.html
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
----
- routing.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
 
+---
 diff --git a/routing.c b/routing.c
-index f0871a4..74e3cdb 100644
+index f0871a4fe6da3315998d9a21e642b16800c79460..74e3cdb3d0f07815cb9c8a5dbfc22a7c5f2f71c7 100644
 --- a/routing.c
 +++ b/routing.c
 @@ -577,7 +577,7 @@ int receive_raw_packet(struct socket *raw_sock, unsigned char *packet_buff, int
@@ -44,6 +42,3 @@ index f0871a4..74e3cdb 100644
  						}
  
  					} else {
--- 
-1.6.2.1
-

@@ -5,12 +5,10 @@ Description: Backport to 2.6.18
  It is leightweight enough to implement needed functions as wrapper.
 Forwarded: no
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
----
- compat.h |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
 
+---
 diff --git a/compat.h b/compat.h
-index 0ea2655..53c1749 100644
+index 0ea2655d564238307df3edbe93cabf7f4d78ad27..53c1749b5dc2d538cef1458acaaa922541aa3be9 100644
 --- a/compat.h
 +++ b/compat.h
 @@ -22,6 +22,15 @@
@@ -29,6 +27,3 @@ index 0ea2655..53c1749 100644
  #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
  
  #define delayed_work work_struct
--- 
-1.6.3.3
-

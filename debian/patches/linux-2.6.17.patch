@@ -3,12 +3,10 @@ Description: Backport to 2.6.17
  the new debugging facility.
 Forwarded: no
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
----
- compat.h |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
 
+---
 diff --git a/compat.h b/compat.h
-index 53c1749..488a40b 100644
+index 53c1749b5dc2d538cef1458acaaa922541aa3be9..488a40b1526af65a8df4eec7899b7cd8d65c1759 100644
 --- a/compat.h
 +++ b/compat.h
 @@ -22,6 +22,21 @@
@@ -33,6 +31,3 @@ index 53c1749..488a40b 100644
  #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 19)
  
  #define random32() net_random()
--- 
-1.6.3.3
-

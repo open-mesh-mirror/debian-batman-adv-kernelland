@@ -1,13 +1,10 @@
 Description: Check icmp for version before sending
 Origin: backport, http://open-mesh.net/changeset/1314
 Author: Marek Lindner <lindner_marek@yahoo.de>
----
- device.c |   12 ++++++++++--
- packet.h |    3 ++-
- 2 files changed, 12 insertions(+), 3 deletions(-)
 
+---
 diff --git a/device.c b/device.c
-index dca1921..99556b0 100644
+index dca1921b50717565959e87d75aad147905b35d8c..99556b06a9d664b9078a5e1886586bfa77d63b0b 100644
 --- a/device.c
 +++ b/device.c
 @@ -233,6 +233,15 @@ ssize_t bat_device_write(struct file *file, const char __user *buff, size_t len,
@@ -50,7 +47,7 @@ index dca1921..99556b0 100644
  }
  
 diff --git a/packet.h b/packet.h
-index 3c6c23b..b4b2528 100644
+index 3c6c23bbf9c665687aa082d9aea2e300031f6ef1..b4b2528a5073756588d004d21f75999d56e31a17 100644
 --- a/packet.h
 +++ b/packet.h
 @@ -29,11 +29,12 @@
@@ -67,6 +64,3 @@ index 3c6c23b..b4b2528 100644
  
  
  struct batman_packet
--- 
-1.6.3.1
-

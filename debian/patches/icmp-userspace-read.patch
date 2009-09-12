@@ -1,12 +1,10 @@
 Description: Fix half copied icmp paket to userspace
 Origin: backport, http://open-mesh.net/changeset/1329
 Author: Marek Lindner <lindner_marek@yahoo.de>
----
- device.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
+---
 diff --git a/device.c b/device.c
-index 028cf7d..dca1921 100644
+index 028cf7df5c5749b6ced4add7375b44077e517215..dca1921b50717565959e87d75aad147905b35d8c 100644
 --- a/device.c
 +++ b/device.c
 @@ -229,7 +229,7 @@ ssize_t bat_device_write(struct file *file, const char __user *buff, size_t len,
@@ -27,6 +25,3 @@ index 028cf7d..dca1921 100644
  
  	spin_lock(&device_client->lock);
  
--- 
-1.6.3.1
-

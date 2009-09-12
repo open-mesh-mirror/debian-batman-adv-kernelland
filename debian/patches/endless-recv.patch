@@ -1,12 +1,10 @@
 Description: read packet even though it will be ignore to avoid endless call loop
 Origin: backport, http://open-mesh.net/changeset/1320
 Author: Marek Lindner <lindner_marek@yahoo.de>
----
- routing.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
+---
 diff --git a/routing.c b/routing.c
-index 74e3cdb..94c6455 100644
+index 74e3cdb3d0f07815cb9c8a5dbfc22a7c5f2f71c7..94c6455c458a0bfe2fa3ee14320faef89ac177d4 100644
 --- a/routing.c
 +++ b/routing.c
 @@ -617,6 +617,7 @@ int packet_recv_thread(void *data)
@@ -17,6 +15,3 @@ index 74e3cdb..94c6455 100644
  					result = 0;
  					break;
  				}
--- 
-1.6.3.1
-

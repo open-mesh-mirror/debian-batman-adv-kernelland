@@ -7,12 +7,10 @@ Description: Convert to new net_device_ops
 Bug-Debian: http://bugs.debian.org/534631
 Forwarded: https://lists.open-mesh.net/pipermail/b.a.t.m.a.n/2009-June/002711.html
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
----
- soft-interface.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
 
+---
 diff --git a/soft-interface.c b/soft-interface.c
-index bb95501..4600017 100644
+index cff12869481482f3d0e0ce9afc6ba0b1ae6888a5..d5b83bbfadff2e0acd3fea6936ee1ce844de9d21 100644
 --- a/soft-interface.c
 +++ b/soft-interface.c
 @@ -31,6 +31,7 @@
@@ -59,6 +57,3 @@ index bb95501..4600017 100644
  	dev->destructor = free_netdev;
  
  	dev->features |= NETIF_F_NO_CSUM;
--- 
-1.6.3.1
-
