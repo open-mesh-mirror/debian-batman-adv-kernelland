@@ -8,6 +8,8 @@ batman-adv-kernelland (0.1-11) UNRELEASED; urgency=low
     - Add inactive_interface.patch, Disable originator output when interface is
       disabled
     - Add uninitialised_socket.patch, Don't read from uninitialised socket
+    - Add correct_vis_entries.patch, Calculate correct number of vis_entries
+      when receiving undersized packet
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 16 Aug 2009 02:42:02 +0200
 

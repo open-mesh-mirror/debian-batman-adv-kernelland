@@ -1,0 +1,18 @@
+Description: fix bug in vis (thanks sven)
+Origin: upstream, http://open-mesh.net/changeset/1418
+Author: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+
+---
+diff --git a/vis.c b/vis.c
+index 85ae3bfa9943cf2931981074ba1c11ca99731df8..04ca21e4e672b10be31e135ae2c06b4c74567b4d 100644
+--- a/vis.c
++++ b/vis.c
+@@ -146,7 +146,7 @@ struct vis_info *add_packet(struct vis_packet *vis_packet, int vis_info_len, int
+ 
+ 	/* repair if entries is longer than packet. */
+ 	if (info->packet.entries * sizeof(struct vis_info_entry) > vis_info_len)
+-		info->packet.entries = vis_info_len / sizeof(struct vis_info);
++		info->packet.entries = vis_info_len / sizeof(struct vis_info_entry);
+ 
+ 	recv_list_add(&info->recv_list, info->packet.sender_orig);
+ 
