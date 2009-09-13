@@ -25,6 +25,35 @@ batman-adv-kernelland (0.2~beta~svn1336-1) experimental; urgency=low
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 15 Jul 2009 17:35:14 +0200
 
+batman-adv-kernelland (0.1-11) unstable; urgency=low
+
+  * Upgraded to policy 3.8.3, no changes required
+  * Add README.source with informations about patch management
+  * debian/patches:
+    - Change to dep3 patch tagging guidelines
+    - Remove number before patches as order is given by debian/patches/series
+    - Add inactive_interface.patch, Disable originator output when interface is
+      disabled
+    - Add uninitialised_socket.patch, Don't read from uninitialised socket
+    - Add correct_vis_entries.patch, Calculate correct number of vis_entries
+      when receiving undersized packet
+    - Add oops_deactivated_interface.patch, Fix crash when sending vis packets
+      on disabled interface
+    - Add clamp_ttl.patch, Don't forward packets with ttl 255 after receiving
+      packet with ttl 0
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 13 Sep 2009 20:07:24 +0200
+
+batman-adv-kernelland (0.1-10) unstable; urgency=low
+
+  * debian/patches:
+    - Add 106-netdevice_ops.patch, fix compilation against linux-2.6.31-rc1
+      (Closes: #534631)
+    - Add 107-linux-2.6.19.patch, 108-linux-2.6.18.patch,
+      109-linux-2.6.17.patch, 110-linux-2.6.15.patch, backport to linux-2.6.15
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Fri, 07 Aug 2009 22:44:56 +0200
+
 batman-adv-kernelland (0.1-9) unstable; urgency=low
 
   * debian/rules:
