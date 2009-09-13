@@ -10,3 +10,4 @@ linux-2.6.18.patch
 linux-2.6.17.patch
 linux-2.6.15.patch
 inactive_interface.patch
+uninitialised_socket.patch

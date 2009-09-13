@@ -1,0 +1,19 @@
+Description: don't read from uninitialized socket
+Origin: backport, http://open-mesh.net/changeset/1410
+Author: Marek Lindner <lindner_marek@yahoo.de>
+
+---
+diff --git a/routing.c b/routing.c
+index 03d9751532a361e72519c351ffde44971cc7bbf9..9dd81aca176448fcccf335654c7e2734863e36fa 100644
+--- a/routing.c
++++ b/routing.c
+@@ -617,7 +617,8 @@ int packet_recv_thread(void *data)
+ 			while (1) {
+ 				if (batman_if->if_active != IF_ACTIVE) {
+ 					debug_log(LOG_TYPE_NOTICE, "Could not read from deactivated interface %s!\n", batman_if->dev);
+-					receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE);
++					if (batman_if->raw_sock)
++						receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE);
+ 					result = 0;
+ 					break;
+ 				}
