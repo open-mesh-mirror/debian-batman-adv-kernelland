@@ -1,4 +1,4 @@
-batman-adv-kernelland (0.1-11) UNRELEASED; urgency=low
+batman-adv-kernelland (0.1-11) unstable; urgency=low
 
   * Upgraded to policy 3.8.3, no changes required
   * Add README.source with informations about patch management
@@ -15,7 +15,7 @@ batman-adv-kernelland (0.1-11) UNRELEASED; urgency=low
     - Add clamp_ttl.patch, Don't forward packets with ttl 255 after receiving
       packet with ttl 0
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 16 Aug 2009 02:42:02 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 13 Sep 2009 20:07:24 +0200
 
 batman-adv-kernelland (0.1-10) unstable; urgency=low
 
