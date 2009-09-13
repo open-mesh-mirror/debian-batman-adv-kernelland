@@ -12,6 +12,8 @@ batman-adv-kernelland (0.1-11) UNRELEASED; urgency=low
       when receiving undersized packet
     - Add oops_deactivated_interface.patch, Fix crash when sending vis packets
       on disabled interface
+    - Add clamp_ttl.patch, Don't forward packets with ttl 255 after receiving
+      packet with ttl 0
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 16 Aug 2009 02:42:02 +0200
 

@@ -1,0 +1,20 @@
+Description: check whether we have a valid "previous ttl" to avoid a TTL of 255
+Origin: backport, http://open-mesh.net/changeset/1433
+Author: Marek Lindner <lindner_marek@yahoo.de>
+
+---
+diff --git a/send.c b/send.c
+index a5053026cc86753fb8e739d05d13582746b99340..76c9b3051cc77e213c09f004987b055773e30b61 100644
+--- a/send.c
++++ b/send.c
+@@ -211,7 +211,9 @@ void send_forward_packet(struct orig_node *orig_node, struct ethhdr *ethhdr, str
+ 		if (!compare_orig(orig_node->router->addr, ethhdr->h_source)) {
+ 
+ 			batman_packet->tq = orig_node->router->tq_avg;
+-			batman_packet->ttl = orig_node->router->last_ttl - 1;
++
++			if (orig_node->router->last_ttl)
++				batman_packet->ttl = orig_node->router->last_ttl - 1;
+ 
+ 		}
+ 
