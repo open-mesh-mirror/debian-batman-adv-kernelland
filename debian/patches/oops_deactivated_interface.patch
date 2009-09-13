@@ -1,0 +1,31 @@
+Description: fix crash in vis client after an interface went down
+ generate_vis_packet() checks if the originator has an interface but
+ does not check whether this interface is up & running (while
+ generating the vis packet). After an interface goes down there is a
+ short period in which an interface is selected but down.
+Origin: backport, http://open-mesh.net/changeset/1426
+Author: Marek Lindner <lindner_marek@yahoo.de>
+
+---
+diff --git a/vis.c b/vis.c
+index 04ca21e4e672b10be31e135ae2c06b4c74567b4d..0e19cad439ce141b29db8fd223bcecb8c3ce0d56 100644
+--- a/vis.c
++++ b/vis.c
+@@ -403,7 +403,7 @@ void send_vis_packet(struct vis_info *info)
+ 			orig_node = hashit->bucket->data;
+ 
+ 			/* if it's a vis server and reachable, send it. */
+-			if ((orig_node != NULL) && (orig_node->flags & VIS_SERVER) && (orig_node->batman_if != NULL) && (orig_node->router != NULL)) {
++			if ((orig_node != NULL) && (orig_node->flags & VIS_SERVER) && (orig_node->batman_if != NULL) && (orig_node->batman_if->if_active == IF_ACTIVE) && (orig_node->router != NULL)) {
+ 
+ 				/* don't send it if we already received the packet from this node. */
+ 				if (recv_list_is_in(&info->recv_list, orig_node->orig))
+@@ -423,7 +423,7 @@ void send_vis_packet(struct vis_info *info)
+ 		spin_lock(&orig_hash_lock);
+ 		orig_node = ((struct orig_node *) hash_find(orig_hash, info->packet.target_orig));
+ 
+-		if ((orig_node != NULL) && (orig_node->batman_if != NULL) && (orig_node->router != NULL)) {
++		if ((orig_node != NULL) && (orig_node->batman_if != NULL) && (orig_node->batman_if->if_active == IF_ACTIVE) && (orig_node->router != NULL)) {
+ 			send_raw_packet((unsigned char *) &info->packet, packet_length,
+ 					orig_node->batman_if->net_dev->dev_addr, orig_node->router->addr, orig_node->batman_if);
+ 		}

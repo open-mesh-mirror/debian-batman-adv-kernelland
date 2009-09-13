@@ -12,3 +12,4 @@ linux-2.6.15.patch
 inactive_interface.patch
 uninitialised_socket.patch
 correct_vis_entries.patch
+oops_deactivated_interface.patch
