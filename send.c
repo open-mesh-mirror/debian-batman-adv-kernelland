@@ -71,8 +71,8 @@ void send_raw_packet(unsigned char *pack_buff, int pack_buff_len,
 
 	if (!(batman_if->net_dev->flags & IFF_UP)) {
 		debug_log(LOG_TYPE_WARN,
-			  "Interface %s is not up - can't send packet via that interface !\n", batman_if->dev);
-		batman_if->if_active = IF_TO_BE_DEACTIVATED;
+		         "Interface %s is not up - can't send packet via that interface (IF_TO_BE_DEACTIVATED was here) !\n",
+		          batman_if->dev);
 		return;
 	}
 
@@ -98,11 +98,10 @@ void send_raw_packet(unsigned char *pack_buff, int pack_buff_len,
 	 * congestion and traffic shaping, it drops and returns NET_XMIT_DROP
 	 * (which is > 0). This will not be treated as an error. */
 	retval = dev_queue_xmit(skb);
-	if (retval < 0) {
-		debug_log(LOG_TYPE_CRIT, "Can't write to raw socket: %i\n",
-			  retval);
-		batman_if->if_active = IF_TO_BE_DEACTIVATED;
-	}
+	if (retval < 0)
+		debug_log(LOG_TYPE_CRIT,
+		          "Can't write to raw socket (IF_TO_BE_DEACTIVATED was here): %i\n",
+		          retval);
 }
 
 /* Send a packet to a given interface */
@@ -293,7 +292,7 @@ void schedule_forward_packet(struct orig_node *orig_node,
 	in_ttl = batman_packet->ttl;
 
 	batman_packet->ttl--;
-	memcpy(batman_packet->old_orig, ethhdr->h_source, ETH_ALEN);
+	memcpy(batman_packet->prev_sender, ethhdr->h_source, ETH_ALEN);
 
 	/* rebroadcast tq of our best ranking neighbor to ensure the rebroadcast
 	 * of our best tq value */
@@ -302,7 +301,9 @@ void schedule_forward_packet(struct orig_node *orig_node,
 		/* rebroadcast ogm of best ranking neighbor as is */
 		if (!compare_orig(orig_node->router->addr, ethhdr->h_source)) {
 			batman_packet->tq = orig_node->router->tq_avg;
-			batman_packet->ttl = orig_node->router->last_ttl - 1;
+
+			if (orig_node->router->last_ttl)
+				batman_packet->ttl = orig_node->router->last_ttl - 1;
 		}
 
 		tq_avg = orig_node->router->tq_avg;

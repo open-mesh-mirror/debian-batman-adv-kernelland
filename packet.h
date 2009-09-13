@@ -26,7 +26,7 @@
 #define BAT_VIS       0x05
 
 /* this file is included by batctl which needs these defines */
-#define COMPAT_VERSION 7
+#define COMPAT_VERSION 8
 #define DIRECTLINK 0x40
 #define VIS_SERVER 0x20
 
@@ -48,7 +48,7 @@ struct batman_packet {
 	uint8_t  tq;
 	uint16_t seqno;
 	uint8_t  orig[6];
-	uint8_t  old_orig[6];
+	uint8_t  prev_sender[6];
 	uint8_t  ttl;
 	uint8_t  num_hna;
 } __attribute__((packed));

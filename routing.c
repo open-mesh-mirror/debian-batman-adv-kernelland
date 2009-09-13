@@ -53,13 +53,19 @@ int originator_init(void)
 	if (orig_hash)
 		return 1;
 
+	spin_lock(&orig_hash_lock);
 	orig_hash = hash_new(128, compare_orig, choose_orig);
 
 	if (!orig_hash)
-		return 0;
+		goto err;
 
+	spin_unlock(&orig_hash_lock);
 	start_purge_timer();
 	return 1;
+
+err:
+	spin_unlock(&orig_hash_lock);
+	return 0;
 }
 
 void originator_free(void)
@@ -68,8 +74,11 @@ void originator_free(void)
 		return;
 
 	cancel_delayed_work_sync(&purge_orig_wq);
+
+	spin_lock(&orig_hash_lock);
 	hash_delete(orig_hash, free_orig_node);
 	orig_hash = NULL;
+	spin_unlock(&orig_hash_lock);
 }
 
 static struct neigh_node *create_neighbor(struct orig_node *orig_node, struct orig_node *orig_neigh_node, uint8_t *neigh, struct batman_if *if_incoming)
@@ -78,7 +87,7 @@ static struct neigh_node *create_neighbor(struct orig_node *orig_node, struct or
 
 	debug_log(LOG_TYPE_BATMAN, "Creating new last-hop neighbour of originator\n");
 
-	neigh_node = kmalloc(sizeof(struct neigh_node), GFP_KERNEL);
+	neigh_node = kmalloc(sizeof(struct neigh_node), GFP_ATOMIC);
 	memset(neigh_node, 0, sizeof(struct neigh_node));
 	INIT_LIST_HEAD(&neigh_node->list);
 
@@ -126,7 +135,7 @@ static struct orig_node *get_orig_node(uint8_t *addr)
 	addr_to_string(orig_str, addr);
 	debug_log(LOG_TYPE_BATMAN, "Creating new originator: %s \n", orig_str);
 
-	orig_node = kmalloc(sizeof(struct orig_node), GFP_KERNEL);
+	orig_node = kmalloc(sizeof(struct orig_node), GFP_ATOMIC);
 	memset(orig_node, 0, sizeof(struct orig_node));
 	INIT_LIST_HEAD(&orig_node->neigh_list);
 
@@ -135,10 +144,10 @@ static struct orig_node *get_orig_node(uint8_t *addr)
 	orig_node->batman_if = NULL;
 	orig_node->hna_buff = NULL;
 
-	orig_node->bcast_own = kmalloc(num_ifs * sizeof(TYPE_OF_WORD) * NUM_WORDS, GFP_KERNEL);
+	orig_node->bcast_own = kmalloc(num_ifs * sizeof(TYPE_OF_WORD) * NUM_WORDS, GFP_ATOMIC);
 	memset(orig_node->bcast_own, 0, num_ifs * sizeof(TYPE_OF_WORD) * NUM_WORDS);
 
-	orig_node->bcast_own_sum = kmalloc(num_ifs * sizeof(uint8_t), GFP_KERNEL);
+	orig_node->bcast_own_sum = kmalloc(num_ifs * sizeof(uint8_t), GFP_ATOMIC);
 	memset(orig_node->bcast_own_sum, 0, num_ifs * sizeof(uint8_t));
 
 	hash_add(orig_hash, orig_node);
@@ -385,7 +394,7 @@ void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_pack
 {
 	struct batman_if *batman_if;
 	struct orig_node *orig_neigh_node, *orig_node;
-	char orig_str[ETH_STR_LEN], old_orig_str[ETH_STR_LEN], neigh_str[ETH_STR_LEN];
+	char orig_str[ETH_STR_LEN], prev_sender_str[ETH_STR_LEN], neigh_str[ETH_STR_LEN];
 	char has_directlink_flag;
 	char is_my_addr = 0, is_my_orig = 0, is_my_oldorig = 0, is_broadcast = 0, is_bidirectional, is_single_hop_neigh, is_duplicate;
 	unsigned short if_incoming_seqno;
@@ -394,14 +403,14 @@ void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_pack
 	if_incoming_seqno = atomic_read(&if_incoming->seqno);
 
 	addr_to_string(orig_str, batman_packet->orig);
-	addr_to_string(old_orig_str, batman_packet->old_orig);
+	addr_to_string(prev_sender_str, batman_packet->prev_sender);
 	addr_to_string(neigh_str, ethhdr->h_source);
 
 	has_directlink_flag = (batman_packet->flags & DIRECTLINK ? 1 : 0);
 
 	is_single_hop_neigh = (compare_orig(ethhdr->h_source, batman_packet->orig) ? 1 : 0);
 
-	debug_log(LOG_TYPE_BATMAN, "Received BATMAN packet via NB: %s, IF: %s [%s] (from OG: %s, via old OG: %s, seqno %d, tq %d, TTL %d, V %d, IDF %d) \n", neigh_str, if_incoming->dev, if_incoming->addr_str, orig_str, old_orig_str, batman_packet->seqno, batman_packet->tq, batman_packet->ttl, batman_packet->version, has_directlink_flag);
+	debug_log(LOG_TYPE_BATMAN, "Received BATMAN packet via NB: %s, IF: %s [%s] (from OG: %s, via prev OG: %s, seqno %d, tq %d, TTL %d, V %d, IDF %d) \n", neigh_str, if_incoming->dev, if_incoming->addr_str, orig_str, prev_sender_str, batman_packet->seqno, batman_packet->tq, batman_packet->ttl, batman_packet->version, has_directlink_flag);
 
 	list_for_each_entry_rcu(batman_if, &if_list, list) {
 		if (batman_if->if_active != IF_ACTIVE)
@@ -413,7 +422,7 @@ void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_pack
 		if (compare_orig(batman_packet->orig, batman_if->net_dev->dev_addr))
 			is_my_orig = 1;
 
-		if (compare_orig(batman_packet->old_orig, batman_if->net_dev->dev_addr))
+		if (compare_orig(batman_packet->prev_sender, batman_if->net_dev->dev_addr))
 			is_my_oldorig = 1;
 
 		if (compare_orig(ethhdr->h_source, broadcastAddr))
@@ -570,6 +579,7 @@ void purge_orig(struct work_struct *work)
 	}
 
 	spin_unlock(&orig_hash_lock);
+
 	start_purge_timer();
 }
 
@@ -634,7 +644,8 @@ int packet_recv_thread(void *data)
 						          "Could not read from deactivated interface %s!\n",
 						          batman_if->dev);
 
-					receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE);
+					if (batman_if->raw_sock)
+						receive_raw_packet(batman_if->raw_sock, packet_buff, PACKBUFF_SIZE);
 					result = 0;
 					break;
 				}
