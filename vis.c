@@ -87,7 +87,7 @@ static int vis_info_cmp(void *data1, void *data2)
 	struct vis_info *d1, *d2;
 	d1 = data1;
 	d2 = data2;
-	return memcmp(d1->packet.vis_orig, d2->packet.vis_orig, ETH_ALEN) == 0;
+	return compare_orig(d1->packet.vis_orig, d2->packet.vis_orig);
 }
 
 /* hash function to choose an entry in a hash table of given size */
@@ -117,7 +117,7 @@ static int vis_info_choose(void *data, int size)
 static void recv_list_add(struct list_head *recv_list, char *mac)
 {
 	struct recvlist_node *entry;
-	entry = kmalloc(sizeof(struct recvlist_node), GFP_KERNEL);
+	entry = kmalloc(sizeof(struct recvlist_node), GFP_ATOMIC);
 	if (!entry)
 		return;
 
@@ -172,7 +172,7 @@ static struct vis_info *add_packet(struct vis_packet *vis_packet,
 		free_info(old_info);
 	}
 
-	info = kmalloc(sizeof(struct vis_info) + vis_info_len, GFP_KERNEL);
+	info = kmalloc(sizeof(struct vis_info) + vis_info_len, GFP_ATOMIC);
 	if (info == NULL)
 		return NULL;
 
@@ -187,7 +187,7 @@ static struct vis_info *add_packet(struct vis_packet *vis_packet,
 
 	/* repair if entries is longer than packet. */
 	if (info->packet.entries * sizeof(struct vis_info_entry) > vis_info_len)
-		info->packet.entries = vis_info_len / sizeof(struct vis_info);
+		info->packet.entries = vis_info_len / sizeof(struct vis_info_entry);
 
 	recv_list_add(&info->recv_list, info->packet.sender_orig);
 
@@ -229,6 +229,7 @@ void receive_client_update_packet(struct vis_packet *vis_packet,
 {
 	struct vis_info *info;
 	int is_new;
+
 	/* clients shall not broadcast. */
 	if (is_bcast(vis_packet->target_orig))
 		return;
@@ -325,13 +326,15 @@ static int generate_vis_packet(void)
 
 	while (NULL != (hashit = hash_iterate(orig_hash, hashit))) {
 		orig_node = hashit->bucket->data;
-		if (orig_node->router != NULL &&
-		    memcmp(orig_node->router->addr,
-			   orig_node->orig, ETH_ALEN) == 0 &&
-		    orig_node->router->tq_avg > 0) {
+		if (orig_node->router != NULL
+			&& compare_orig(orig_node->router->addr, orig_node->orig)
+			&& orig_node->batman_if
+			&& (orig_node->batman_if->if_active == IF_ACTIVE)
+		    && orig_node->router->tq_avg > 0) {
 
 			/* fill one entry into buffer. */
 			entry = &entry_array[info->packet.entries];
+			memcpy(entry->src, orig_node->batman_if->net_dev->dev_addr, ETH_ALEN);
 			memcpy(entry->dest, orig_node->orig, ETH_ALEN);
 			entry->quality = orig_node->router->tq_avg;
 			info->packet.entries++;
@@ -350,6 +353,7 @@ static int generate_vis_packet(void)
 	while (NULL != (hashit = hash_iterate(hna_local_hash, hashit))) {
 		hna_local_entry = hashit->bucket->data;
 		entry = &entry_array[info->packet.entries];
+		memset(entry->src, 0, ETH_ALEN);
 		memcpy(entry->dest, hna_local_entry->addr, ETH_ALEN);
 		entry->quality = 0; /* 0 means HNA */
 		info->packet.entries++;
@@ -368,7 +372,6 @@ void purge_vis_packets(void)
 	struct hash_it_t *hashit = NULL;
 	struct vis_info *info;
 
-	spin_lock(&vis_hash_lock);
 	while (NULL != (hashit = hash_iterate(vis_hash, hashit))) {
 		info = hashit->bucket->data;
 		if (info == my_vis_info)	/* never purge own data. */
@@ -379,7 +382,6 @@ void purge_vis_packets(void)
 			free_info(info);
 		}
 	}
-	spin_unlock(&vis_hash_lock);
 }
 
 static void broadcast_vis_packet(struct vis_info *info, int packet_length)
@@ -464,8 +466,9 @@ static void send_vis_packets(struct work_struct *work)
 {
 	struct vis_info *info, *temp;
 
-	purge_vis_packets();
 	spin_lock(&vis_hash_lock);
+	purge_vis_packets();
+
 	if (generate_vis_packet() == 0)
 		/* schedule if generation was successful */
 		list_add_tail(&my_vis_info->send_list, &send_list);
@@ -483,18 +486,23 @@ static DECLARE_DELAYED_WORK(vis_timer_wq, send_vis_packets);
  * initialized (e.g. bat0 is initialized, interfaces have been added) */
 int vis_init(void)
 {
+	if (vis_hash)
+		return 1;
+
+	spin_lock(&vis_hash_lock);
+
 	vis_hash = hash_new(256, vis_info_cmp, vis_info_choose);
-	if (vis_hash == NULL) {
+	if (!vis_hash) {
 		debug_log(LOG_TYPE_CRIT, "Can't initialize vis_hash\n");
-		return -1;
+		goto err;
 	}
 
-	my_vis_info = kmalloc(1000, GFP_KERNEL);
-	if (my_vis_info == NULL) {
-		vis_quit();
+	my_vis_info = kmalloc(1000, GFP_ATOMIC);
+	if (!my_vis_info) {
 		debug_log(LOG_TYPE_CRIT, "Can't initialize vis packet\n");
-		return -1;
+		goto err;
 	}
+
 	/* prefill the vis info */
 	my_vis_info->first_seen = jiffies - atomic_read(&vis_interval);
 	INIT_LIST_HEAD(&my_vis_info->recv_list);
@@ -516,27 +524,33 @@ int vis_init(void)
 			  "Can't add own vis packet into hash\n");
 		free_info(my_vis_info);	/* not in hash, need to remove it
 					 * manually. */
-		vis_quit();
-		return -1;
+		goto err;
 	}
 
+	spin_unlock(&vis_hash_lock);
 	start_vis_timer();
+	return 1;
+
+err:
+	spin_unlock(&vis_hash_lock);
+	vis_quit();
 	return 0;
 }
 
 /* shutdown vis-server */
-int vis_quit(void)
+void vis_quit(void)
 {
-	if (vis_hash != NULL) {
-		cancel_delayed_work_sync(&vis_timer_wq);
-		spin_lock(&vis_hash_lock);
-		/* properly remove, kill timers ... */
-		hash_delete(vis_hash, free_info);
-		vis_hash = NULL;
-		my_vis_info = NULL;
-		spin_unlock(&vis_hash_lock);
-	}
-	return 0;
+	if (!vis_hash)
+		return;
+
+	cancel_delayed_work_sync(&vis_timer_wq);
+
+	spin_lock(&vis_hash_lock);
+	/* properly remove, kill timers ... */
+	hash_delete(vis_hash, free_info);
+	vis_hash = NULL;
+	my_vis_info = NULL;
+	spin_unlock(&vis_hash_lock);
 }
 
 /* schedule packets for (re)transmission */
@@ -545,3 +559,4 @@ static void start_vis_timer(void)
 	queue_delayed_work(bat_event_workqueue, &vis_timer_wq,
 			   (atomic_read(&vis_interval)/1000) * HZ);
 }
+

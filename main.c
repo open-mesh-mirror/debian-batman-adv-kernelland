@@ -99,7 +99,7 @@ int init_module(void)
 		goto free_soft_device;
 	}
 
-	start_hardif_check_timer();
+	register_netdevice_notifier(&hard_if_notifier);
 
 	debug_log(LOG_TYPE_CRIT, "B.A.T.M.A.N. advanced %s%s (compatibility version %i) loaded \n",
 	          SOURCE_VERSION, REVISION_VERSION_STR, COMPAT_VERSION);
@@ -122,7 +122,7 @@ void cleanup_module(void)
 		soft_device = NULL;
 	}
 
-	destroy_hardif_check_timer();
+	unregister_netdevice_notifier(&hard_if_notifier);
 	cleanup_procfs();
 
 	destroy_workqueue(bat_event_workqueue);
@@ -143,8 +143,11 @@ void activate_module(void)
 
 	hna_local_add(soft_device->dev_addr);
 
-	bat_device_setup();
-	vis_init();
+	if (bat_device_setup() < 1)
+		goto end;
+
+	if (vis_init() < 1)
+		goto err;
 
 	/* (re)start kernel thread for packet processing */
 	if (!kthread_task) {
@@ -156,6 +159,7 @@ void activate_module(void)
 		}
 	}
 
+	update_min_mtu();
 	atomic_set(&module_state, MODULE_ACTIVE);
 	goto end;
 
@@ -199,20 +203,12 @@ void shutdown_module(void)
 
 void inc_module_count(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
-	MOD_INC_USE_COUNT;
-#else
 	try_module_get(THIS_MODULE);
-#endif
 }
 
 void dec_module_count(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0)
-	MOD_DEC_USE_COUNT;
-#else
 	module_put(THIS_MODULE);
-#endif
 }
 
 int addr_to_string(char *buff, uint8_t *addr)
@@ -220,6 +216,8 @@ int addr_to_string(char *buff, uint8_t *addr)
 	return sprintf(buff, "%02x:%02x:%02x:%02x:%02x:%02x",
 		       addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
 }
+
+/* returns 1 if they are the same originator */
 
 int compare_orig(void *data1, void *data2)
 {
