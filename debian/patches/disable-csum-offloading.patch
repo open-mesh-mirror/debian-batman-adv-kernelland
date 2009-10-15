@@ -1,0 +1,21 @@
+Description: Disable checksum offloading
+ It is related to the TCP checksum offload function: I am using as embedded
+ platform PCEngines Alix 3d2, that do not support this function (and also qemu
+ virtual machines do not support it). This patch disable the tx checksum
+ offload and everything now works fine for me.
+Origin: backport, http://open-mesh.net/changeset/1440
+Author: Andrea Ghittino <a.mailevent@gmail.com>
+
+---
+diff --git a/soft-interface.c b/soft-interface.c
+index d5b83bbfadff2e0acd3fea6936ee1ce844de9d21..884ded1d1776cfa1cb19bf836c27b43dba755855 100644
+--- a/soft-interface.c
++++ b/soft-interface.c
+@@ -130,7 +130,6 @@ void interface_setup(struct net_device *dev)
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29) */
+ 	dev->destructor = free_netdev;
+ 
+-	dev->features |= NETIF_F_NO_CSUM;
+ 	dev->mtu = hardif_min_mtu();
+ 	dev->hard_header_len = BAT_HEADER_LEN; /*reserve more space in the skbuff for our header */
+ 

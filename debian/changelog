@@ -3,6 +3,7 @@ batman-adv-kernelland (0.1-12) UNRELEASED; urgency=low
   * debian/patches:
     - Add filled_socketbuffer.patch, Fixing race condition while handling lots
       of data
+    - Add disable-csum-offloading.patch, Disable checksum offloading
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 19:32:19 +0200
 

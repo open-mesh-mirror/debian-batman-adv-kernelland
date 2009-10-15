@@ -15,3 +15,4 @@ correct_vis_entries.patch
 oops_deactivated_interface.patch
 clamp_ttl.patch
 filled_socketbuffer.patch
+disable-csum-offloading.patch
