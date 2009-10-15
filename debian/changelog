@@ -1,11 +1,11 @@
-batman-adv-kernelland (0.2~beta~svn1440-1) UNRELEASED; urgency=low
+batman-adv-kernelland (0.2~beta~svn1440-1) experimental; urgency=low
 
   * New Upstream Snapshot
   * debian/patches:
     - Remove upstream merged patches disable-csum-offloading.patch,
       filled_socketbuffer.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 19:56:23 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 20:14:06 +0200
 
 batman-adv-kernelland (0.2~beta~svn1436-1) experimental; urgency=low
 
