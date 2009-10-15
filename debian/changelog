@@ -1,11 +1,11 @@
-batman-adv-kernelland (0.1-12) UNRELEASED; urgency=low
+batman-adv-kernelland (0.1-12) unstable; urgency=low
 
   * debian/patches:
     - Add filled_socketbuffer.patch, Fixing race condition while handling lots
       of data
     - Add disable-csum-offloading.patch, Disable checksum offloading
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 19:32:19 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 19:41:36 +0200
 
 batman-adv-kernelland (0.1-11) unstable; urgency=low
 
