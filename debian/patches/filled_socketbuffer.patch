@@ -1,0 +1,36 @@
+Description: fixing race condition while handling lots of data
+ The callback batman_data_ready() set the variable data_ready_cond to true
+ before waking up the packet handling thread. When the thread has completed its
+ work it will sleep and sets the variable back to false. When the system has to
+ handle large quantities of traffic the callback might be called several times
+ while the packet handling thread runs. The status variable will be overwritten
+ once the thread is done which might leave packets in the socket buffer. If the
+ socket buffer is full no more packets are accepted and the callback won't be
+ triggered. Therefore the packet receive thread has to reset the variable at
+ the very beginning.
+Origin: backport, http://open-mesh.net/changeset/1439
+Author: Marek Lindner <lindner_marek@yahoo.de>
+
+---
+diff --git a/routing.c b/routing.c
+index 9dd81aca176448fcccf335654c7e2734863e36fa..d03d8e43fd60853c8648fefb89ee35c55f22f7fd 100644
+--- a/routing.c
++++ b/routing.c
+@@ -602,6 +602,8 @@ int packet_recv_thread(void *data)
+ 
+ 		wait_event_interruptible(thread_wait, (atomic_read(&data_ready_cond) || atomic_read(&exit_cond)));
+ 
++		atomic_set(&data_ready_cond, 0);
++
+ 		if (kthread_should_stop() || atomic_read(&exit_cond))
+ 			break;
+ 
+@@ -920,8 +922,6 @@ int packet_recv_thread(void *data)
+ 		}
+ 		rcu_read_unlock();
+ 
+-		atomic_set(&data_ready_cond, 0);
+-
+ 	}
+ 	kfree(packet_buff);
+ 

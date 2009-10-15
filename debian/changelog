@@ -1,3 +1,11 @@
+batman-adv-kernelland (0.1-12) UNRELEASED; urgency=low
+
+  * debian/patches:
+    - Add filled_socketbuffer.patch, Fixing race condition while handling lots
+      of data
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 19:32:19 +0200
+
 batman-adv-kernelland (0.1-11) unstable; urgency=low
 
   * Upgraded to policy 3.8.3, no changes required
