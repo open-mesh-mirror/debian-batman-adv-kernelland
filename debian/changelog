@@ -1,12 +1,21 @@
 batman-adv-kernelland (0.2~beta~svn1440-1) UNRELEASED; urgency=low
 
   * New Upstream Snapshot
+  * debian/patches:
+    - Remove upstream merged patches disable-csum-offloading.patch,
+      filled_socketbuffer.patch
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 19:56:23 +0200
 
 batman-adv-kernelland (0.2~beta~svn1436-1) experimental; urgency=low
 
   * New Upstream Snapshot
+  * debian/patches:
+    - Remove upstream merged patches inactive_interface.patch,
+      uninitialised_socket.patch, correct_vis_entries.patch,
+      oops_deactivated_interface.patch, clamp_ttl.patch, netdevice_ops.patch
+    - Remove patches which cannot be backported, linux-2.6.19.patch,
+      linux-2.6.18.patch, linux-2.6.17.patch, linux-2.6.15.patch
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 13 Sep 2009 20:25:08 +0200
 
@@ -36,6 +45,15 @@ batman-adv-kernelland (0.2~beta~svn1336-1) experimental; urgency=low
   * Update copyright years in debian/changelog
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 15 Jul 2009 17:35:14 +0200
+
+batman-adv-kernelland (0.1-12) unstable; urgency=low
+
+  * debian/patches:
+    - Add filled_socketbuffer.patch, Fixing race condition while handling lots
+      of data
+    - Add disable-csum-offloading.patch, Disable checksum offloading
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 19:41:36 +0200
 
 batman-adv-kernelland (0.1-11) unstable; urgency=low
 
