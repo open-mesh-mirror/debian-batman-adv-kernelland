@@ -1,11 +1,10 @@
 Description: Backport to 2.6.19
- linux v2.6.19-rc6-118-g52bad64 splitted the the structure in delayed
- and non-delayed structures. This was the first time the
- DECLARE_DELAYED_WORK and related structures were introduced. We must
- rebuild this macros on top of the unsplitted version of the structure.
- v2.6.19-rc6-119-g6bb49e5 changed the way the function pointer of the
- worker function has to look. The given parameters are ignored in all
- functions so we can change it to a dummy parameter.
+ linux v2.6.19-rc6-118-g52bad64 splitted the the structure in delayed and
+ non-delayed structures. This was the first time the DECLARE_DELAYED_WORK and
+ related structures were introduced. We must rebuild this macros on top of the
+ unsplitted version of the structure. v2.6.19-rc6-119-g6bb49e5 changed the way
+ the function pointer of the worker function has to look. The given parameters
+ are ignored in all functions so we can change it to a dummy parameter.
 Forwarded: no
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
 

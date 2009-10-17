@@ -1,8 +1,9 @@
 Description: Backport to 2.6.18
- The function random32 was first introduced in v2.6.19-rc2-109-gaaa248f
- were it was renamed from net_random.
- The in-kernel socket api was first introduced in v2.6.18-310-gac5a488.
- It is leightweight enough to implement needed functions as wrapper.
+ The function random32 was first introduced in v2.6.19-rc2-109-gaaa248f were it
+ was renamed from net_random.
+ .
+ The in-kernel socket api was first introduced in v2.6.18-310-gac5a488. It is
+ leightweight enough to implement needed functions as wrapper.
 Forwarded: no
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
 

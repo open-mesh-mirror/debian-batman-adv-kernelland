@@ -1,19 +1,19 @@
 Description: Don't access random memory after forwarding broadcast
- B.A.T.M.A.N. advanced iterates over every known interface when receiving
- data and tries to forward as much as possible data from the same
- interface as possible using a while-loop inside the outer loop.
- When it receives a broadcast ethernet frame which needs to be forwarded
- again it will try to send it to every known interface again. This loop
- is inside the first one and used the same pos variable as the outer
- loop. After the inner loop has finished it will point to a memory
- location which is not part of the interface list, but the while loop
- starts again and tries to access this memory region without knowing what
- it is and to what it belongs. This could lead to a kernel oops or any
- kind of other unspecified behavior of the kernel.
- The inner loop should use a seperate position variable to iterate over
- all interfaces for the broadcast.
+ B.A.T.M.A.N. advanced iterates over every known interface when receiving data
+ and tries to forward as much as possible data from the same interface as
+ possible using a while-loop inside the outer loop. When it receives a broadcast
+ ethernet frame which needs to be forwarded again it will try to send it to
+ every known interface again. This loop is inside the first one and used the
+ same pos variable as the outer loop. After the inner loop has finished it will
+ point to a memory location which is not part of the interface list, but the
+ while loop starts again and tries to access this memory region without knowing
+ what it is and to what it belongs. This could lead to a kernel oops or any kind
+ of other unspecified behavior of the kernel.
+ .
+ The inner loop should use a seperate position variable to iterate over all
+ interfaces for the broadcast.
 Bug: http://open-mesh.net/ticket/125
-Forwarded: https://lists.open-mesh.net/pipermail/b.a.t.m.a.n/2009-April/002502.html
+Forwarded: https://lists.open-mesh.net/pipermail/b.a.t.m.a.n/2009-April/001341.html
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
 
 ---

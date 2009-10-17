@@ -1,8 +1,8 @@
 Description: Disable checksum offloading
  It is related to the TCP checksum offload function: I am using as embedded
  platform PCEngines Alix 3d2, that do not support this function (and also qemu
- virtual machines do not support it). This patch disable the tx checksum
- offload and everything now works fine for me.
+ virtual machines do not support it). This patch disable the tx checksum offload
+ and everything now works fine for me.
 Origin: backport, http://open-mesh.net/changeset/1440
 Author: Andrea Ghittino <a.mailevent@gmail.com>
 

@@ -1,11 +1,11 @@
 Description: Convert to new net_device_ops
- The current version of batman-adv-kernelland uses the netdevice
- structure instead of netdevice ops introduced by
- v2.6.28-rc5-510-gd314774. The compatibility version was removed in
- v2.6.30-rc6-851-ge3804cb. We need to change now change to this new
- structure to be able to compile it against linux-2.6.31.
+ The current version of batman-adv-kernelland uses the netdevice structure
+ instead of netdevice ops introduced by v2.6.28-rc5-510-gd314774. The
+ compatibility version was removed in v2.6.30-rc6-851-ge3804cb. We need to
+ change now change to this new structure to be able to compile it against
+ linux-2.6.31.
 Bug-Debian: http://bugs.debian.org/534631
-Forwarded: https://lists.open-mesh.net/pipermail/b.a.t.m.a.n/2009-June/002711.html
+Forwarded: https://lists.open-mesh.net/pipermail/b.a.t.m.a.n/2009-June/001550.html
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
 
 ---

@@ -1,8 +1,8 @@
 Description: fix crash in vis client after an interface went down
- generate_vis_packet() checks if the originator has an interface but
- does not check whether this interface is up & running (while
- generating the vis packet). After an interface goes down there is a
- short period in which an interface is selected but down.
+ generate_vis_packet() checks if the originator has an interface but does not
+ check whether this interface is up & running (while generating the vis packet).
+ After an interface goes down there is a short period in which an interface is
+ selected but down.
 Origin: backport, http://open-mesh.net/changeset/1426
 Author: Marek Lindner <lindner_marek@yahoo.de>
 

@@ -6,8 +6,8 @@ Description: fixing race condition while handling lots of data
  while the packet handling thread runs. The status variable will be overwritten
  once the thread is done which might leave packets in the socket buffer. If the
  socket buffer is full no more packets are accepted and the callback won't be
- triggered. Therefore the packet receive thread has to reset the variable at
- the very beginning.
+ triggered. Therefore the packet receive thread has to reset the variable at the
+ very beginning.
 Origin: backport, http://open-mesh.net/changeset/1439
 Author: Marek Lindner <lindner_marek@yahoo.de>
 

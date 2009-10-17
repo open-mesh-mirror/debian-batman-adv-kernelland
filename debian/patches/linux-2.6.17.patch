@@ -1,6 +1,6 @@
 Description: Backport to 2.6.17
- Linux v2.6.17-4588-ge4d9191 introduced __SPIN_LOCK_UNLOCKED to extend
- the new debugging facility.
+ Linux v2.6.17-4588-ge4d9191 introduced __SPIN_LOCK_UNLOCKED to extend the new
+ debugging facility.
 Forwarded: no
 Author: Sven Eckelmann <sven.eckelmann@gmx.de>
 
