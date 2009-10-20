@@ -21,9 +21,13 @@ include /usr/share/quilt/quilt.make
 # 
 # Name of the source package
 psource:=batman-adv-source
+dkmssource:=batman-adv-dkms
 
 # The short upstream name, used for the module source directory
 sname:=batman-adv
+
+version:= $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 \
+            | cut -d- -f1)
 
 ### KERNEL SETUP
 ### Setup the stuff needed for making kernel module packages
@@ -124,12 +128,17 @@ install: build
 ###########################
 	# Create the directories to install the source into
 	dh_installdirs -p$(psource)  usr/src/modules/$(sname)/debian
+	dh_installdirs -p$(dkmssource)  usr/src/$(sname)-$(version)
 
 	# Copy only the driver source to the proper location
 	cp *.c *.h Makefile* README  \
 		debian/$(psource)/usr/src/modules/$(sname)
+	cp *.c *.h Makefile* README  \
+		debian/$(dkmssource)/usr/src/$(sname)-$(version)
 	mv debian/$(psource)/usr/src/modules/$(sname)/Makefile.kbuild \
 	   debian/$(psource)/usr/src/modules/$(sname)/Makefile
+	mv debian/$(dkmssource)/usr/src/$(sname)-$(version)/Makefile.kbuild \
+	   debian/$(dkmssource)/usr/src/$(sname)-$(version)/Makefile
 	# Copy the needed debian/ pieces to the proper location
 	cp debian/*modules.in* \
 		debian/$(psource)/usr/src/modules/$(sname)/debian
@@ -138,10 +147,15 @@ install: build
 
 	mkdir -p debian/$(psource)/usr/share/doc/$(psource)
 	cp debian/copyright debian/$(psource)/usr/share/doc/$(psource)
+	mkdir -p debian/$(dkmssource)/usr/share/doc/$(dkmssource)
+	cp debian/copyright debian/$(dkmssource)/usr/share/doc/$(dkmssource)
 
 	mkdir -p debian/$(psource)$(MA_DIR)/packages/
 	cd debian/$(psource)$(MA_DIR)/packages/ && ln -sf default.sh $(psource)
 	cd debian/$(psource)/usr/src && tar c modules | bzip2 -9 > $(sname).tar.bz2 && rm -rf modules
+
+	sed -e 's/[@]VERSION[@]/$(version)/' debian/dkms.conf.in \
+	    > debian/$(dkmssource)/usr/src/$(sname)-$(version)/dkms.conf
 
 	dh_install
 
