@@ -24,3 +24,18 @@ Description: Source for the batman-advanced kernel module
  implementation of this protocol on ISO/OSI Layer 2, allowing mesh networks to
  be used as a virtual switch. With this approach, LANs and WANs can be easily
  integrated, and more protocols (like DHCP, IPv6) are supported.
+
+Package: batman-adv-dkms
+Architecture: all
+Depends: ${misc:Depends}, dkms
+Recommends: batman-adv-battool
+Description: DKMS Source for the batman-advanced kernel module
+ This package contains the source for the batman-adv-source kernel modules,
+ packaged with approriate configuration for DKMS to build new modules
+ dynamically.
+ .
+ B.A.T.M.A.N. (better approach to mobile ad-hoc networking) is a new routing
+ protocol for multi-hop ad-hoc mesh networks. B.A.T.M.A.N.-advanced is the
+ implementation of this protocol on ISO/OSI Layer 2, allowing mesh networks to
+ be used as a virtual switch. With this approach, LANs and WANs can be easily
+ integrated, and more protocols (like DHCP, IPv6) are supported.

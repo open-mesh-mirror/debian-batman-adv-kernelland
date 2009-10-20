@@ -46,6 +46,14 @@ batman-adv-kernelland (0.2~beta~svn1336-1) experimental; urgency=low
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 15 Jul 2009 17:35:14 +0200
 
+batman-adv-kernelland (0.1-13) unstable; urgency=low
+
+  * Correct minor dep3 tagging problems in debian/patches/
+  * Provide batman-adv-dkms package that uses DKMS to dynamically build modules
+    for the local kernel
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 20 Oct 2009 17:39:11 +0200
+
 batman-adv-kernelland (0.1-12) unstable; urgency=low
 
   * debian/patches:
