@@ -1,3 +1,9 @@
+batman-adv-kernelland (0.2~beta~svn1453-2) UNRELEASED; urgency=low
+
+  * Convert to 3.0 (quilt) source format
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Fri, 06 Nov 2009 13:01:43 +0100
+
 batman-adv-kernelland (0.2~beta~svn1453-1) experimental; urgency=low
 
   * New Upstream Snapshot
