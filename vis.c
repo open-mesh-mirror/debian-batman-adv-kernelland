@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2008-2009 B.A.T.M.A.N. contributors:
+ *
  * Simon Wunderlich
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -367,7 +369,7 @@ static int generate_vis_packet(void)
 	return 0;
 }
 
-void purge_vis_packets(void)
+static void purge_vis_packets(void)
 {
 	struct hash_it_t *hashit = NULL;
 	struct vis_info *info;

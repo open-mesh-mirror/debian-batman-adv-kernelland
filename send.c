@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner, Simon Wunderlich
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -399,7 +401,7 @@ void send_outstanding_bcast_packet(struct work_struct *work)
 	/* if we still have some more bcasts to send and we are not shutting
 	 * down */
 	if ((forw_packet->num_packets < 3) &&
-	    (atomic_read(&module_state) != MODULE_INACTIVE))
+	    (atomic_read(&module_state) != MODULE_DEACTIVATING))
 		_add_bcast_packet_to_list(forw_packet, ((5 * HZ) / 1000));
 	else
 		forw_packet_free(forw_packet);
@@ -424,7 +426,7 @@ void send_outstanding_bat_packet(struct work_struct *work)
 	 * shutting down
 	 */
 	if ((forw_packet->own) &&
-	    (atomic_read(&module_state) != MODULE_INACTIVE))
+	    (atomic_read(&module_state) != MODULE_DEACTIVATING))
 		schedule_own_packet(forw_packet->if_incoming);
 
 	forw_packet_free(forw_packet);

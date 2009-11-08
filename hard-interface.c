@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2007-2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner, Simon Wunderlich
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -70,7 +72,7 @@ int hardif_min_mtu(void)
 	return min_mtu;
 }
 
-void check_known_mac_addr(uint8_t *addr)
+static void check_known_mac_addr(uint8_t *addr)
 {
 	struct batman_if *batman_if;
 	char mac_string[ETH_STR_LEN];
@@ -103,7 +105,7 @@ void update_min_mtu(void)
 }
 
 /* checks if the interface is up. (returns 1 if it is) */
-int hardif_is_interface_up(char *dev)
+static int hardif_is_interface_up(char *dev)
 {
 	struct net_device *net_dev;
 
@@ -174,7 +176,7 @@ void hardif_deactivate_interface(struct batman_if *batman_if)
 }
 
 /* (re)activate given interface. */
-void hardif_activate_interface(struct batman_if *batman_if)
+static void hardif_activate_interface(struct batman_if *batman_if)
 {
 	struct sockaddr_ll bind_addr;
 	int retval;
@@ -398,6 +400,8 @@ int hardif_add_interface(char *dev, int if_num)
 	return 1;
 
 out:
+	if (batman_if->packet_buff)
+		kfree(batman_if->packet_buff);
 	kfree(batman_if);
 	kfree(dev);
 	return -1;
@@ -425,6 +429,10 @@ static int hard_if_event(struct notifier_block *this,
 		break;
 	case NETDEV_UP:
 		hardif_activate_interface(batman_if);
+		if ((atomic_read(&module_state) == MODULE_INACTIVE) &&
+		    (hardif_get_active_if_num() > 0)) {
+			activate_module();
+		}
 		break;
 	/* NETDEV_CHANGEADDR - mac address change - what are we doing here ? */
 	default:
