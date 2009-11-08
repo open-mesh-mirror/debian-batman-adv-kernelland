@@ -1,8 +1,8 @@
-batman-adv-kernelland (0.2-2) UNRELEASED; urgency=low
+batman-adv-kernelland (0.2-2) unstable; urgency=low
 
   * Recommend batctl instead of deprecated batman-adv-battool
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 08 Nov 2009 23:16:20 +0100
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 08 Nov 2009 23:17:12 +0100
 
 batman-adv-kernelland (0.2-1) unstable; urgency=low
 
