@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2007-2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner, Simon Wunderlich
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -44,7 +46,7 @@ static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
 static atomic_t data_ready_cond;
 atomic_t exit_cond;
 
-void start_purge_timer(void)
+static void start_purge_timer(void)
 {
 	queue_delayed_work(bat_event_workqueue, &purge_orig_wq, 1 * HZ);
 }
@@ -344,18 +346,28 @@ static void update_orig(struct orig_node *orig_node, struct ethhdr *ethhdr, stru
 
 	tmp_hna_buff_len = (hna_buff_len > batman_packet->num_hna * ETH_ALEN ? batman_packet->num_hna * ETH_ALEN : hna_buff_len);
 
-	/**
-	 * if we got have a better tq value via this neighbour or
-	 * same tq value but the link is more symetric change the next hop
-	 * router
-	 */
-	if ((orig_node->router != neigh_node) && ((!orig_node->router) ||
-	    (neigh_node->tq_avg > orig_node->router->tq_avg) ||
-	    ((neigh_node->tq_avg == orig_node->router->tq_avg) &&
-	     (neigh_node->orig_node->bcast_own_sum[if_incoming->if_num] > orig_node->router->orig_node->bcast_own_sum[if_incoming->if_num]))))
-		update_routes(orig_node, neigh_node, hna_buff, tmp_hna_buff_len);
-	else
-		update_routes(orig_node, orig_node->router, hna_buff, tmp_hna_buff_len);
+	/* if this neighbor already is our next hop there is nothing to change */
+	if (orig_node->router == neigh_node)
+		goto update_hna;
+
+	/* if this neighbor does not offer a better TQ we won't consider it */
+	if ((orig_node->router) &&
+	    (orig_node->router->tq_avg > neigh_node->tq_avg))
+		goto update_hna;
+
+	/* if the TQ is the same and the link not more symetric we won't consider it either */
+	if ((orig_node->router) &&
+	     ((neigh_node->tq_avg == orig_node->router->tq_avg) &&
+	     (orig_node->router->orig_node->bcast_own_sum[if_incoming->if_num] >
+	      neigh_node->orig_node->bcast_own_sum[if_incoming->if_num])))
+		goto update_hna;
+
+	update_routes(orig_node, neigh_node, hna_buff, tmp_hna_buff_len);
+	return;
+
+update_hna:
+	update_routes(orig_node, orig_node->router, hna_buff, tmp_hna_buff_len);
+	return;
 }
 
 static char count_real_packets(struct ethhdr *ethhdr, struct batman_packet *batman_packet, struct batman_if *if_incoming)
@@ -402,7 +414,7 @@ void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_pack
 
 	/* Silently drop when the batman packet is actually not a correct packet.
 	 *
-	 * This might happen if a packet is padded (e.g. Ethernet has a 
+	 * This might happen if a packet is padded (e.g. Ethernet has a
 	 * minimum frame length of 64 byte) and the aggregation interprets
 	 * it as an additional length.
 	 *
@@ -490,6 +502,15 @@ void receive_bat_packet(struct ethhdr *ethhdr, struct batman_packet *batman_pack
 	orig_node = get_orig_node(batman_packet->orig);
 	if (orig_node == NULL)
 		return;
+
+	/* avoid temporary routing loops */
+	if ((orig_node->router) && (orig_node->router->orig_node->router) &&
+	    (compare_orig(orig_node->router->addr, batman_packet->prev_sender)) &&
+	    !(compare_orig(batman_packet->orig, batman_packet->prev_sender)) &&
+	    (compare_orig(orig_node->router->addr, orig_node->router->orig_node->router->addr))) {
+		debug_log(LOG_TYPE_BATMAN, "Drop packet: ignoring all rebroadcast packets that may make me loop (sender: %s) \n", neigh_str);
+		return;
+	}
 
 	/* if sender is a direct neighbor the sender mac equals originator mac */
 	orig_neigh_node = (is_single_hop_neigh ? orig_node : get_orig_node(ethhdr->h_source));
@@ -597,7 +618,7 @@ void purge_orig(struct work_struct *work)
 	start_purge_timer();
 }
 
-int receive_raw_packet(struct socket *raw_sock, unsigned char *packet_buff, int packet_buff_len)
+static int receive_raw_packet(struct socket *raw_sock, unsigned char *packet_buff, int packet_buff_len)
 {
 	struct kvec iov;
 	struct msghdr msg;

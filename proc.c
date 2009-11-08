@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2007-2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner, Simon Wunderlich
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -28,7 +30,7 @@
 #include "vis.h"
 #include "compat.h"
 
-uint8_t vis_format = DOT_DRAW;
+static uint8_t vis_format = DOT_DRAW;
 
 static struct proc_dir_entry *proc_batman_dir, *proc_interface_file;
 static struct proc_dir_entry *proc_orig_interval_file, *proc_originators_file;
@@ -539,7 +541,7 @@ static int proc_vis_read(struct seq_file *seq, void *offset)
 		if (current_format == DOT_DRAW) {
 
 			addr_to_string(tmp_addr_str, info->packet.vis_orig);
-			seq_printf(seq, "\tsubgraph \"cluster_%s\" \{\n", tmp_addr_str);
+			seq_printf(seq, "\tsubgraph \"cluster_%s\" {\n", tmp_addr_str);
 			while (if_entries != NULL) {
 
 				addr_to_string(tmp_addr_str, if_entries->addr);

@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2007-2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner, Simon Wunderlich
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -30,7 +32,7 @@ static struct hashtable_t *hna_global_hash;
 atomic_t hna_local_changed;
 
 DEFINE_SPINLOCK(hna_local_hash_lock);
-DEFINE_SPINLOCK(hna_global_hash_lock);
+static DEFINE_SPINLOCK(hna_global_hash_lock);
 
 static DECLARE_DELAYED_WORK(hna_local_purge_wq, hna_local_purge);
 

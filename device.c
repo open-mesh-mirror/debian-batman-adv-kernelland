@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2007-2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -304,6 +306,7 @@ void bat_device_add_packet(struct device_client *device_client,
 	/* while waiting for the lock the device_client could have been
 	 * deleted */
 	if (!device_client_hash[icmp_packet->uid]) {
+		spin_unlock(&device_client->lock);
 		kfree(device_packet);
 		return;
 	}

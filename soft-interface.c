@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2007-2008 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner, Simon Wunderlich
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -66,7 +68,7 @@ int main_if_was_up(void)
 	return (memcmp(mainIfAddr, mainIfAddr_default, ETH_ALEN) != 0 ? 1 : 0);
 }
 
-int my_skb_push(struct sk_buff *skb, unsigned int len)
+static int my_skb_push(struct sk_buff *skb, unsigned int len)
 {
 	int result = 0;
 
