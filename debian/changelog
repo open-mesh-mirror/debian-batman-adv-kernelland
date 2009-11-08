@@ -1,8 +1,9 @@
-batman-adv-kernelland (0.2~beta~svn1453-2) UNRELEASED; urgency=low
+batman-adv-kernelland (0.2-1) unstable; urgency=low
 
+  * New Upstream Version
   * Convert to 3.0 (quilt) source format
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Fri, 06 Nov 2009 13:01:43 +0100
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 08 Nov 2009 14:41:07 +0100
 
 batman-adv-kernelland (0.2~beta~svn1453-1) experimental; urgency=low
 
