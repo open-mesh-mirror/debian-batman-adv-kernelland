@@ -1,4 +1,4 @@
-batman-adv-kernelland (0.2-3) UNRELEASED; urgency=low
+batman-adv-kernelland (0.2-3) unstable; urgency=low
 
   * debian/patches:
     - Add missing_kfree.patch, Introduce missing kfree in case of failed
@@ -7,7 +7,7 @@ batman-adv-kernelland (0.2-3) UNRELEASED; urgency=low
       interrupt context
     - Add vis_rounding.patch, Fixes rounding issues in vis.c
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Dec 2009 23:54:07 +0100
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 20 Dec 2009 00:24:11 +0100
 
 batman-adv-kernelland (0.2-2) unstable; urgency=low
 
