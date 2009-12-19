@@ -5,6 +5,7 @@ batman-adv-kernelland (0.2-3) UNRELEASED; urgency=low
       allocation of packet buffer
     - Add irqdeadlock.patch, Use forw_bcast_list_lock always in disabled
       interrupt context
+    - Add vis_rounding.patch, Fixes rounding issues in vis.c
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Dec 2009 23:54:07 +0100
 
