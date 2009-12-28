@@ -1,3 +1,9 @@
+batman-adv-kernelland (0.2-4) UNRELEASED; urgency=low
+
+  * Add ${misc:Depends} debhelper for batman-adv-source
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 28 Dec 2009 23:22:56 +0100
+
 batman-adv-kernelland (0.2-3) unstable; urgency=low
 
   * debian/patches:
