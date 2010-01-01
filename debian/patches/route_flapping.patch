@@ -1,0 +1,18 @@
+Description: decrease route flapping in perfect environments
+Origin: upstream, http://open-mesh.net/changeset/1481
+Author: Simon Wunderlich<siwu@hrz.tu-chemnitz.de>
+
+---
+diff --git a/routing.c b/routing.c
+index b33cef9995232cf496735fd9ff24f70286d8928c..4a14c363ac2bfb3f7f9f9b4913f39c8593da50b5 100644
+--- a/routing.c
++++ b/routing.c
+@@ -358,7 +358,7 @@ static void update_orig(struct orig_node *orig_node, struct ethhdr *ethhdr, stru
+ 	/* if the TQ is the same and the link not more symetric we won't consider it either */
+ 	if ((orig_node->router) &&
+ 	     ((neigh_node->tq_avg == orig_node->router->tq_avg) &&
+-	     (orig_node->router->orig_node->bcast_own_sum[if_incoming->if_num] >
++	     (orig_node->router->orig_node->bcast_own_sum[if_incoming->if_num] >=
+ 	      neigh_node->orig_node->bcast_own_sum[if_incoming->if_num])))
+ 		goto update_hna;
+ 
