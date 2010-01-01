@@ -10,6 +10,26 @@ batman-adv-kernelland (0.2.1~beta~svn1482-1) experimental; urgency=low
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 15 Nov 2009 14:28:19 +0100
 
+batman-adv-kernelland (0.2-4) unstable; urgency=low
+
+  * Add ${misc:Depends} debhelper for batman-adv-source
+  * debian/patches:
+    - Add route_flapping.patch, decrease route flapping in perfect environments
+    - Add random_mac.patch, Copy complete 6 bytes of a random ethernet address
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 02 Jan 2010 00:15:50 +0100
+
+batman-adv-kernelland (0.2-3) unstable; urgency=low
+
+  * debian/patches:
+    - Add missing_kfree.patch, Introduce missing kfree in case of failed
+      allocation of packet buffer
+    - Add irqdeadlock.patch, Use forw_bcast_list_lock always in disabled
+      interrupt context
+    - Add vis_rounding.patch, Fixes rounding issues in vis.c
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 20 Dec 2009 00:24:11 +0100
+
 batman-adv-kernelland (0.2-2) unstable; urgency=low
 
   * Recommend batctl instead of deprecated batman-adv-battool
