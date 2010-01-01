@@ -26,6 +26,7 @@
 #include "hash.h"
 #include "translation-table.h"
 #include "routing.h"
+#include "compat.h"
 
 
 static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
@@ -37,35 +38,38 @@ static void start_purge_timer(void)
 
 int originator_init(void)
 {
+	unsigned long flags;
 	if (orig_hash)
 		return 1;
 
-	spin_lock(&orig_hash_lock);
+	spin_lock_irqsave(&orig_hash_lock, flags);
 	orig_hash = hash_new(128, compare_orig, choose_orig);
 
 	if (!orig_hash)
 		goto err;
 
-	spin_unlock(&orig_hash_lock);
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
 	start_purge_timer();
 	return 1;
 
 err:
-	spin_unlock(&orig_hash_lock);
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
 	return 0;
 }
 
 void originator_free(void)
 {
+	unsigned long flags;
+
 	if (!orig_hash)
 		return;
 
 	cancel_delayed_work_sync(&purge_orig_wq);
 
-	spin_lock(&orig_hash_lock);
+	spin_lock_irqsave(&orig_hash_lock, flags);
 	hash_delete(orig_hash, free_orig_node);
 	orig_hash = NULL;
-	spin_unlock(&orig_hash_lock);
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
 }
 
 struct neigh_node *
@@ -76,8 +80,10 @@ create_neighbor(struct orig_node *orig_node, struct orig_node *orig_neigh_node,
 
 	bat_dbg(DBG_BATMAN, "Creating new last-hop neighbor of originator\n");
 
-	neigh_node = kmalloc(sizeof(struct neigh_node), GFP_ATOMIC);
-	memset(neigh_node, 0, sizeof(struct neigh_node));
+	neigh_node = kzalloc(sizeof(struct neigh_node), GFP_ATOMIC);
+	if (!neigh_node)
+		return NULL;
+
 	INIT_LIST_HEAD(&neigh_node->list);
 
 	memcpy(neigh_node->addr, neigh, ETH_ALEN);
@@ -115,7 +121,6 @@ struct orig_node *get_orig_node(uint8_t *addr)
 {
 	struct orig_node *orig_node;
 	struct hashtable_t *swaphash;
-	char orig_str[ETH_STR_LEN];
 	int size;
 
 	orig_node = ((struct orig_node *)hash_find(orig_hash, addr));
@@ -123,11 +128,12 @@ struct orig_node *get_orig_node(uint8_t *addr)
 	if (orig_node != NULL)
 		return orig_node;
 
-	addr_to_string(orig_str, addr);
-	bat_dbg(DBG_BATMAN, "Creating new originator: %s \n", orig_str);
+	bat_dbg(DBG_BATMAN, "Creating new originator: %pM \n", addr);
 
-	orig_node = kmalloc(sizeof(struct orig_node), GFP_ATOMIC);
-	memset(orig_node, 0, sizeof(struct orig_node));
+	orig_node = kzalloc(sizeof(struct orig_node), GFP_ATOMIC);
+	if (!orig_node)
+		return NULL;
+
 	INIT_LIST_HEAD(&orig_node->neigh_list);
 
 	memcpy(orig_node->orig, addr, ETH_ALEN);
@@ -137,14 +143,17 @@ struct orig_node *get_orig_node(uint8_t *addr)
 
 	size = num_ifs * sizeof(TYPE_OF_WORD) * NUM_WORDS;
 
-	orig_node->bcast_own = kmalloc(size, GFP_ATOMIC);
-	memset(orig_node->bcast_own, 0, size);
+	orig_node->bcast_own = kzalloc(size, GFP_ATOMIC);
+	if (!orig_node->bcast_own)
+		goto free_orig_node;
 
 	size = num_ifs * sizeof(uint8_t);
-	orig_node->bcast_own_sum = kmalloc(size, GFP_ATOMIC);
-	memset(orig_node->bcast_own_sum, 0, size);
+	orig_node->bcast_own_sum = kzalloc(size, GFP_ATOMIC);
+	if (!orig_node->bcast_own_sum)
+		goto free_bcast_own;
 
-	hash_add(orig_hash, orig_node);
+	if (hash_add(orig_hash, orig_node) < 0)
+		goto free_bcast_own_sum;
 
 	if (orig_hash->elements * 4 > orig_hash->size) {
 		swaphash = hash_resize(orig_hash, orig_hash->size * 2);
@@ -157,13 +166,19 @@ struct orig_node *get_orig_node(uint8_t *addr)
 	}
 
 	return orig_node;
+free_bcast_own_sum:
+	kfree(orig_node->bcast_own_sum);
+free_bcast_own:
+	kfree(orig_node->bcast_own);
+free_orig_node:
+	kfree(orig_node);
+	return NULL;
 }
 
 static bool purge_orig_neighbors(struct orig_node *orig_node,
 				 struct neigh_node **best_neigh_node)
 {
 	struct list_head *list_pos, *list_pos_tmp;
-	char neigh_str[ETH_STR_LEN], orig_str[ETH_STR_LEN];
 	struct neigh_node *neigh_node;
 	bool neigh_purged = false;
 
@@ -178,9 +193,7 @@ static bool purge_orig_neighbors(struct orig_node *orig_node,
 			       (neigh_node->last_valid +
 				((PURGE_TIMEOUT * HZ) / 1000)))) {
 
-			addr_to_string(neigh_str, neigh_node->addr);
-			addr_to_string(orig_str, orig_node->orig);
-			bat_dbg(DBG_BATMAN, "neighbor timeout: originator %s, neighbor: %s, last_valid %lu\n", orig_str, neigh_str, (neigh_node->last_valid / HZ));
+			bat_dbg(DBG_BATMAN, "neighbor timeout: originator %pM, neighbor: %pM, last_valid %lu\n", orig_node->orig, neigh_node->addr, (neigh_node->last_valid / HZ));
 
 			neigh_purged = true;
 			list_del(list_pos);
@@ -198,17 +211,14 @@ static bool purge_orig_neighbors(struct orig_node *orig_node,
 static bool purge_orig_node(struct orig_node *orig_node)
 {
 	struct neigh_node *best_neigh_node;
-	char orig_str[ETH_STR_LEN];
-
-	addr_to_string(orig_str, orig_node->orig);
 
 	if (time_after(jiffies,
 		       (orig_node->last_valid +
 			((2 * PURGE_TIMEOUT * HZ) / 1000)))) {
 
 		bat_dbg(DBG_BATMAN,
-			"Originator timeout: originator %s, last_valid %lu\n",
-			orig_str, (orig_node->last_valid / HZ));
+			"Originator timeout: originator %pM, last_valid %lu\n",
+			orig_node->orig, (orig_node->last_valid / HZ));
 		return true;
 	} else {
 		if (purge_orig_neighbors(orig_node, &best_neigh_node))
@@ -223,8 +233,9 @@ void purge_orig(struct work_struct *work)
 {
 	HASHIT(hashit);
 	struct orig_node *orig_node;
+	unsigned long flags;
 
-	spin_lock(&orig_hash_lock);
+	spin_lock_irqsave(&orig_hash_lock, flags);
 
 	/* for all origins... */
 	while (hash_iterate(orig_hash, &hashit)) {
@@ -235,7 +246,7 @@ void purge_orig(struct work_struct *work)
 		}
 	}
 
-	spin_unlock(&orig_hash_lock);
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
 
 	start_purge_timer();
 }
