@@ -1,3 +1,12 @@
+batman-adv-kernelland (0.2.1~beta~svn1529-1) UNRELEASED; urgency=low
+
+  * New Upstream Snapshot
+  * debian/patches:
+    - Remove upstream merged patches missing_kfree.patch, irqdeadlock.patch,
+      vis_rounding.patch, route_flapping.patch, random_mac.patch
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 02 Jan 2010 00:25:53 +0100
+
 batman-adv-kernelland (0.2.1~beta~svn1506-1) experimental; urgency=low
 
   * New Upstream Snapshot
