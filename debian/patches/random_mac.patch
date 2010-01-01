@@ -1,0 +1,21 @@
+Description: Copy complete 6 bytes of a random ethernet address
+ When we create the bat0 device, we use a fresh generated random
+ ethernet mac. This address wasn't copied at full length in 32 bit
+ systems due to misusage of sizeof.
+Origin: backport, http://open-mesh.net/changeset/1527
+Author: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+
+---
+diff --git a/soft-interface.c b/soft-interface.c
+index d543f50b647f888a28ce47159c3eea2bf47dd7b3..8eb874f8954ded0d4e547f2fcf6bf59b7536f0ae 100644
+--- a/soft-interface.c
++++ b/soft-interface.c
+@@ -122,7 +122,7 @@ void interface_setup(struct net_device *dev)
+ 
+ 	/* generate random address */
+ 	random_ether_addr(dev_addr);
+-	memcpy(dev->dev_addr, dev_addr, sizeof(dev->dev_addr));
++	memcpy(dev->dev_addr, dev_addr, ETH_ALEN);
+ 
+ 	SET_ETHTOOL_OPS(dev, &bat_ethtool_ops);
+ 

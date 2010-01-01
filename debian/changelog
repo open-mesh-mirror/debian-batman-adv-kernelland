@@ -3,6 +3,7 @@ batman-adv-kernelland (0.2-4) UNRELEASED; urgency=low
   * Add ${misc:Depends} debhelper for batman-adv-source
   * debian/patches:
     - Add route_flapping.patch, decrease route flapping in perfect environments
+    - Add random_mac.patch, Copy complete 6 bytes of a random ethernet address
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 28 Dec 2009 23:22:56 +0100
 
