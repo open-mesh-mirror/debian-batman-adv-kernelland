@@ -1,9 +1,9 @@
-batman-adv-kernelland (0.2-5) UNRELEASED; urgency=low
+batman-adv-kernelland (0.2-5) unstable; urgency=low
 
   * Correct spelling errors found by lintian
   * Use dkms postinst script for batman-adv-dkms (Closes LP: #497149)
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 13 Jan 2010 23:44:51 +0100
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 14 Jan 2010 00:01:22 +0100
 
 batman-adv-kernelland (0.2-4) unstable; urgency=low
 
