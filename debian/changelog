@@ -25,6 +25,13 @@ batman-adv-kernelland (0.2.1~beta~svn1482-1) experimental; urgency=low
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 15 Nov 2009 14:28:19 +0100
 
+batman-adv-kernelland (0.2-5) unstable; urgency=low
+
+  * Correct spelling errors found by lintian
+  * Use dkms postinst script for batman-adv-dkms (Closes LP: #497149)
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 14 Jan 2010 00:01:22 +0100
+
 batman-adv-kernelland (0.2-4) unstable; urgency=low
 
   * Add ${misc:Depends} debhelper for batman-adv-source
@@ -132,7 +139,7 @@ batman-adv-kernelland (0.1-12) unstable; urgency=low
 batman-adv-kernelland (0.1-11) unstable; urgency=low
 
   * Upgraded to policy 3.8.3, no changes required
-  * Add README.source with informations about patch management
+  * Add README.source with information about patch management
   * debian/patches:
     - Change to dep3 patch tagging guidelines
     - Remove number before patches as order is given by debian/patches/series
