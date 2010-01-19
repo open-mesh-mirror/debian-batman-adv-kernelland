@@ -1,3 +1,9 @@
+batman-adv-kernelland (0.2-6) UNRELEASED; urgency=low
+
+  * debian/copyright: Update copyright years
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 19 Jan 2010 23:43:25 +0100
+
 batman-adv-kernelland (0.2-5) unstable; urgency=low
 
   * Correct spelling errors found by lintian
