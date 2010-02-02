@@ -5,7 +5,7 @@ Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Uploaders: Sven Eckelmann <sven.eckelmann@gmx.de>
 Dm-Upload-Allowed: yes
 Homepage: http://www.open-mesh.net/
-Standards-Version: 3.8.3
+Standards-Version: 3.8.4
 Vcs-Browser: http://git.debian.org/?p=collab-maint/batman-adv-kernelland.git
 Vcs-Git: git://git.debian.org/git/collab-maint/batman-adv-kernelland.git
 Build-Depends: debhelper (>= 7)
