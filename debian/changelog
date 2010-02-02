@@ -1,6 +1,7 @@
 batman-adv-kernelland (0.2-6) UNRELEASED; urgency=low
 
   * debian/copyright: Update copyright years
+  * Correct debhelper generated postinst scripts after configure of dkms
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 19 Jan 2010 23:43:25 +0100
 
