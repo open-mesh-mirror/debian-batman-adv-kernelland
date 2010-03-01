@@ -36,7 +36,7 @@ static struct proc_dir_entry *proc_orig_interval_file, *proc_originators_file;
 static struct proc_dir_entry *proc_transt_local_file;
 static struct proc_dir_entry *proc_transt_global_file;
 static struct proc_dir_entry *proc_vis_srv_file, *proc_vis_data_file;
-static struct proc_dir_entry *proc_aggr_file;
+static struct proc_dir_entry *proc_aggr_file, *proc_bond_file;
 static struct proc_dir_entry *proc_gw_mode_file, *proc_gw_srv_list_file;
 
 static int proc_interfaces_read(struct seq_file *seq, void *offset)
@@ -67,7 +67,7 @@ static ssize_t proc_interfaces_write(struct file *instance,
 				     size_t count, loff_t *data)
 {
 	char *if_string, *colon_ptr = NULL, *cr_ptr = NULL;
-	int not_copied = 0, if_num = 0;
+	int not_copied = 0, if_num = 0, add_success;
 	struct batman_if *batman_if = NULL;
 
 	if_string = kmalloc(count, GFP_KERNEL);
@@ -113,22 +113,17 @@ static ssize_t proc_interfaces_write(struct file *instance,
 	}
 	rcu_read_unlock();
 
-	hardif_add_interface(if_string, if_num);
+	add_success = hardif_add_interface(if_string, if_num);
+	if (add_success < 0)
+		goto end;
+
+	num_ifs = if_num + 1;
 
 	if ((atomic_read(&module_state) == MODULE_INACTIVE) &&
 	    (hardif_get_active_if_num() > 0))
 		activate_module();
 
-	rcu_read_lock();
-	if (list_empty(&if_list)) {
-		rcu_read_unlock();
-		goto end;
-	}
-	rcu_read_unlock();
-
-	num_ifs = if_num + 1;
 	return count;
-
 end:
 	kfree(if_string);
 	return count;
@@ -342,11 +337,11 @@ static ssize_t proc_vis_srv_write(struct file *file, const char __user * buffer,
 	if ((strcmp(vis_mode_string, "client") == 0) ||
 			(strcmp(vis_mode_string, "disabled") == 0)) {
 		printk(KERN_INFO "batman-adv:Setting VIS mode to client (disabling vis server)\n");
-		vis_set_mode(VIS_TYPE_CLIENT_UPDATE);
+		atomic_set(&vis_mode, VIS_TYPE_CLIENT_UPDATE);
 	} else if ((strcmp(vis_mode_string, "server") == 0) ||
 			(strcmp(vis_mode_string, "enabled") == 0)) {
 		printk(KERN_INFO "batman-adv:Setting VIS mode to server (enabling vis server)\n");
-		vis_set_mode(VIS_TYPE_SERVER_SYNC);
+		atomic_set(&vis_mode, VIS_TYPE_SERVER_SYNC);
 	} else
 		printk(KERN_ERR "batman-adv:Unknown VIS mode: %s\n",
 		       vis_mode_string);
@@ -357,12 +352,12 @@ static ssize_t proc_vis_srv_write(struct file *file, const char __user * buffer,
 
 static int proc_vis_srv_read(struct seq_file *seq, void *offset)
 {
-	int vis_server = is_vis_server();
+	int vis_server = atomic_read(&vis_mode);
 
 	seq_printf(seq, "[%c] client mode (server disabled) \n",
-			(!vis_server) ? 'x' : ' ');
+			(vis_server == VIS_TYPE_CLIENT_UPDATE) ? 'x' : ' ');
 	seq_printf(seq, "[%c] server mode (server enabled) \n",
-			(vis_server) ? 'x' : ' ');
+			(vis_server == VIS_TYPE_SERVER_SYNC) ? 'x' : ' ');
 
 	return 0;
 }
@@ -381,9 +376,10 @@ static int proc_vis_data_read(struct seq_file *seq, void *offset)
 	int i;
 	char tmp_addr_str[ETH_STR_LEN];
 	unsigned long flags;
+	int vis_server = atomic_read(&vis_mode);
 
 	rcu_read_lock();
-	if (list_empty(&if_list) || (!is_vis_server())) {
+	if (list_empty(&if_list) || (vis_server == VIS_TYPE_CLIENT_UPDATE)) {
 		rcu_read_unlock();
 		goto end;
 	}
@@ -558,6 +554,53 @@ static int proc_gw_srv_list_open(struct inode *inode, struct file *file)
 }
 
 
+static int proc_bond_read(struct seq_file *seq, void *offset)
+{
+	seq_printf(seq, "%i\n", atomic_read(&bonding_enabled));
+
+	return 0;
+}
+
+static ssize_t proc_bond_write(struct file *file, const char __user *buffer,
+			       size_t count, loff_t *ppos)
+{
+	char *bond_string;
+	int not_copied = 0;
+	unsigned long bonding_enabled_tmp;
+	int retval;
+
+	bond_string = kmalloc(count, GFP_KERNEL);
+
+	if (!bond_string)
+		return -ENOMEM;
+
+	not_copied = copy_from_user(bond_string, buffer, count);
+	bond_string[count - not_copied - 1] = 0;
+
+	retval = strict_strtoul(bond_string, 10, &bonding_enabled_tmp);
+
+	if (retval || bonding_enabled_tmp > 1) {
+		printk(KERN_ERR "batman-adv: Bonding can only be enabled (1) or disabled (0), given value: %li\n", bonding_enabled_tmp);
+	} else {
+		printk(KERN_INFO "batman-adv:Changing bonding from: %s (%i) to: %s (%li)\n",
+		       (atomic_read(&bonding_enabled) == 1 ?
+			"enabled" : "disabled"),
+		       atomic_read(&bonding_enabled),
+		       (bonding_enabled_tmp == 1 ? "enabled" : "disabled"),
+		       bonding_enabled_tmp);
+		atomic_set(&bonding_enabled,
+						(unsigned)bonding_enabled_tmp);
+	}
+
+	kfree(bond_string);
+	return count;
+}
+
+static int proc_bond_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, proc_bond_read, NULL);
+}
+
 /* satisfying different prototypes ... */
 static ssize_t proc_dummy_write(struct file *file, const char __user *buffer,
 				size_t count, loff_t *ppos)
@@ -588,6 +631,15 @@ static const struct file_operations proc_aggr_fops = {
 	.open		= proc_aggr_open,
 	.read		= seq_read,
 	.write		= proc_aggr_write,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
+static const struct file_operations proc_bond_fops = {
+	.owner		= THIS_MODULE,
+	.open		= proc_bond_open,
+	.read		= seq_read,
+	.write		= proc_bond_write,
 	.llseek		= seq_lseek,
 	.release	= single_release,
 };
@@ -686,6 +738,10 @@ void cleanup_procfs(void)
 
 	if (proc_gw_srv_list_file)
 		remove_proc_entry(PROC_FILE_GW_SRV_LIST, proc_batman_dir);
+
+	if (proc_bond_file)
+		remove_proc_entry(PROC_FILE_BOND, proc_batman_dir);
+
 
 	if (proc_batman_dir)
 #ifdef __NET_NET_NAMESPACE_H
@@ -811,6 +867,16 @@ int setup_procfs(void)
 	} else {
 		printk(KERN_ERR "batman-adv: Registering the '/proc/net/%s/%s' file failed\n",
 		       PROC_ROOT_DIR, PROC_FILE_GW_SRV_LIST);
+		cleanup_procfs();
+		return -EFAULT;
+	}
+
+	proc_bond_file = create_proc_entry(PROC_FILE_BOND, S_IWUSR | S_IRUGO,
+					   proc_batman_dir);
+	if (proc_bond_file) {
+		proc_bond_file->proc_fops = &proc_bond_fops;
+	} else {
+		printk(KERN_ERR "batman-adv: Registering the '/proc/net/%s/%s' file failed\n", PROC_ROOT_DIR, PROC_FILE_BOND);
 		cleanup_procfs();
 		return -EFAULT;
 	}

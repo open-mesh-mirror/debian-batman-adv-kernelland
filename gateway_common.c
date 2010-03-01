@@ -20,12 +20,13 @@
 #include "main.h"
 #include "gateway_common.h"
 #include "gateway_client.h"
+#include "compat.h"
 
 atomic_t gw_mode;
 atomic_t gw_srv_class;
 
 /* calculates the gateway class from kbit */
-void kbit_to_gw_srv_class(int down, int up, long *gw_srv_class)
+static void kbit_to_gw_srv_class(int down, int up, long *gw_srv_class)
 {
 	int mdown = 0, tdown, tup, difference;
 	uint8_t sbit, part;
@@ -85,7 +86,7 @@ static bool parse_gw_mode_tok(char *tokptr, long *gw_mode_tmp,
 
 	switch (*gw_mode_tmp) {
 	case GW_MODE_CLIENT:
-		ret = strict_strtol(tokptr, 10, gw_clnt_class_tmp);
+		ret = strict_strtoul(tokptr, 10, gw_clnt_class_tmp);
 		if (ret) {
 			printk(KERN_ERR "Client class of gateway mode invalid: %s\n",
 			       tokptr);
@@ -104,7 +105,7 @@ static bool parse_gw_mode_tok(char *tokptr, long *gw_mode_tmp,
 		if (slash_ptr)
 			*slash_ptr = 0;
 
-		ret = strict_strtol(tokptr, 10, down);
+		ret = strict_strtoul(tokptr, 10, down);
 		if (ret) {
 			printk(KERN_ERR "Download speed of gateway mode invalid: %s\n",
 			       tokptr);
@@ -121,7 +122,7 @@ static bool parse_gw_mode_tok(char *tokptr, long *gw_mode_tmp,
 
 		/* we also got some upload info */
 		if (slash_ptr) {
-			ret = strict_strtol(slash_ptr + 1, 10, up);
+			ret = strict_strtoul(slash_ptr + 1, 10, up);
 			if (ret) {
 				printk(KERN_ERR "Upload speed of gateway mode invalid: %s\n",
 				       slash_ptr + 1);

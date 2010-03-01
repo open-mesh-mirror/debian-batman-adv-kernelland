@@ -312,9 +312,9 @@ int hardif_add_interface(char *dev, int if_num)
 	batman_packet = (struct batman_packet *)(batman_if->packet_buff);
 	batman_packet->packet_type = BAT_PACKET;
 	batman_packet->version = COMPAT_VERSION;
-	batman_packet->flags = 0x00;
-	batman_packet->ttl = (batman_if->if_num > 0 ? 2 : TTL);
-	batman_packet->flags = 0;
+	batman_packet->flags = batman_if->if_num > 0 ?
+			0x00 : PRIMARIES_FIRST_HOP;
+	batman_packet->ttl = batman_if->if_num > 0 ? 2 : TTL;
 	batman_packet->tq = TQ_MAX_VALUE;
 	batman_packet->num_hna = 0;
 
@@ -427,9 +427,13 @@ int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 	struct net_device_stats *stats;
 	int ret;
 
-    skb = skb_share_check(skb, GFP_ATOMIC);
+	skb = skb_share_check(skb, GFP_ATOMIC);
 
-    if (skb == NULL)
+	/* skb was released by skb_share_check() */
+	if (!skb)
+		goto err_out;
+
+	if (atomic_read(&module_state) != MODULE_ACTIVE)
 		goto err_free;
 
 	/* packet should hold at least type and version */
@@ -445,7 +449,11 @@ int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 	if (!batman_if)
 		goto err_free;
 
-    stats = (struct net_device_stats *) dev_get_stats(skb->dev);
+	/* discard frames on not active interfaces */
+	if (batman_if->if_active != IF_ACTIVE)
+		goto err_free;
+
+	stats = (struct net_device_stats *)dev_get_stats(skb->dev);
 	if (stats) {
 		stats->rx_packets++;
 		stats->rx_bytes += skb->len;
@@ -491,6 +499,7 @@ int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 	default:
 		ret = NET_RX_DROP;
 	}
+
 	if (ret == NET_RX_DROP)
 		kfree_skb(skb);
 
@@ -501,9 +510,9 @@ int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 	return NET_RX_SUCCESS;
 
 err_free:
-    kfree_skb(skb);
-    return NET_RX_DROP;
-
+	kfree_skb(skb);
+err_out:
+	return NET_RX_DROP;
 }
 
 
