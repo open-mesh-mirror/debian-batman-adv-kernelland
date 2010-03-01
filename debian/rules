@@ -152,9 +152,7 @@ install: build
 	cd debian/$(psource)$(MA_DIR)/packages/ && ln -sf default.sh $(psource)
 	cd debian/$(psource)/usr/src && tar c modules | bzip2 -9 > $(sname).tar.bz2 && rm -rf modules
 
-	sed -e 's/[@]VERSION[@]/$(version)/' debian/dkms.conf.in \
-	    > debian/$(dkmssource)/usr/src/$(sname)-$(version)/dkms.conf
-
+	dh_dkms -V
 	dh_install
 
 # Build architecture-independent files here.
