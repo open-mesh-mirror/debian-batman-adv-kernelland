@@ -1,3 +1,9 @@
+batman-adv-kernelland (0.2.1~beta~svn1578-1) UNRELEASED; urgency=low
+
+  * New Upstream Snapshot
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 01 Mar 2010 13:01:52 +0100
+
 batman-adv-kernelland (0.2.1~beta~svn1548-1) experimental; urgency=low
 
   * New Upstream Snapshot
