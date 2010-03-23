@@ -10,32 +10,16 @@ batman-adv-kernelland (0.3.0~alpha~svn1578-1) experimental; urgency=low
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 01 Mar 2010 13:06:35 +0100
 
-batman-adv-kernelland (0.2.1~beta~svn1548-1) experimental; urgency=low
+batman-adv-kernelland (0.2.1-1) unstable; urgency=low
 
-  * New Upstream Snapshot
-
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 14 Jan 2010 00:11:39 +0100
-
-batman-adv-kernelland (0.2.1~beta~svn1529-1) experimental; urgency=low
-
-  * New Upstream Snapshot
+  * New Upstream Version
+  * Remove outdated README.source
+  * Updated debian/copyright
   * debian/patches:
-    - Remove upstream merged patches missing_kfree.patch, irqdeadlock.patch,
-      vis_rounding.patch, route_flapping.patch, random_mac.patch
+    - Remove upstream merged irqdeadlock.patch, missing_kfree.patch,
+      random_mac.patch, route_flapping.patch, vis_rounding.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 02 Jan 2010 00:28:14 +0100
-
-batman-adv-kernelland (0.2.1~beta~svn1506-1) experimental; urgency=low
-
-  * New Upstream Snapshot
-
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Dec 2009 11:59:39 +0100
-
-batman-adv-kernelland (0.2.1~beta~svn1482-1) experimental; urgency=low
-
-  * New Upstream Snapshot
-
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 15 Nov 2009 14:28:19 +0100
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 23 Mar 2010 01:11:04 +0100
 
 batman-adv-kernelland (0.2-6) unstable; urgency=low
 
