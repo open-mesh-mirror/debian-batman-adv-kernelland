@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2009-2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -28,6 +28,7 @@
 #include "routing.h"
 #include "compat.h"
 #include "gateway_client.h"
+#include "hard-interface.h"
 
 static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
 
@@ -207,9 +208,10 @@ static bool purge_orig_neighbors(struct orig_node *orig_node,
 	return neigh_purged;
 }
 
-
 static bool purge_orig_node(struct orig_node *orig_node)
 {
+	/* FIXME: each batman_if will be attached to a softif */
+	struct bat_priv *bat_priv = netdev_priv(soft_device);
 	struct neigh_node *best_neigh_node;
 
 	if (time_after(jiffies,
@@ -227,7 +229,7 @@ static bool purge_orig_node(struct orig_node *orig_node)
 				      orig_node->hna_buff_len);
 			/* update bonding candidates, we could have lost
 			 * some candidates. */
-			update_bonding_candidates(orig_node);
+			update_bonding_candidates(bat_priv, orig_node);
 		}
 	}
 	return false;
@@ -257,4 +259,102 @@ void purge_orig(struct work_struct *work)
 	gw_node_purge_deleted();
 	gw_election();
 	start_purge_timer();
+}
+
+ssize_t orig_fill_buffer_text(struct net_device *net_dev, char *buff,
+			      size_t count, loff_t off)
+{
+	HASHIT(hashit);
+	struct orig_node *orig_node;
+	struct neigh_node *neigh_node;
+	size_t hdr_len, tmp_len;
+	int batman_count = 0, bytes_written = 0;
+	unsigned long flags;
+	char orig_str[ETH_STR_LEN], router_str[ETH_STR_LEN];
+
+	rcu_read_lock();
+	if (list_empty(&if_list)) {
+		rcu_read_unlock();
+
+		if (off == 0)
+			return sprintf(buff,
+				       "BATMAN mesh %s disabled - please specify interfaces to enable it\n",
+				       net_dev->name);
+
+		return 0;
+	}
+
+	if (((struct batman_if *)if_list.next)->if_active != IF_ACTIVE) {
+		rcu_read_unlock();
+
+		if (off == 0)
+			return sprintf(buff,
+				       "BATMAN mesh %s disabled - primary interface not active\n",
+				       net_dev->name);
+
+		return 0;
+	}
+
+	hdr_len = sprintf(buff,
+		   "  %-14s (%s/%i) %17s [%10s]: %20s ... [B.A.T.M.A.N. adv %s%s, MainIF/MAC: %s/%s (%s)] \n",
+		   "Originator", "#", TQ_MAX_VALUE, "Nexthop", "outgoingIF",
+		   "Potential nexthops", SOURCE_VERSION, REVISION_VERSION_STR,
+		   ((struct batman_if *)if_list.next)->dev,
+		   ((struct batman_if *)if_list.next)->addr_str,
+		   net_dev->name);
+	rcu_read_unlock();
+
+	if (off < hdr_len)
+		bytes_written = hdr_len;
+
+	spin_lock_irqsave(&orig_hash_lock, flags);
+
+	while (hash_iterate(orig_hash, &hashit)) {
+
+		orig_node = hashit.bucket->data;
+
+		if (!orig_node->router)
+			continue;
+
+		if (orig_node->router->tq_avg == 0)
+			continue;
+
+		/* estimated line length */
+		if (count < bytes_written + 200)
+			break;
+
+		addr_to_string(orig_str, orig_node->orig);
+		addr_to_string(router_str, orig_node->router->addr);
+
+		tmp_len = sprintf(buff + bytes_written,
+				  "%-17s  (%3i) %17s [%10s]:",
+				   orig_str, orig_node->router->tq_avg,
+				   router_str,
+				   orig_node->router->if_incoming->dev);
+
+		list_for_each_entry(neigh_node, &orig_node->neigh_list, list) {
+			addr_to_string(orig_str, neigh_node->addr);
+			tmp_len += sprintf(buff + bytes_written + tmp_len,
+					   " %17s (%3i)", orig_str,
+					   neigh_node->tq_avg);
+		}
+
+		tmp_len += sprintf(buff + bytes_written + tmp_len, "\n");
+
+		batman_count++;
+		hdr_len += tmp_len;
+
+		if (off >= hdr_len)
+			continue;
+
+		bytes_written += tmp_len;
+	}
+
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
+
+	if ((batman_count == 0) && (off == 0))
+		bytes_written += sprintf(buff + bytes_written,
+					"No batman nodes in range ... \n");
+
+	return bytes_written;
 }

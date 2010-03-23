@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -94,6 +94,12 @@ struct neigh_node {
 
 struct bat_priv {
 	struct net_device_stats stats;
+	atomic_t aggregation_enabled;
+	atomic_t bonding_enabled;
+	atomic_t vis_mode;
+	atomic_t gw_mode;
+	atomic_t gw_class;
+	struct kobject *mesh_obj;
 };
 
 struct device_client {
