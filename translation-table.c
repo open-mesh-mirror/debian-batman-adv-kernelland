@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -157,23 +157,49 @@ int hna_local_fill_buffer(unsigned char *buff, int buff_len)
 	return i;
 }
 
-int hna_local_fill_buffer_text(unsigned char *buff, int buff_len)
+int hna_local_fill_buffer_text(struct net_device *net_dev, char *buff,
+			       size_t count, loff_t off)
 {
 	struct hna_local_entry *hna_local_entry;
 	HASHIT(hashit);
 	int bytes_written = 0;
 	unsigned long flags;
+	size_t hdr_len;
+
+	rcu_read_lock();
+	if (list_empty(&if_list)) {
+		rcu_read_unlock();
+
+		if (off == 0)
+			return sprintf(buff,
+				       "BATMAN mesh %s disabled - please specify interfaces to enable it\n",
+				       net_dev->name);
+
+		return 0;
+	}
+	rcu_read_unlock();
+
+	hdr_len = sprintf(buff,
+			  "Locally retrieved addresses (from %s) announced via HNA:\n",
+			  net_dev->name);
+
+	if (off < hdr_len)
+		bytes_written = hdr_len;
 
 	spin_lock_irqsave(&hna_local_hash_lock, flags);
 
 	while (hash_iterate(hna_local_hash, &hashit)) {
+		hdr_len += 21;
 
-		if (buff_len < bytes_written + ETH_STR_LEN + 4)
+		if (count < bytes_written + 22)
 			break;
+
+		if (off >= hdr_len)
+			continue;
 
 		hna_local_entry = hashit.bucket->data;
 
-		bytes_written += snprintf(buff + bytes_written, ETH_STR_LEN + 4,
+		bytes_written += snprintf(buff + bytes_written, 22,
 					  " * %02x:%02x:%02x:%02x:%02x:%02x\n",
 					  hna_local_entry->addr[0],
 					  hna_local_entry->addr[1],
@@ -184,7 +210,6 @@ int hna_local_fill_buffer_text(unsigned char *buff, int buff_len)
 	}
 
 	spin_unlock_irqrestore(&hna_local_hash_lock, flags);
-
 	return bytes_written;
 }
 
@@ -349,24 +374,50 @@ void hna_global_add_orig(struct orig_node *orig_node,
 	spin_unlock_irqrestore(&hna_global_hash_lock, flags);
 }
 
-int hna_global_fill_buffer_text(unsigned char *buff, int buff_len)
+int hna_global_fill_buffer_text(struct net_device *net_dev, char *buff,
+				size_t count, loff_t off)
 {
 	struct hna_global_entry *hna_global_entry;
 	HASHIT(hashit);
 	int bytes_written = 0;
 	unsigned long flags;
+	size_t hdr_len;
+
+	rcu_read_lock();
+	if (list_empty(&if_list)) {
+		rcu_read_unlock();
+
+		if (off == 0)
+			return sprintf(buff,
+				       "BATMAN mesh %s disabled - please specify interfaces to enable it\n",
+				       net_dev->name);
+
+		return 0;
+	}
+	rcu_read_unlock();
+
+	hdr_len = sprintf(buff,
+			  "Globally announced HNAs received via the mesh %s (translation table):\n",
+			  net_dev->name);
+
+	if (off < hdr_len)
+		bytes_written = hdr_len;
 
 	spin_lock_irqsave(&hna_global_hash_lock, flags);
 
 	while (hash_iterate(hna_global_hash, &hashit)) {
-		if (buff_len < bytes_written + (2 * ETH_STR_LEN) + 10)
+		hdr_len += 43;
+
+		if (count < bytes_written + 44)
 			break;
+
+		if (off >= hdr_len)
+			continue;
 
 		hna_global_entry = hashit.bucket->data;
 
-		bytes_written += snprintf(buff + bytes_written,
-					  (2 * ETH_STR_LEN) + 10,
-					  " * %02x:%02x:%02x:%02x:%02x:%02x via %02x:%02x:%02x:%02x:%02x:%02x \n",
+		bytes_written += snprintf(buff + bytes_written, 44,
+					  " * %02x:%02x:%02x:%02x:%02x:%02x via %02x:%02x:%02x:%02x:%02x:%02x\n",
 					  hna_global_entry->addr[0],
 					  hna_global_entry->addr[1],
 					  hna_global_entry->addr[2],
@@ -382,7 +433,6 @@ int hna_global_fill_buffer_text(unsigned char *buff, int buff_len)
 	}
 
 	spin_unlock_irqrestore(&hna_global_hash_lock, flags);
-
 	return bytes_written;
 }
 

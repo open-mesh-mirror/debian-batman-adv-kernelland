@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -34,8 +34,6 @@
 #define TQ_MAX_VALUE 255
 #define JITTER 20
 #define TTL 50			  /* Time To Live of broadcast messages */
-#define MAX_ADDR 16		  /* number of interfaces which can be added to
-				   * batman. */
 
 #define PURGE_TIMEOUT 200000	  /* purge originators after time in ms if no
 				   * valid packet comes in -> TODO: check
@@ -135,9 +133,6 @@ extern spinlock_t forw_bcast_list_lock;
 
 extern atomic_t originator_interval;
 extern atomic_t vis_interval;
-extern atomic_t vis_mode;
-extern atomic_t aggregation_enabled;
-extern atomic_t bonding_enabled;
 extern int16_t num_hna;
 extern int16_t num_ifs;
 

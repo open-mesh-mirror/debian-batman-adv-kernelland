@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2009-2010 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -27,5 +29,6 @@ void gw_node_update(struct orig_node *orig_node, uint8_t new_gwflags);
 void gw_node_delete(struct orig_node *orig_node);
 void gw_node_purge_deleted(void);
 void gw_node_list_free(void);
-int gw_client_fill_buffer_text(unsigned char *buff, int buff_len);
-bool gw_is_target(struct sk_buff *skb);
+int gw_client_fill_buffer_text(struct net_device *net_dev, char *buff,
+			       size_t count, loff_t off);
+bool gw_is_target(struct bat_priv *bat_priv, struct sk_buff *skb);

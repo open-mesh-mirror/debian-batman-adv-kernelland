@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -362,35 +362,37 @@ static char count_real_packets(struct ethhdr *ethhdr,
 }
 
 /* copy primary address for bonding */
-static void mark_bonding_address(struct orig_node *orig_node,
-				struct orig_node *orig_neigh_node,
-				struct batman_packet *batman_packet)
+static void mark_bonding_address(struct bat_priv *bat_priv,
+				 struct orig_node *orig_node,
+				 struct orig_node *orig_neigh_node,
+				 struct batman_packet *batman_packet)
 
 {
 	/* don't care if bonding is not enabled */
-	if (!atomic_read(&bonding_enabled)) {
+	if (!atomic_read(&bat_priv->bonding_enabled)) {
 		orig_node->bond.candidates = 0;
 		return;
 	}
 
 	if (batman_packet->flags & PRIMARIES_FIRST_HOP)
 		memcpy(orig_neigh_node->primary_addr,
-						orig_node->orig, ETH_ALEN);
-	 else
-		return;
+		       orig_node->orig, ETH_ALEN);
+
+	return;
 }
 
 /* mark possible bonding candidates in the neighbor list */
-void update_bonding_candidates(struct orig_node *orig_node)
+void update_bonding_candidates(struct bat_priv *bat_priv,
+			       struct orig_node *orig_node)
 {
 	int candidates;
 	int interference_candidate;
 	int best_tq;
 	struct neigh_node *tmp_neigh_node, *tmp_neigh_node2;
-    struct neigh_node *first_candidate, *last_candidate;
+	struct neigh_node *first_candidate, *last_candidate;
 
 	/* don't care if bonding is not enabled */
-	if (!atomic_read(&bonding_enabled)) {
+	if (!atomic_read(&bat_priv->bonding_enabled)) {
 		orig_node->bond.candidates = 0;
 		return;
 	}
@@ -477,6 +479,8 @@ void receive_bat_packet(struct ethhdr *ethhdr,
 				unsigned char *hna_buff, int hna_buff_len,
 				struct batman_if *if_incoming)
 {
+	/* FIXME: each orig_node->batman_if will be attached to a softif */
+	struct bat_priv *bat_priv = netdev_priv(soft_device);
 	struct batman_if *batman_if;
 	struct orig_node *orig_neigh_node, *orig_node;
 	char has_directlink_flag;
@@ -638,8 +642,9 @@ void receive_bat_packet(struct ethhdr *ethhdr,
 		update_orig(orig_node, ethhdr, batman_packet,
 			    if_incoming, hna_buff, hna_buff_len, is_duplicate);
 
-	mark_bonding_address(orig_node, orig_neigh_node, batman_packet);
-	update_bonding_candidates(orig_node);
+	mark_bonding_address(bat_priv, orig_node,
+			     orig_neigh_node, batman_packet);
+	update_bonding_candidates(bat_priv, orig_node);
 
 	/* is single hop (direct) neighbor */
 	if (is_single_hop_neigh) {
@@ -675,6 +680,7 @@ int recv_bat_packet(struct sk_buff *skb,
 {
 	struct ethhdr *ethhdr;
 	unsigned long flags;
+	struct sk_buff *skb_old;
 
 	/* drop packet if it has not necessary minimum size */
 	if (skb_headlen(skb) < sizeof(struct batman_packet))
@@ -690,12 +696,19 @@ int recv_bat_packet(struct sk_buff *skb,
 	if (is_bcast(ethhdr->h_source))
 		return NET_RX_DROP;
 
-	spin_lock_irqsave(&orig_hash_lock, flags);
 	/* TODO: we use headlen instead of "length", because
 	 * only this data is paged in. */
-	/* TODO: is another skb_copy needed here? there will be
-	 * written on the data, but nobody (?) should further use
-	 * this data */
+
+	/* create a copy of the skb, if needed, to modify it. */
+	if (!skb_clone_writable(skb, skb_headlen(skb))) {
+		skb_old = skb;
+		skb = skb_copy(skb, GFP_ATOMIC);
+		if (!skb)
+			return NET_RX_DROP;
+		kfree_skb(skb_old);
+	}
+
+	spin_lock_irqsave(&orig_hash_lock, flags);
 	receive_aggr_bat_packet(ethhdr,
 				skb->data,
 				skb_headlen(skb),
@@ -928,6 +941,8 @@ int recv_icmp_packet(struct sk_buff *skb)
  * bonding if possible. */
 struct neigh_node *find_router(struct orig_node *orig_node)
 {
+	/* FIXME: each orig_node->batman_if will be attached to a softif */
+	struct bat_priv *bat_priv = netdev_priv(soft_device);
 	struct orig_node *primary_orig_node;
 	struct orig_node *router_orig;
 	struct neigh_node *router;
@@ -940,7 +955,7 @@ struct neigh_node *find_router(struct orig_node *orig_node)
 		return NULL;
 
 	/* don't care if bonding is not enabled */
-	if (!atomic_read(&bonding_enabled))
+	if (!atomic_read(&bat_priv->bonding_enabled))
 		return orig_node->router;
 
 	router_orig = orig_node->router->orig_node;
@@ -1135,6 +1150,7 @@ int recv_vis_packet(struct sk_buff *skb)
 {
 	struct vis_packet *vis_packet;
 	struct ethhdr *ethhdr;
+	struct bat_priv *bat_priv;
 	int hdr_size = sizeof(struct vis_packet);
 
 	if (skb_headlen(skb) < hdr_size)
@@ -1154,15 +1170,20 @@ int recv_vis_packet(struct sk_buff *skb)
 	if (is_my_mac(vis_packet->sender_orig))
 		return NET_RX_DROP;
 
+	/* FIXME: each batman_if will be attached to a softif */
+	bat_priv = netdev_priv(soft_device);
+
 	switch (vis_packet->vis_type) {
 	case VIS_TYPE_SERVER_SYNC:
 		/* TODO: handle fragmented skbs properly */
-		receive_server_sync_packet(vis_packet, skb_headlen(skb));
+		receive_server_sync_packet(bat_priv, vis_packet,
+					   skb_headlen(skb));
 		break;
 
 	case VIS_TYPE_CLIENT_UPDATE:
 		/* TODO: handle fragmented skbs properly */
-		receive_client_update_packet(vis_packet, skb_headlen(skb));
+		receive_client_update_packet(bat_priv, vis_packet,
+					     skb_headlen(skb));
 		break;
 
 	default:	/* ignore unknown packet */

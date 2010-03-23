@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2009-2010 B.A.T.M.A.N. contributors:
+ *
  * Marek Lindner
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
  * License as published by the Free Software Foundation.
@@ -27,8 +29,5 @@ enum gw_modes {
 #define GW_MODE_CLIENT_NAME	"client"
 #define GW_MODE_SERVER_NAME	"server"
 
-extern atomic_t gw_mode;
-extern atomic_t gw_srv_class;
-
 void gw_srv_class_to_kbit(uint8_t gw_class, int *down, int *up);
-ssize_t gw_mode_set(const char __user *userbuffer, size_t count);
+ssize_t gw_mode_set(struct bat_priv *bat_priv, char *buff, size_t count);
