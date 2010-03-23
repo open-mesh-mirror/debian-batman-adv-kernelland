@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -52,6 +52,8 @@ static bool can_aggregate_with(struct batman_packet *new_batman_packet,
 	 */
 
 	if (time_before(send_time, forw_packet->send_time) &&
+	    time_after_eq(send_time + msecs_to_jiffies(MAX_AGGREGATION_MS),
+					forw_packet->send_time) &&
 	    (aggregated_bytes <= MAX_AGGREGATION_BYTES)) {
 
 		/**
@@ -79,9 +81,15 @@ static bool can_aggregate_with(struct batman_packet *new_batman_packet,
 		 * interface only - we still can aggregate */
 		if ((directlink) &&
 		    (new_batman_packet->ttl == 1) &&
-		    (forw_packet->if_incoming == if_incoming))
-			return true;
+		    (forw_packet->if_incoming == if_incoming) &&
 
+		    /* packets from direct neighbors or
+		     * own secondary interface packets
+		     * (= secondary interface packets in general) */
+		    (batman_packet->flags & DIRECTLINK ||
+		     (forw_packet->own &&
+		      forw_packet->if_incoming->if_num != 0)))
+			return true;
 	}
 
 	return false;
@@ -96,6 +104,7 @@ static void new_aggregated_packet(unsigned char *packet_buff,
 			   int own_packet)
 {
 	struct forw_packet *forw_packet_aggr;
+	unsigned long flags;
 
 	forw_packet_aggr = kmalloc(sizeof(struct forw_packet), GFP_ATOMIC);
 	if (!forw_packet_aggr)
@@ -115,6 +124,7 @@ static void new_aggregated_packet(unsigned char *packet_buff,
 	       packet_buff,
 	       forw_packet_aggr->packet_len);
 
+	forw_packet_aggr->skb = NULL;
 	forw_packet_aggr->own = own_packet;
 	forw_packet_aggr->if_incoming = if_incoming;
 	forw_packet_aggr->num_packets = 0;
@@ -126,9 +136,9 @@ static void new_aggregated_packet(unsigned char *packet_buff,
 		forw_packet_aggr->direct_link_flags |= 1;
 
 	/* add new packet to packet list */
-	spin_lock(&forw_bat_list_lock);
+	spin_lock_irqsave(&forw_bat_list_lock, flags);
 	hlist_add_head(&forw_packet_aggr->list, &forw_bat_list);
-	spin_unlock(&forw_bat_list_lock);
+	spin_unlock_irqrestore(&forw_bat_list_lock, flags);
 
 	/* start timer for this packet */
 	INIT_DELAYED_WORK(&forw_packet_aggr->delayed_work,
@@ -168,9 +178,10 @@ void add_bat_packet_to_list(unsigned char *packet_buff, int packet_len,
 	struct batman_packet *batman_packet =
 		(struct batman_packet *)packet_buff;
 	bool direct_link = batman_packet->flags & DIRECTLINK ? 1 : 0;
+	unsigned long flags;
 
 	/* find position for the packet in the forward queue */
-	spin_lock(&forw_bat_list_lock);
+	spin_lock_irqsave(&forw_bat_list_lock, flags);
 	/* own packets are not to be aggregated */
 	if ((atomic_read(&aggregation_enabled)) && (!own_packet)) {
 		hlist_for_each_entry(forw_packet_pos, tmp_node, &forw_bat_list,
@@ -191,7 +202,17 @@ void add_bat_packet_to_list(unsigned char *packet_buff, int packet_len,
 	 * suitable aggregation packet found */
 	if (forw_packet_aggr == NULL) {
 		/* the following section can run without the lock */
-		spin_unlock(&forw_bat_list_lock);
+		spin_unlock_irqrestore(&forw_bat_list_lock, flags);
+
+		/**
+		 * if we could not aggregate this packet with one of the others
+		 * we hold it back for a while, so that it might be aggregated
+		 * later on
+		 */
+		if ((!own_packet) &&
+		    (atomic_read(&aggregation_enabled)))
+			send_time += msecs_to_jiffies(MAX_AGGREGATION_MS);
+
 		new_aggregated_packet(packet_buff, packet_len,
 				      send_time, direct_link,
 				      if_incoming, own_packet);
@@ -199,7 +220,7 @@ void add_bat_packet_to_list(unsigned char *packet_buff, int packet_len,
 		aggregate(forw_packet_aggr,
 			  packet_buff, packet_len,
 			  direct_link);
-		spin_unlock(&forw_bat_list_lock);
+		spin_unlock_irqrestore(&forw_bat_list_lock, flags);
 	}
 }
 

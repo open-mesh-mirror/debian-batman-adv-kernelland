@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2009 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -19,14 +19,12 @@
  *
  */
 
-extern const struct file_operations proc_log_operations;
-extern uint8_t log_level;
-
-int debug_log(int type, char *fmt, ...);
-int log_open(struct inode *inode, struct file *file);
-int log_release(struct inode *inode, struct file *file);
-ssize_t log_read(struct file *file, char __user *buf, size_t count,
-		 loff_t *ppos);
-ssize_t log_write(struct file *file, const char __user *buf, size_t count,
-		  loff_t *ppos);
-unsigned int log_poll(struct file *file, poll_table *wait);
+int originator_init(void);
+void free_orig_node(void *data);
+void originator_free(void);
+void purge_orig(struct work_struct *work);
+struct orig_node *orig_find(char *mac);
+struct orig_node *get_orig_node(uint8_t *addr);
+struct neigh_node *
+create_neighbor(struct orig_node *orig_node, struct orig_node *orig_neigh_node,
+		uint8_t *neigh, struct batman_if *if_incoming);
