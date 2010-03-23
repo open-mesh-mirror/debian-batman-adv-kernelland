@@ -3,6 +3,9 @@ batman-adv-kernelland (0.2.1-1) UNRELEASED; urgency=low
   * New Upstream Version
   * Remove outdated README.source
   * Updated debian/copyright
+  * debian/patches:
+    - Remove upstream merged irqdeadlock.patch, missing_kfree.patch,
+      random_mac.patch, route_flapping.patch, vis_rounding.patch
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 01 Mar 2010 13:14:52 +0100
 
