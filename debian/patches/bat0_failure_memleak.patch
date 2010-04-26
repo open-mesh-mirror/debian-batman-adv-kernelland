@@ -1,0 +1,19 @@
+Description: kfree_skb() in interface_tx() in error case
+ As we always return that the we consumed the skb, we should also free the skb
+ in the case of an error.
+Origin: backport, http://git.open-mesh.net/?p=batman-adv;a=commit;h=195bab41d06e88f86f3696a4e25d07fdb214d8d7
+Author: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+
+---
+diff --git a/soft-interface.c b/soft-interface.c
+index 62c4250eee003e8d1b0fd2d0835693ea02d45acc..c0d7b1905d529c0de6890452933c8ab128a7874b 100644
+--- a/soft-interface.c
++++ b/soft-interface.c
+@@ -272,6 +272,7 @@ unlock:
+ 	spin_unlock_irqrestore(&orig_hash_lock, flags);
+ dropped:
+ 	priv->stats.tx_dropped++;
++	kfree_skb(skb);
+ end:
+ 	return NETDEV_TX_OK;
+ }
