@@ -32,7 +32,7 @@
 #include <linux/etherdevice.h>
 #include "compat.h"
 
-static uint16_t bcast_seqno = 1; /* give own bcast messages seq numbers to avoid
+static uint32_t bcast_seqno = 1; /* give own bcast messages seq numbers to avoid
 				  * broadcast storms */
 static int32_t skb_packets;
 static int32_t skb_bad_packets;
@@ -176,8 +176,6 @@ int interface_change_mtu(struct net_device *dev, int new_mtu)
 	return 0;
 }
 
-
-
 int interface_tx(struct sk_buff *skb, struct net_device *dev)
 {
 	struct unicast_packet *unicast_packet;
@@ -216,6 +214,7 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 
 		bcast_packet = (struct bcast_packet *)skb->data;
 		bcast_packet->version = COMPAT_VERSION;
+		bcast_packet->ttl = TTL;
 
 		/* batman packet type: broadcast */
 		bcast_packet->packet_type = BAT_BCAST;
@@ -225,12 +224,12 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 		memcpy(bcast_packet->orig, mainIfAddr, ETH_ALEN);
 
 		/* set broadcast sequence number */
-		bcast_packet->seqno = htons(bcast_seqno);
+		bcast_packet->seqno = htonl(bcast_seqno);
 
-		bcast_seqno++;
+		/* broadcast packet. on success, increase seqno. */
+		if (add_bcast_packet_to_list(skb) == NETDEV_TX_OK)
+			bcast_seqno++;
 
-		/* broadcast packet */
-		add_bcast_packet_to_list(skb);
 		/* a copy is stored in the bcast list, therefore removing
 		 * the original skb. */
 		kfree_skb(skb);
@@ -263,7 +262,7 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 
 		spin_unlock_irqrestore(&orig_hash_lock, flags);
 
-		if (batman_if->if_active != IF_ACTIVE)
+		if (batman_if->if_status != IF_ACTIVE)
 			goto dropped;
 
 		if (my_skb_push(skb, sizeof(struct unicast_packet)) < 0)
@@ -290,6 +289,7 @@ unlock:
 	spin_unlock_irqrestore(&orig_hash_lock, flags);
 dropped:
 	priv->stats.tx_dropped++;
+	kfree_skb(skb);
 end:
 	return NETDEV_TX_OK;
 }

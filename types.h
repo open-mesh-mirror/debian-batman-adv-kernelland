@@ -36,12 +36,13 @@ struct batman_if {
 	struct list_head list;
 	int16_t if_num;
 	char *dev;
-	char if_active;
+	char if_status;
 	char addr_str[ETH_STR_LEN];
 	struct net_device *net_dev;
 	atomic_t seqno;
 	unsigned char *packet_buff;
 	int packet_len;
+	struct kobject *hardif_obj;
 	struct rcu_head rcu;
 };
 
@@ -49,20 +50,23 @@ struct orig_node {               /* structure for orig_list maintaining nodes of
 	uint8_t orig[ETH_ALEN];
 	uint8_t primary_addr[ETH_ALEN];	/* hosts primary interface address */
 	struct neigh_node *router;
-	struct batman_if *batman_if;
 	TYPE_OF_WORD *bcast_own;
 	uint8_t *bcast_own_sum;
 	uint8_t tq_own;
 	int tq_asym_penalty;
 	unsigned long last_valid;        /* when last packet from this node was received */
+	unsigned long bcast_seqno_reset; /* time when the broadcast
+					    seqno window was reset. */
+	unsigned long batman_seqno_reset;/* time when the batman seqno
+					    window was reset. */
 	uint8_t gw_flags;      /* flags related to gateway class */
 	uint8_t flags;    /* for now only VIS_SERVER flag. */
 	unsigned char *hna_buff;
 	int16_t hna_buff_len;
-	uint16_t last_real_seqno;   /* last and best known squence number */
+	uint32_t last_real_seqno;   /* last and best known sequence number */
 	uint8_t last_ttl;         /* ttl of last received packet */
 	TYPE_OF_WORD bcast_bits[NUM_WORDS];
-	uint16_t last_bcast_seqno;  /* last broadcast sequence number received by this host */
+	uint32_t last_bcast_seqno;  /* last received broadcast seqno */
 	struct list_head neigh_list;
 	struct {
 		uint8_t candidates;	/* how many candidates are available */
@@ -99,6 +103,11 @@ struct bat_priv {
 	atomic_t vis_mode;
 	atomic_t gw_mode;
 	atomic_t gw_class;
+	atomic_t orig_interval;
+	atomic_t bcast_queue_left;
+	atomic_t batman_queue_left;
+	char num_ifaces;
+	struct batman_if *primary_if;
 	struct kobject *mesh_obj;
 };
 

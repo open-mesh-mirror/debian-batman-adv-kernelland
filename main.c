@@ -20,7 +20,6 @@
  */
 
 #include "main.h"
-#include "proc.h"
 #include "bat_sysfs.h"
 #include "routing.h"
 #include "send.h"
@@ -44,10 +43,7 @@ DEFINE_SPINLOCK(orig_hash_lock);
 DEFINE_SPINLOCK(forw_bat_list_lock);
 DEFINE_SPINLOCK(forw_bcast_list_lock);
 
-atomic_t originator_interval;
-atomic_t vis_interval;
 int16_t num_hna;
-int16_t num_ifs;
 
 struct net_device *soft_device;
 
@@ -82,20 +78,12 @@ int init_module(void)
 
 	atomic_set(&module_state, MODULE_INACTIVE);
 
-	atomic_set(&originator_interval, 1000);
-	atomic_set(&vis_interval, 1000);/* TODO: raise this later, this is only
-					 * for debugging now. */
-
 	/* the name should not be longer than 10 chars - see
 	 * http://lwn.net/Articles/23634/ */
 	bat_event_workqueue = create_singlethread_workqueue("bat_events");
 
 	if (!bat_event_workqueue)
 		return -ENOMEM;
-
-	retval = setup_procfs();
-	if (retval < 0)
-		return retval;
 
 	bat_device_init();
 
@@ -123,7 +111,7 @@ int init_module(void)
 	register_netdevice_notifier(&hard_if_notifier);
 	dev_add_pack(&batman_adv_packet_type);
 
-	printk(KERN_INFO "batman-adv:B.A.T.M.A.N. advanced %s%s (compatibility version %i) loaded \n",
+	printk(KERN_INFO "batman-adv:B.A.T.M.A.N. advanced %s%s (compatibility version %i) loaded\n",
 		  SOURCE_VERSION, REVISION_VERSION_STR, COMPAT_VERSION);
 
 	return 0;
@@ -139,7 +127,10 @@ end:
 
 void cleanup_module(void)
 {
-	shutdown_module();
+	deactivate_module();
+
+	unregister_netdevice_notifier(&hard_if_notifier);
+	hardif_remove_interfaces();
 
 	if (soft_device) {
 		sysfs_del_meshif(soft_device);
@@ -148,9 +139,6 @@ void cleanup_module(void)
 	}
 
 	dev_remove_pack(&batman_adv_packet_type);
-
-	unregister_netdevice_notifier(&hard_if_notifier);
-	cleanup_procfs();
 
 	destroy_workqueue(bat_event_workqueue);
 	bat_event_workqueue = NULL;
@@ -182,17 +170,17 @@ void activate_module(void)
 
 err:
 	printk(KERN_ERR "batman-adv:Unable to allocate memory for mesh information structures: out of mem ?\n");
-	shutdown_module();
+	deactivate_module();
 end:
 	return;
 }
 
 /* shuts down the whole module.*/
-void shutdown_module(void)
+void deactivate_module(void)
 {
 	atomic_set(&module_state, MODULE_DEACTIVATING);
 
-	purge_outstanding_packets();
+	purge_outstanding_packets(NULL);
 	flush_workqueue(bat_event_workqueue);
 
 	vis_quit();
@@ -208,7 +196,6 @@ void shutdown_module(void)
 	synchronize_net();
 	bat_device_destroy();
 
-	hardif_remove_interfaces();
 	synchronize_rcu();
 	atomic_set(&module_state, MODULE_INACTIVE);
 }

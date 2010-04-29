@@ -174,13 +174,10 @@ ssize_t vis_fill_buffer_text(struct net_device *net_dev, char *buff,
 	unsigned long flags;
 	int vis_server = atomic_read(&bat_priv->vis_mode);
 
-	rcu_read_lock();
-	if (list_empty(&if_list) || (vis_server == VIS_TYPE_CLIENT_UPDATE)) {
-		rcu_read_unlock();
+	if ((!bat_priv->primary_if) ||
+	    (vis_server == VIS_TYPE_CLIENT_UPDATE))
 		return 0;
-	}
 
-	rcu_read_unlock();
 	hdr_len = 0;
 
 	spin_lock_irqsave(&vis_hash_lock, flags);
@@ -312,7 +309,8 @@ static struct vis_info *add_packet(struct vis_packet *vis_packet,
 	old_info = hash_find(vis_hash, &search_elem);
 
 	if (old_info != NULL) {
-		if (!seq_after(vis_packet->seqno, old_info->packet.seqno)) {
+		if (!seq_after(ntohl(vis_packet->seqno),
+				ntohl(old_info->packet.seqno))) {
 			if (old_info->packet.seqno == vis_packet->seqno) {
 				recv_list_add(&old_info->recv_list,
 					      vis_packet->sender_orig);
@@ -480,7 +478,7 @@ static int generate_vis_packet(struct bat_priv *bat_priv)
 	spin_lock_irqsave(&orig_hash_lock, flags);
 	memcpy(info->packet.target_orig, broadcastAddr, ETH_ALEN);
 	info->packet.ttl = TTL;
-	info->packet.seqno++;
+	info->packet.seqno = htonl(ntohl(info->packet.seqno) + 1);
 	info->packet.entries = 0;
 
 	if (info->packet.vis_type == VIS_TYPE_CLIENT_UPDATE) {
@@ -499,14 +497,14 @@ static int generate_vis_packet(struct bat_priv *bat_priv)
 		if (orig_node->router != NULL
 			&& compare_orig(orig_node->router->addr,
 					orig_node->orig)
-			&& orig_node->batman_if
-			&& (orig_node->batman_if->if_active == IF_ACTIVE)
+			&& (orig_node->router->if_incoming->if_status ==
+								IF_ACTIVE)
 		    && orig_node->router->tq_avg > 0) {
 
 			/* fill one entry into buffer. */
 			entry = &entry_array[info->packet.entries];
 			memcpy(entry->src,
-			       orig_node->batman_if->net_dev->dev_addr,
+			     orig_node->router->if_incoming->net_dev->dev_addr,
 			       ETH_ALEN);
 			memcpy(entry->dest, orig_node->orig, ETH_ALEN);
 			entry->quality = orig_node->router->tq_avg;
@@ -574,8 +572,7 @@ static void broadcast_vis_packet(struct vis_info *info, int packet_length)
 		orig_node = hashit.bucket->data;
 
 		/* if it's a vis server and reachable, send it. */
-		if ((!orig_node) || (!orig_node->batman_if) ||
-		    (!orig_node->router))
+		if ((!orig_node) || (!orig_node->router))
 			continue;
 		if (!(orig_node->flags & VIS_SERVER))
 			continue;
@@ -585,7 +582,7 @@ static void broadcast_vis_packet(struct vis_info *info, int packet_length)
 			continue;
 
 		memcpy(info->packet.target_orig, orig_node->orig, ETH_ALEN);
-		batman_if = orig_node->batman_if;
+		batman_if = orig_node->router->if_incoming;
 		memcpy(dstaddr, orig_node->router->addr, ETH_ALEN);
 		spin_unlock_irqrestore(&orig_hash_lock, flags);
 
@@ -610,12 +607,12 @@ static void unicast_vis_packet(struct vis_info *info, int packet_length)
 	orig_node = ((struct orig_node *)
 		     hash_find(orig_hash, info->packet.target_orig));
 
-	if ((!orig_node) || (!orig_node->batman_if) || (!orig_node->router))
+	if ((!orig_node) || (!orig_node->router))
 		goto out;
 
 	/* don't lock while sending the packets ... we therefore
 	 * copy the required data before sending */
-	batman_if = orig_node->batman_if;
+	batman_if = orig_node->router->if_incoming;
 	memcpy(dstaddr, orig_node->router->addr, ETH_ALEN);
 	spin_unlock_irqrestore(&orig_hash_lock, flags);
 
@@ -706,7 +703,7 @@ int vis_init(void)
 	}
 
 	/* prefill the vis info */
-	my_vis_info->first_seen = jiffies - atomic_read(&vis_interval);
+	my_vis_info->first_seen = jiffies - msecs_to_jiffies(VIS_INTERVAL);
 	INIT_LIST_HEAD(&my_vis_info->recv_list);
 	INIT_LIST_HEAD(&my_vis_info->send_list);
 	kref_init(&my_vis_info->refcount);
@@ -769,5 +766,5 @@ void vis_quit(void)
 static void start_vis_timer(void)
 {
 	queue_delayed_work(bat_event_workqueue, &vis_timer_wq,
-			   (atomic_read(&vis_interval) * HZ) / 1000);
+			   (VIS_INTERVAL * HZ) / 1000);
 }

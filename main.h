@@ -56,6 +56,8 @@
 #define LOG_BUF_LEN 8192	  /* has to be a power of 2 */
 #define ETH_STR_LEN 20
 
+#define VIS_INTERVAL 5000	/* 5 seconds */
+
 /* how much worse secondary interfaces may be to
  * to be considered as bonding candidates */
 
@@ -66,10 +68,16 @@
 				   * forw_packet->direct_link_flags */
 #define MAX_AGGREGATION_MS 100
 
+#define RESET_PROTECTION_MS 30000
+#define EXPECTED_SEQNO_RANGE	65536
+/* don't reset again within 30 seconds */
+
 #define MODULE_INACTIVE 0
 #define MODULE_ACTIVE 1
 #define MODULE_DEACTIVATING 2
 
+#define BCAST_QUEUE_LEN		256
+#define BATMAN_QUEUE_LEN 	256
 
 /*
  * Debug Messages
@@ -131,10 +139,7 @@ extern spinlock_t orig_hash_lock;
 extern spinlock_t forw_bat_list_lock;
 extern spinlock_t forw_bcast_list_lock;
 
-extern atomic_t originator_interval;
-extern atomic_t vis_interval;
 extern int16_t num_hna;
-extern int16_t num_ifs;
 
 extern struct net_device *soft_device;
 
@@ -143,7 +148,7 @@ extern atomic_t module_state;
 extern struct workqueue_struct *bat_event_workqueue;
 
 void activate_module(void);
-void shutdown_module(void);
+void deactivate_module(void);
 void inc_module_count(void);
 void dec_module_count(void);
 int addr_to_string(char *buff, uint8_t *addr);
