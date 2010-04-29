@@ -95,6 +95,7 @@ static bool can_aggregate_with(struct batman_packet *new_batman_packet,
 	return false;
 }
 
+#define atomic_dec_not_zero(v)          atomic_add_unless((v), -1, 0)
 /* create a new aggregated packet and add this packet to it */
 static void new_aggregated_packet(unsigned char *packet_buff,
 			   int packet_len,
@@ -105,14 +106,29 @@ static void new_aggregated_packet(unsigned char *packet_buff,
 {
 	struct forw_packet *forw_packet_aggr;
 	unsigned long flags;
+	/* FIXME: each batman_if will be attached to a softif */
+	struct bat_priv *bat_priv = netdev_priv(soft_device);
+
+	/* own packet should always be scheduled */
+	if (!own_packet) {
+		if (!atomic_dec_not_zero(&bat_priv->batman_queue_left)) {
+			bat_dbg(DBG_BATMAN, "batman packet queue full\n");
+			return;
+		}
+	}
 
 	forw_packet_aggr = kmalloc(sizeof(struct forw_packet), GFP_ATOMIC);
-	if (!forw_packet_aggr)
+	if (!forw_packet_aggr) {
+		if (!own_packet)
+			atomic_inc(&bat_priv->batman_queue_left);
 		return;
+	}
 
 	forw_packet_aggr->packet_buff = kmalloc(MAX_AGGREGATION_BYTES,
 						GFP_ATOMIC);
 	if (!forw_packet_aggr->packet_buff) {
+		if (!own_packet)
+			atomic_inc(&bat_priv->batman_queue_left);
 		kfree(forw_packet_aggr);
 		return;
 	}
@@ -238,9 +254,9 @@ void receive_aggr_bat_packet(struct ethhdr *ethhdr, unsigned char *packet_buff,
 	while (aggregated_packet(buff_pos, packet_len,
 				 batman_packet->num_hna)) {
 
-		/* network to host order for our 16bit seqno, and the
+		/* network to host order for our 32bit seqno, and the
 		   orig_interval. */
-		batman_packet->seqno = ntohs(batman_packet->seqno);
+		batman_packet->seqno = ntohl(batman_packet->seqno);
 
 		hna_buff = packet_buff + buff_pos + BAT_PACKET_LEN;
 		receive_bat_packet(ethhdr, batman_packet,
