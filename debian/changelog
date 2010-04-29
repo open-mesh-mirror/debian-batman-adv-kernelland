@@ -1,11 +1,11 @@
-batman-adv-kernelland (0.3.0~alpha~svn1641-1) UNRELEASED; urgency=low
+batman-adv-kernelland (0.3.0~alpha~svn1641-1) experimental; urgency=low
 
   * New Upstream Snapshot
   * debian/patches:
     - Remove upstream merged bat0_failure_memleak.patch, limit_queues.patch,
       seqno_redesign.patch, update_ethhdr_after_copy.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 29 Apr 2010 10:44:11 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 29 Apr 2010 10:49:58 +0200
 
 batman-adv-kernelland (0.3.0~alpha~svn1608-1) experimental; urgency=low
 
