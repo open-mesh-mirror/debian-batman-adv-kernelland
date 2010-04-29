@@ -1,6 +1,9 @@
 batman-adv-kernelland (0.3.0~alpha~svn1641-1) UNRELEASED; urgency=low
 
   * New Upstream Snapshot
+  * debian/patches:
+    - Remove upstream merged bat0_failure_memleak.patch, limit_queues.patch,
+      seqno_redesign.patch, update_ethhdr_after_copy.patch
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 29 Apr 2010 10:44:11 +0200
 
@@ -15,6 +18,20 @@ batman-adv-kernelland (0.3.0~alpha~svn1578-1) experimental; urgency=low
   * New Upstream Snapshot
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 01 Mar 2010 13:06:35 +0100
+
+batman-adv-kernelland (0.2.1-2) unstable; urgency=low
+
+  * debian/patches:
+    - Add seqno_redesign.patch, Reorganize sequence number handling to reduce
+      broadcast loops
+    - Add limit_queues.patch, Limit queue lengths for batman and broadcast
+      packets
+    - Add bat0_failure_memleak.patch, kfree_skb() in interface_tx() in error
+      case
+    - Add update_ethhdr_after_copy.patch, Update pointer to ethhdr after
+      skb_copy
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 26 Apr 2010 22:33:03 +0200
 
 batman-adv-kernelland (0.2.1-1) unstable; urgency=low
 
