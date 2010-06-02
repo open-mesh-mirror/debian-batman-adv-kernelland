@@ -29,6 +29,7 @@
 #include "vis.h"
 #include "aggregation.h"
 #include "gateway_common.h"
+#include <linux/netfilter_bridge.h>
 
 #include "compat.h"
 
@@ -68,7 +69,8 @@ int send_skb_packet(struct sk_buff *skb,
 
 	if (!(batman_if->net_dev->flags & IFF_UP)) {
 		printk(KERN_WARNING
-		       "batman-adv:Interface %s is not up - can't send packet via that interface!\n",
+		       "batman-adv:Interface %s "
+		       "is not up - can't send packet via that interface!\n",
 		       batman_if->dev);
 		goto send_skb_err;
 	}
@@ -92,9 +94,12 @@ int send_skb_packet(struct sk_buff *skb,
 
 	/* dev_queue_xmit() returns a negative result on error.	 However on
 	 * congestion and traffic shaping, it drops and returns NET_XMIT_DROP
-	 * (which is > 0). This will not be treated as an error. */
+	 * (which is > 0). This will not be treated as an error.
+	 * Also, if netfilter/ebtables wants to block outgoing batman
+	 * packets then giving them a chance to do so here */
 
-	return dev_queue_xmit(skb);
+	return NF_HOOK(PF_BRIDGE, NF_BR_LOCAL_OUT, skb, NULL, skb->dev,
+		       dev_queue_xmit);
 send_skb_err:
 	kfree_skb(skb);
 	return NET_XMIT_DROP;
@@ -129,7 +134,8 @@ static void send_packet_to_if(struct forw_packet *forw_packet,
 	if (batman_if->if_status != IF_ACTIVE)
 		return;
 
-	packet_num = buff_pos = 0;
+	packet_num = 0;
+	buff_pos = 0;
 	batman_packet = (struct batman_packet *)
 		(forw_packet->packet_buff);
 
@@ -150,9 +156,9 @@ static void send_packet_to_if(struct forw_packet *forw_packet,
 							    "Sending own" :
 							    "Forwarding"));
 		bat_dbg(DBG_BATMAN,
-			"%s %spacket (originator %pM, seqno %d, TQ %d, TTL %d, IDF %s) on interface %s [%s]\n",
-			fwd_str,
-			(packet_num > 0 ? "aggregated " : ""),
+			"%s %spacket (originator %pM, seqno %d, TQ %d, TTL %d,"
+			" IDF %s) on interface %s [%s]\n",
+			fwd_str, (packet_num > 0 ? "aggregated " : ""),
 			batman_packet->orig, ntohl(batman_packet->seqno),
 			batman_packet->tq, batman_packet->ttl,
 			(batman_packet->flags & DIRECTLINK ?
@@ -180,7 +186,8 @@ static void send_packet(struct forw_packet *forw_packet)
 	unsigned char directlink = (batman_packet->flags & DIRECTLINK ? 1 : 0);
 
 	if (!forw_packet->if_incoming) {
-		printk(KERN_ERR "batman-adv: Error - can't forward packet: incoming iface not specified\n");
+		printk(KERN_ERR "batman-adv: Error - can't forward packet: "
+		       "incoming iface not specified\n");
 		return;
 	}
 
@@ -194,7 +201,8 @@ static void send_packet(struct forw_packet *forw_packet)
 
 		/* FIXME: what about aggregated packets ? */
 		bat_dbg(DBG_BATMAN,
-			"%s packet (originator %pM, seqno %d, TTL %d) on interface %s [%s]\n",
+			"%s packet (originator %pM, seqno %d, TTL %d) "
+			"on interface %s [%s]\n",
 			(forw_packet->own ? "Sending own" : "Forwarding"),
 			batman_packet->orig, ntohl(batman_packet->seqno),
 			batman_packet->ttl, forw_packet->if_incoming->dev,
@@ -330,7 +338,8 @@ void schedule_forward_packet(struct orig_node *orig_node,
 			batman_packet->tq = orig_node->router->tq_avg;
 
 			if (orig_node->router->last_ttl)
-				batman_packet->ttl = orig_node->router->last_ttl - 1;
+				batman_packet->ttl = orig_node->router->last_ttl
+							- 1;
 		}
 
 		tq_avg = orig_node->router->tq_avg;
@@ -339,7 +348,8 @@ void schedule_forward_packet(struct orig_node *orig_node,
 	/* apply hop penalty */
 	batman_packet->tq = hop_penalty(batman_packet->tq);
 
-	bat_dbg(DBG_BATMAN, "Forwarding packet: tq_orig: %i, tq_avg: %i, tq_forw: %i, ttl_orig: %i, ttl_forw: %i\n",
+	bat_dbg(DBG_BATMAN, "Forwarding packet: tq_orig: %i, tq_avg: %i, "
+		"tq_forw: %i, ttl_orig: %i, ttl_forw: %i\n",
 		in_tq, tq_avg, batman_packet->tq, in_ttl - 1,
 		batman_packet->ttl);
 
@@ -454,6 +464,9 @@ void send_outstanding_bcast_packet(struct work_struct *work)
 	hlist_del(&forw_packet->list);
 	spin_unlock_irqrestore(&forw_bcast_list_lock, flags);
 
+	if (atomic_read(&module_state) == MODULE_DEACTIVATING)
+		goto out;
+
 	/* rebroadcast packet */
 	rcu_read_lock();
 	list_for_each_entry_rcu(batman_if, &if_list, list) {
@@ -467,15 +480,15 @@ void send_outstanding_bcast_packet(struct work_struct *work)
 
 	forw_packet->num_packets++;
 
-	/* if we still have some more bcasts to send and we are not shutting
-	 * down */
-	if ((forw_packet->num_packets < 3) &&
-	    (atomic_read(&module_state) != MODULE_DEACTIVATING))
+	/* if we still have some more bcasts to send */
+	if (forw_packet->num_packets < 3) {
 		_add_bcast_packet_to_list(forw_packet, ((5 * HZ) / 1000));
-	else {
-		forw_packet_free(forw_packet);
-		atomic_inc(&bat_priv->bcast_queue_left);
+		return;
 	}
+
+out:
+	forw_packet_free(forw_packet);
+	atomic_inc(&bat_priv->bcast_queue_left);
 }
 
 void send_outstanding_bat_packet(struct work_struct *work)
@@ -492,6 +505,9 @@ void send_outstanding_bat_packet(struct work_struct *work)
 	hlist_del(&forw_packet->list);
 	spin_unlock_irqrestore(&forw_bat_list_lock, flags);
 
+	if (atomic_read(&module_state) == MODULE_DEACTIVATING)
+		goto out;
+
 	send_packet(forw_packet);
 
 	/**
@@ -499,10 +515,10 @@ void send_outstanding_bat_packet(struct work_struct *work)
 	 * to determine the queues wake up time unless we are
 	 * shutting down
 	 */
-	if ((forw_packet->own) &&
-	    (atomic_read(&module_state) != MODULE_DEACTIVATING))
+	if (forw_packet->own)
 		schedule_own_packet(forw_packet->if_incoming);
 
+out:
 	/* don't count own packet */
 	if (!forw_packet->own)
 		atomic_inc(&bat_priv->batman_queue_left);

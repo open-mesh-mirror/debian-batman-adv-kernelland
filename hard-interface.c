@@ -28,9 +28,11 @@
 #include "bat_sysfs.h"
 #include "originator.h"
 #include "hash.h"
-#include "compat.h"
 
 #include <linux/if_arp.h>
+#include <linux/netfilter_bridge.h>
+
+#include "compat.h"
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
@@ -150,9 +152,12 @@ static void check_known_mac_addr(uint8_t *addr)
 		if (!compare_orig(batman_if->net_dev->dev_addr, addr))
 			continue;
 
-		printk(KERN_WARNING "batman-adv:The newly added mac address (%pM) already exists on: %s\n",
-		       addr, batman_if->dev);
-		printk(KERN_WARNING "batman-adv:It is strongly recommended to keep mac addresses unique to avoid problems!\n");
+		printk(KERN_WARNING "batman-adv:"
+		    "The newly added mac address (%pM) already exists on: %s\n",
+		    addr, batman_if->dev);
+		printk(KERN_WARNING "batman-adv:"
+		    "It is strongly recommended to keep mac addresses unique"
+		    "to avoid problems!\n");
 	}
 	rcu_read_unlock();
 }
@@ -243,7 +248,8 @@ int hardif_enable_interface(struct batman_if *batman_if)
 	batman_if->packet_buff = kmalloc(batman_if->packet_len, GFP_ATOMIC);
 
 	if (!batman_if->packet_buff) {
-		printk(KERN_ERR "batman-adv:Can't add interface packet (%s): out of memory\n",
+		printk(KERN_ERR "batman-adv:"
+		       "Can't add interface packet (%s): out of memory\n",
 		       batman_if->dev);
 		goto err;
 	}
@@ -267,7 +273,10 @@ int hardif_enable_interface(struct batman_if *batman_if)
 	if (hardif_is_iface_up(batman_if))
 		hardif_activate_interface(bat_priv, batman_if);
 	else
-		printk(KERN_ERR "batman-adv:Not using interface %s (retrying later): interface not active\n", batman_if->dev);
+		printk(KERN_ERR "batman-adv:"
+		       "Not using interface %s "
+		       "(retrying later): interface not active\n",
+		       batman_if->dev);
 
 	/* begin scheduling originator messages on that interface */
 	schedule_own_packet(batman_if);
@@ -317,7 +326,8 @@ static struct batman_if *hardif_add_interface(struct net_device *net_dev)
 
 	batman_if = kmalloc(sizeof(struct batman_if), GFP_ATOMIC);
 	if (!batman_if) {
-		printk(KERN_ERR "batman-adv:Can't add interface (%s): out of memory\n",
+		printk(KERN_ERR "batman-adv:"
+		       "Can't add interface (%s): out of memory\n",
 		       net_dev->name);
 		goto out;
 	}
@@ -333,7 +343,6 @@ static struct batman_if *hardif_add_interface(struct net_device *net_dev)
 	batman_if->if_num = -1;
 	batman_if->net_dev = net_dev;
 	batman_if->if_status = IF_NOT_IN_USE;
-	INIT_RCU_HEAD(&batman_if->rcu);
 	INIT_LIST_HEAD(&batman_if->list);
 
 	check_known_mac_addr(batman_if->net_dev->dev_addr);
@@ -426,6 +435,11 @@ out:
 	return NOTIFY_DONE;
 }
 
+int batman_skb_recv_finish(struct sk_buff *skb)
+{
+	return NF_ACCEPT;
+}
+
 /* receive a packet with the batman ethertype coming on a hard
  * interface */
 int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
@@ -444,6 +458,13 @@ int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 
 	if (atomic_read(&module_state) != MODULE_ACTIVE)
 		goto err_free;
+
+	/* if netfilter/ebtables wants to block incoming batman
+	 * packets then give them a chance to do so here */
+	ret = NF_HOOK(PF_BRIDGE, NF_BR_LOCAL_IN, skb, dev, NULL,
+		      batman_skb_recv_finish);
+	if (ret != 1)
+		goto err_out;
 
 	/* packet should hold at least type and version */
 	if (unlikely(skb_headlen(skb) < 2))
@@ -523,7 +544,6 @@ err_free:
 err_out:
 	return NET_RX_DROP;
 }
-
 
 struct notifier_block hard_if_notifier = {
 	.notifier_call = hard_if_event,
