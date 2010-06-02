@@ -21,11 +21,12 @@
 
 #include "main.h"
 #include "bat_sysfs.h"
+#include "bat_debugfs.h"
 #include "routing.h"
 #include "send.h"
 #include "originator.h"
 #include "soft-interface.h"
-#include "device.h"
+#include "icmp_socket.h"
 #include "translation-table.h"
 #include "hard-interface.h"
 #include "gateway_client.h"
@@ -85,21 +86,24 @@ int init_module(void)
 	if (!bat_event_workqueue)
 		return -ENOMEM;
 
-	bat_device_init();
+	bat_socket_init();
+	debugfs_init();
 
 	/* initialize layer 2 interface */
 	soft_device = alloc_netdev(sizeof(struct bat_priv) , "bat%d",
 				   interface_setup);
 
 	if (!soft_device) {
-		printk(KERN_ERR "batman-adv:Unable to allocate the batman interface\n");
+		printk(KERN_ERR "batman-adv:"
+		       "Unable to allocate the batman interface\n");
 		goto end;
 	}
 
 	retval = register_netdev(soft_device);
 
 	if (retval < 0) {
-		printk(KERN_ERR "batman-adv:Unable to register the batman interface: %i\n", retval);
+		printk(KERN_ERR "batman-adv:"
+		       "Unable to register the batman interface: %i\n", retval);
 		goto free_soft_device;
 	}
 
@@ -108,16 +112,27 @@ int init_module(void)
 	if (retval < 0)
 		goto unreg_soft_device;
 
+	retval = debugfs_add_meshif(soft_device);
+
+	if (retval < 0)
+		goto unreg_sysfs;
+
 	register_netdevice_notifier(&hard_if_notifier);
 	dev_add_pack(&batman_adv_packet_type);
 
-	printk(KERN_INFO "batman-adv:B.A.T.M.A.N. advanced %s%s (compatibility version %i) loaded\n",
-		  SOURCE_VERSION, REVISION_VERSION_STR, COMPAT_VERSION);
+	printk(KERN_INFO "batman-adv:"
+	       "B.A.T.M.A.N. advanced %s%s (compatibility version %i) loaded\n",
+	       SOURCE_VERSION, REVISION_VERSION_STR, COMPAT_VERSION);
 
 	return 0;
 
+unreg_sysfs:
+	sysfs_del_meshif(soft_device);
 unreg_soft_device:
-	unregister_netdevice(soft_device);
+	unregister_netdev(soft_device);
+	soft_device = NULL;
+	return -ENOMEM;
+
 free_soft_device:
 	free_netdev(soft_device);
 	soft_device = NULL;
@@ -133,6 +148,7 @@ void cleanup_module(void)
 	hardif_remove_interfaces();
 
 	if (soft_device) {
+		debugfs_del_meshif(soft_device);
 		sysfs_del_meshif(soft_device);
 		unregister_netdev(soft_device);
 		soft_device = NULL;
@@ -144,7 +160,7 @@ void cleanup_module(void)
 	bat_event_workqueue = NULL;
 }
 
-/* activates the module, creates bat device, starts timer ... */
+/* activates the module, starts timer ... */
 void activate_module(void)
 {
 	if (originator_init() < 1)
@@ -158,9 +174,6 @@ void activate_module(void)
 
 	hna_local_add(soft_device->dev_addr);
 
-	if (bat_device_setup() < 1)
-		goto end;
-
 	if (vis_init() < 1)
 		goto err;
 
@@ -169,7 +182,9 @@ void activate_module(void)
 	goto end;
 
 err:
-	printk(KERN_ERR "batman-adv:Unable to allocate memory for mesh information structures: out of mem ?\n");
+	printk(KERN_ERR "batman-adv:"
+	       "Unable to allocate memory for mesh information structures: "
+	       "out of mem ?\n");
 	deactivate_module();
 end:
 	return;
@@ -194,7 +209,7 @@ void deactivate_module(void)
 	hna_global_free();
 
 	synchronize_net();
-	bat_device_destroy();
+	debugfs_destroy();
 
 	synchronize_rcu();
 	atomic_set(&module_state, MODULE_INACTIVE);
@@ -212,7 +227,7 @@ void dec_module_count(void)
 
 int addr_to_string(char *buff, uint8_t *addr)
 {
-	return sprintf(buff, "%02x:%02x:%02x:%02x:%02x:%02x",
+	return sprintf(buff, MAC_FMT,
 		       addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
 }
 

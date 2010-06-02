@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2010 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner
  *
@@ -19,13 +19,15 @@
  *
  */
 
-void gw_deselect(void);
-void gw_election(void);
-void *gw_get_selected(void);
-void gw_check_election(struct bat_priv *bat_priv, struct orig_node *orig_node);
-void gw_node_update(struct orig_node *orig_node, uint8_t new_gwflags);
-void gw_node_delete(struct orig_node *orig_node);
-void gw_node_purge_deleted(void);
-void gw_node_list_free(void);
-int gw_client_seq_print_text(struct seq_file *seq, void *offset);
-bool gw_is_target(struct bat_priv *bat_priv, struct sk_buff *skb);
+
+#ifndef BAT_DEBUGFS_H
+#define BAT_DEBUGFS_H
+
+#define DEBUGFS_BAT_SUBDIR "batman_adv"
+
+void debugfs_init(void);
+void debugfs_destroy(void);
+int debugfs_add_meshif(struct net_device *dev);
+void debugfs_del_meshif(struct net_device *dev);
+
+#endif
