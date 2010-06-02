@@ -1,8 +1,8 @@
-batman-adv-kernelland (0.3.0~alpha~v0.2+113+gde32ed5-1) UNRELEASED; urgency=low
+batman-adv-kernelland (0.3.0~alpha~v0.2+113+gde32ed5-1) experimental; urgency=low
 
   * New Upstream Snapshot from de32ed5ba4b6487dbd3c4cad6c9ba8240d79c421
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 02 Jun 2010 11:42:08 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 02 Jun 2010 11:52:31 +0200
 
 batman-adv-kernelland (0.3.0~alpha~svn1641-1) experimental; urgency=low
 
