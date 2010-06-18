@@ -1,9 +1,9 @@
-batman-adv-kernelland (2010.0.0+v0.2+124+g9faa319-1) UNRELEASED; urgency=low
+batman-adv-kernelland (2010.0.0+v0.2+124+g9faa319-1) experimental; urgency=low
 
   * New Upstream Snapshot from 9faa3194a34d578d189ff2b5e45568736c948ded
   * Change get-orig-source.sh to support new versioning scheme
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Jun 2010 00:39:59 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Jun 2010 00:42:37 +0200
 
 batman-adv-kernelland (2010.0.0-1) unstable; urgency=low
 
