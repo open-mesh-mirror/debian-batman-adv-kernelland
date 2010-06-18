@@ -22,11 +22,12 @@
 /* Kernel Programming */
 #define LINUX
 
-#define DRIVER_AUTHOR "Marek Lindner <lindner_marek@yahoo.de>, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>"
+#define DRIVER_AUTHOR "Marek Lindner <lindner_marek@yahoo.de>, " \
+		      "Simon Wunderlich <siwu@hrz.tu-chemnitz.de>"
 #define DRIVER_DESC   "B.A.T.M.A.N. advanced"
 #define DRIVER_DEVICE "batman-adv"
 
-#define SOURCE_VERSION "0.2.1"
+#define SOURCE_VERSION "2010.0.0"
 
 
 /* B.A.T.M.A.N. parameters */
@@ -61,10 +62,16 @@
 				   * forw_packet->direct_link_flags */
 #define MAX_AGGREGATION_MS 100
 
+#define RESET_PROTECTION_MS 30000
+#define EXPECTED_SEQNO_RANGE	4096
+/* don't reset again within 30 seconds */
+
 #define MODULE_INACTIVE 0
 #define MODULE_ACTIVE 1
 #define MODULE_DEACTIVATING 2
 
+#define BCAST_QUEUE_LEN		256
+#define BATMAN_QUEUE_LEN	256
 
 /*
  * Debug Messages
@@ -107,6 +114,7 @@ extern int bat_debug_type(int type);
 #include <linux/kthread.h>	/* kernel threads */
 #include <linux/pkt_sched.h>	/* schedule types */
 #include <linux/workqueue.h>	/* workqueue */
+#include <linux/slab.h>
 #include <net/sock.h>		/* struct sock */
 #include <linux/jiffies.h>
 #include "types.h"
@@ -126,12 +134,10 @@ extern spinlock_t orig_hash_lock;
 extern spinlock_t forw_bat_list_lock;
 extern spinlock_t forw_bcast_list_lock;
 
-extern atomic_t originator_interval;
 extern atomic_t vis_interval;
-extern atomic_t vis_mode;
-extern atomic_t aggregation_enabled;
+extern atomic_t bcast_queue_left;
+extern atomic_t batman_queue_left;
 extern int16_t num_hna;
-extern int16_t num_ifs;
 
 extern struct net_device *soft_device;
 
@@ -140,7 +146,7 @@ extern atomic_t module_state;
 extern struct workqueue_struct *bat_event_workqueue;
 
 void activate_module(void);
-void shutdown_module(void);
+void deactivate_module(void);
 void inc_module_count(void);
 void dec_module_count(void);
 int addr_to_string(char *buff, uint8_t *addr);
