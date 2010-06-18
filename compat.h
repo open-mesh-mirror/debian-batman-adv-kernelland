@@ -43,26 +43,12 @@
 #define skb_mac_header(_skb) \
     ((_skb)->mac.raw)
 
-#define skb_network_header(_skb) \
-    ((_skb)->nh.raw)
-
 #define skb_mac_header(_skb) \
     ((_skb)->mac.raw)
 
 #endif /* < KERNEL_VERSION(2,6,22) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
-
-#define transtable_local_read(kobj, attr, buff, off, count) \
-	transtable_local_read(kobj, buff, off, count)
-#define transtable_global_read(kobj, attr, buff, off, count) \
-	transtable_global_read(kobj, buff, off, count)
-#define originators_read(kobj, attr, buff, off, count) \
-	originators_read(kobj, buff, off, count)
-#define gateways_read(kobj, attr, buff, off, count) \
-	gateways_read(kobj, buff, off, count)
-#define vis_data_read(kobj, attr, buff, off, count) \
-	vis_data_read(kobj, buff, off, count)
 
 static inline int skb_clone_writable(struct sk_buff *skb, unsigned int len)
 {
@@ -73,12 +59,6 @@ static inline int skb_clone_writable(struct sk_buff *skb, unsigned int len)
 #define cancel_delayed_work_sync(wq) cancel_delayed_work(wq)
 
 #endif /* < KERNEL_VERSION(2, 6, 23) */
-
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
-
-#define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
-
-#endif /* < KERNEL_VERSION(2, 6, 24) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
 
@@ -149,6 +129,8 @@ static inline struct kobject *kobject_create_and_add(const char *name,
 
 	return kobj;
 }
+
+#define kobject_put(kobj) kobject_unregister(kobj)
 
 #endif /* < KERNEL_VERSION(2, 6, 25) */
 
@@ -234,6 +216,12 @@ next_sibling:
 
 asmlinkage int bat_printk(const char *fmt, ...);
 #define printk bat_printk
+
+int bat_sprintf(char *buf, const char *fmt, ...);
+#define sprintf bat_sprintf
+
+int bat_snprintf(char *buf, size_t size, const char *fmt, ...);
+#define snprintf bat_snprintf
 
 static inline struct net_device_stats *dev_get_stats(struct net_device *dev)
 {

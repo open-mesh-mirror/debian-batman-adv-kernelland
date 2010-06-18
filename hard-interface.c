@@ -74,7 +74,7 @@ static int is_valid_iface(struct net_device *net_dev)
 #endif
 
 	/* Device is being bridged */
-	/* if (net_dev->br_port != NULL)
+	/* if (net_dev->priv_flags & IFF_BRIDGE_PORT)
 		return 0; */
 
 	return 1;
@@ -435,7 +435,7 @@ out:
 	return NOTIFY_DONE;
 }
 
-int batman_skb_recv_finish(struct sk_buff *skb)
+static int batman_skb_recv_finish(struct sk_buff *skb)
 {
 	return NF_ACCEPT;
 }
@@ -514,7 +514,7 @@ int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
 
 		/* unicast packet */
 	case BAT_UNICAST:
-		ret = recv_unicast_packet(skb);
+		ret = recv_unicast_packet(skb, batman_if);
 		break;
 
 		/* broadcast packet */
