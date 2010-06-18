@@ -1,4 +1,4 @@
-batman-adv-kernelland (2010.0.0-1) UNRELEASED; urgency=low
+batman-adv-kernelland (2010.0.0-1) unstable; urgency=low
 
   * New Upstream Version
   * Download snapshots from git repository when using debian/get-orig-source.sh
@@ -7,7 +7,7 @@ batman-adv-kernelland (2010.0.0-1) UNRELEASED; urgency=low
     - Remove upstream merged patches: bat0_failure_memleak.patch,
       limit_queues.patch, seqno_redesign.patch, update_ethhdr_after_copy.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 01 Jun 2010 16:11:15 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Jun 2010 00:02:48 +0200
 
 batman-adv-kernelland (0.2.1-2) unstable; urgency=low
 
