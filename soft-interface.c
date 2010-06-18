@@ -26,6 +26,7 @@
 #include "translation-table.h"
 #include "types.h"
 #include "hash.h"
+#include <linux/slab.h>
 #include <linux/ethtool.h>
 #include <linux/etherdevice.h>
 #include "compat.h"
@@ -182,12 +183,16 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 	struct ethhdr *ethhdr = (struct ethhdr *)skb->data;
 	struct bat_priv *priv = netdev_priv(dev);
 	struct batman_if *batman_if;
+	struct bat_priv *bat_priv;
 	uint8_t dstaddr[6];
 	int data_len = skb->len;
 	unsigned long flags;
 
 	if (atomic_read(&module_state) != MODULE_ACTIVE)
 		goto dropped;
+
+	/* FIXME: each batman_if will be attached to a softif */
+	bat_priv = netdev_priv(soft_device);
 
 	dev->trans_start = jiffies;
 	/* TODO: check this for locks */
@@ -212,10 +217,10 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 		/* set broadcast sequence number */
 		bcast_packet->seqno = htons(bcast_seqno);
 
-		bcast_seqno++;
+		/* broadcast packet. on success, increase seqno. */
+		if (add_bcast_packet_to_list(skb) == NETDEV_TX_OK)
+			bcast_seqno++;
 
-		/* broadcast packet */
-		add_bcast_packet_to_list(skb);
 		/* a copy is stored in the bcast list, therefore removing
 		 * the original skb. */
 		kfree_skb(skb);
@@ -232,8 +237,9 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 			orig_node = transtable_search(ethhdr->h_dest);
 
 		if ((orig_node) &&
-		    (orig_node->batman_if) &&
 		    (orig_node->router)) {
+			struct neigh_node *router = orig_node->router;
+
 			if (my_skb_push(skb, sizeof(struct unicast_packet)) < 0)
 				goto unlock;
 
@@ -248,14 +254,14 @@ int interface_tx(struct sk_buff *skb, struct net_device *dev)
 			memcpy(unicast_packet->dest, orig_node->orig, ETH_ALEN);
 
 			/* net_dev won't be available when not active */
-			if (orig_node->batman_if->if_active != IF_ACTIVE)
+			if (router->if_incoming->if_status != IF_ACTIVE)
 				goto unlock;
 
 			/* don't lock while sending the packets ... we therefore
 			 * copy the required data before sending */
 
-			batman_if = orig_node->batman_if;
-			memcpy(dstaddr, orig_node->router->addr, ETH_ALEN);
+			batman_if = router->if_incoming;
+			memcpy(dstaddr, router->addr, ETH_ALEN);
 			spin_unlock_irqrestore(&orig_hash_lock, flags);
 
 			send_skb_packet(skb, batman_if, dstaddr);
@@ -272,6 +278,7 @@ unlock:
 	spin_unlock_irqrestore(&orig_hash_lock, flags);
 dropped:
 	priv->stats.tx_dropped++;
+	kfree_skb(skb);
 end:
 	return NETDEV_TX_OK;
 }

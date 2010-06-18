@@ -95,6 +95,7 @@ static bool can_aggregate_with(struct batman_packet *new_batman_packet,
 	return false;
 }
 
+#define atomic_dec_not_zero(v)          atomic_add_unless((v), -1, 0)
 /* create a new aggregated packet and add this packet to it */
 static void new_aggregated_packet(unsigned char *packet_buff,
 			   int packet_len,
@@ -106,13 +107,26 @@ static void new_aggregated_packet(unsigned char *packet_buff,
 	struct forw_packet *forw_packet_aggr;
 	unsigned long flags;
 
+	/* own packet should always be scheduled */
+	if (!own_packet) {
+		if (!atomic_dec_not_zero(&batman_queue_left)) {
+			bat_dbg(DBG_BATMAN, "batman packet queue full\n");
+			return;
+		}
+	}
+
 	forw_packet_aggr = kmalloc(sizeof(struct forw_packet), GFP_ATOMIC);
-	if (!forw_packet_aggr)
+	if (!forw_packet_aggr) {
+		if (!own_packet)
+			atomic_inc(&batman_queue_left);
 		return;
+	}
 
 	forw_packet_aggr->packet_buff = kmalloc(MAX_AGGREGATION_BYTES,
 						GFP_ATOMIC);
 	if (!forw_packet_aggr->packet_buff) {
+		if (!own_packet)
+			atomic_inc(&batman_queue_left);
 		kfree(forw_packet_aggr);
 		return;
 	}
@@ -165,7 +179,8 @@ static void aggregate(struct forw_packet *forw_packet_aggr,
 			(1 << forw_packet_aggr->num_packets);
 }
 
-void add_bat_packet_to_list(unsigned char *packet_buff, int packet_len,
+void add_bat_packet_to_list(struct bat_priv *bat_priv,
+			    unsigned char *packet_buff, int packet_len,
 			    struct batman_if *if_incoming, char own_packet,
 			    unsigned long send_time)
 {
@@ -183,7 +198,7 @@ void add_bat_packet_to_list(unsigned char *packet_buff, int packet_len,
 	/* find position for the packet in the forward queue */
 	spin_lock_irqsave(&forw_bat_list_lock, flags);
 	/* own packets are not to be aggregated */
-	if ((atomic_read(&aggregation_enabled)) && (!own_packet)) {
+	if ((atomic_read(&bat_priv->aggregation_enabled)) && (!own_packet)) {
 		hlist_for_each_entry(forw_packet_pos, tmp_node, &forw_bat_list,
 				     list) {
 			if (can_aggregate_with(batman_packet,
@@ -210,7 +225,7 @@ void add_bat_packet_to_list(unsigned char *packet_buff, int packet_len,
 		 * later on
 		 */
 		if ((!own_packet) &&
-		    (atomic_read(&aggregation_enabled)))
+		    (atomic_read(&bat_priv->aggregation_enabled)))
 			send_time += msecs_to_jiffies(MAX_AGGREGATION_MS);
 
 		new_aggregated_packet(packet_buff, packet_len,
