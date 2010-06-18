@@ -3,6 +3,9 @@ batman-adv-kernelland (2010.0.0-1) UNRELEASED; urgency=low
   * New Upstream Version
   * Download snapshots from git repository when using debian/get-orig-source.sh
   * Correct URL in watch file to match newer releases
+  * debian/patches:
+    - Remove upstream merged patches: bat0_failure_memleak.patch,
+      limit_queues.patch, seqno_redesign.patch, update_ethhdr_after_copy.patch
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 01 Jun 2010 16:11:15 +0200
 
