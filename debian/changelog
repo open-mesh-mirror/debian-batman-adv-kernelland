@@ -1,6 +1,7 @@
 batman-adv-kernelland (0.2.1-3) UNRELEASED; urgency=low
 
   * Download snapshots from git repository when using debian/get-orig-source.sh
+  * Correct URL in watch file to match newer releases
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 01 Jun 2010 16:11:15 +0200
 
