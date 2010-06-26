@@ -1,3 +1,9 @@
+batman-adv-kernelland (2010.0.0-2) UNRELEASED; urgency=low
+
+  * Correct destination path of dkms module
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 26 Jun 2010 10:20:31 +0200
+
 batman-adv-kernelland (2010.0.0-1) unstable; urgency=low
 
   * New Upstream Version
