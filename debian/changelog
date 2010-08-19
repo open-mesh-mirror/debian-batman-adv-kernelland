@@ -2,6 +2,9 @@ batman-adv-kernelland (2010.0.0-2) UNRELEASED; urgency=low
 
   * Correct destination path of dkms module
   * Upgraded to policy 3.9.1, no changes required
+  * debian/patches:
+    - Add foreign_stats.patch, Don't increment stats of foreign device (Closes:
+      #593473)
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 26 Jun 2010 10:20:31 +0200
 
