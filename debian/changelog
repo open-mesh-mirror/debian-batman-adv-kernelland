@@ -9,6 +9,8 @@ batman-adv-kernelland (2010.0.0-2) UNRELEASED; urgency=low
       avoid deadlocks (Closes: #593519)
     - Add register_event.patch, Create batman_if only on register event (Closes:
       #593471)
+    - Add netdev_reference.patch, Don't use net_dev after dev_put (Closes:
+      #593472)
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 26 Jun 2010 10:20:31 +0200
 
