@@ -5,6 +5,8 @@ batman-adv-kernelland (2010.0.0-2) UNRELEASED; urgency=low
   * debian/patches:
     - Add foreign_stats.patch, Don't increment stats of foreign device (Closes:
       #593473)
+    - Add orig_hash_deadlock.patch, unify orig_hash_lock spinlock handling to
+      avoid deadlocks (Closes: #593519)
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 26 Jun 2010 10:20:31 +0200
 
