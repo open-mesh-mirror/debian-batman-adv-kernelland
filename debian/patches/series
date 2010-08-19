@@ -1,2 +1,3 @@
 foreign_stats.patch
 orig_hash_deadlock.patch
+register_event.patch
