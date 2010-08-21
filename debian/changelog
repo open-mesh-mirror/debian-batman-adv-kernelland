@@ -1,4 +1,4 @@
-batman-adv-kernelland (2010.0.0-2) UNRELEASED; urgency=low
+batman-adv-kernelland (2010.0.0-2) unstable; urgency=low
 
   * Correct destination path of dkms module
   * Upgraded to policy 3.9.1, no changes required
@@ -14,7 +14,7 @@ batman-adv-kernelland (2010.0.0-2) UNRELEASED; urgency=low
     - Add mac_packet_buff_check.patch, Don't write in not allocated packet_buff
       (Closes: #593724)
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 26 Jun 2010 10:20:31 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 21 Aug 2010 10:47:59 +0200
 
 batman-adv-kernelland (2010.0.0-1) unstable; urgency=low
 
