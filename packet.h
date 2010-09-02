@@ -19,6 +19,9 @@
  *
  */
 
+#ifndef _NET_BATMAN_ADV_PACKET_H_
+#define _NET_BATMAN_ADV_PACKET_H_
+
 #define ETH_P_BATMAN  0x4305	/* unofficial/not registered Ethertype */
 
 #define BAT_PACKET    0x01
@@ -28,7 +31,7 @@
 #define BAT_VIS       0x05
 
 /* this file is included by batctl which needs these defines */
-#define COMPAT_VERSION 10
+#define COMPAT_VERSION 11
 #define DIRECTLINK 0x40
 #define VIS_SERVER 0x20
 #define PRIMARIES_FIRST_HOP 0x10
@@ -54,8 +57,6 @@ struct batman_packet {
 	uint8_t  prev_sender[6];
 	uint8_t  ttl;
 	uint8_t  num_hna;
-	uint8_t  gw_flags;  /* flags related to gateway class */
-	uint8_t  align;
 } __attribute__((packed));
 
 #define BAT_PACKET_LEN sizeof(struct batman_packet)
@@ -115,3 +116,5 @@ struct vis_packet {
 	uint8_t  target_orig[6]; /* who should receive this packet */
 	uint8_t  sender_orig[6]; /* who sent or rebroadcasted this packet */
 } __attribute__((packed));
+
+#endif /* _NET_BATMAN_ADV_PACKET_H_ */

@@ -29,7 +29,6 @@
 #include "icmp_socket.h"
 #include "translation-table.h"
 #include "hard-interface.h"
-#include "gateway_client.h"
 #include "types.h"
 #include "vis.h"
 #include "hash.h"
@@ -44,11 +43,14 @@ DEFINE_SPINLOCK(orig_hash_lock);
 DEFINE_SPINLOCK(forw_bat_list_lock);
 DEFINE_SPINLOCK(forw_bcast_list_lock);
 
+atomic_t bcast_queue_left;
+atomic_t batman_queue_left;
+
 int16_t num_hna;
 
 struct net_device *soft_device;
 
-unsigned char broadcastAddr[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+unsigned char broadcast_addr[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 atomic_t module_state;
 
 static struct packet_type batman_adv_packet_type __read_mostly = {
@@ -58,18 +60,7 @@ static struct packet_type batman_adv_packet_type __read_mostly = {
 
 struct workqueue_struct *bat_event_workqueue;
 
-#ifdef CONFIG_BATMAN_ADV_DEBUG
-int debug;
-
-module_param(debug, int, 0644);
-
-int bat_debug_type(int type)
-{
-	return debug & type;
-}
-#endif
-
-int init_module(void)
+static int __init batman_init(void)
 {
 	int retval;
 
@@ -78,6 +69,9 @@ int init_module(void)
 	INIT_HLIST_HEAD(&forw_bcast_list);
 
 	atomic_set(&module_state, MODULE_INACTIVE);
+
+	atomic_set(&bcast_queue_left, BCAST_QUEUE_LEN);
+	atomic_set(&batman_queue_left, BATMAN_QUEUE_LEN);
 
 	/* the name should not be longer than 10 chars - see
 	 * http://lwn.net/Articles/23634/ */
@@ -94,16 +88,14 @@ int init_module(void)
 				   interface_setup);
 
 	if (!soft_device) {
-		printk(KERN_ERR "batman-adv:"
-		       "Unable to allocate the batman interface\n");
+		pr_err("Unable to allocate the batman interface\n");
 		goto end;
 	}
 
 	retval = register_netdev(soft_device);
 
 	if (retval < 0) {
-		printk(KERN_ERR "batman-adv:"
-		       "Unable to register the batman interface: %i\n", retval);
+		pr_err("Unable to register the batman interface: %i\n", retval);
 		goto free_soft_device;
 	}
 
@@ -120,9 +112,9 @@ int init_module(void)
 	register_netdevice_notifier(&hard_if_notifier);
 	dev_add_pack(&batman_adv_packet_type);
 
-	printk(KERN_INFO "batman-adv:"
-	       "B.A.T.M.A.N. advanced %s%s (compatibility version %i) loaded\n",
-	       SOURCE_VERSION, REVISION_VERSION_STR, COMPAT_VERSION);
+	pr_info("B.A.T.M.A.N. advanced %s%s (compatibility version %i) "
+		"loaded\n", SOURCE_VERSION, REVISION_VERSION_STR,
+		COMPAT_VERSION);
 
 	return 0;
 
@@ -140,10 +132,11 @@ end:
 	return -ENOMEM;
 }
 
-void cleanup_module(void)
+static void __exit batman_exit(void)
 {
 	deactivate_module();
 
+	debugfs_destroy();
 	unregister_netdevice_notifier(&hard_if_notifier);
 	hardif_remove_interfaces();
 
@@ -182,8 +175,7 @@ void activate_module(void)
 	goto end;
 
 err:
-	printk(KERN_ERR "batman-adv:"
-	       "Unable to allocate memory for mesh information structures: "
+	pr_err("Unable to allocate memory for mesh information structures: "
 	       "out of mem ?\n");
 	deactivate_module();
 end:
@@ -202,14 +194,12 @@ void deactivate_module(void)
 
 	/* TODO: unregister BATMAN pack */
 
-	gw_node_list_free();
 	originator_free();
 
 	hna_local_free();
 	hna_global_free();
 
 	synchronize_net();
-	debugfs_destroy();
 
 	synchronize_rcu();
 	atomic_set(&module_state, MODULE_INACTIVE);
@@ -261,10 +251,13 @@ int choose_orig(void *data, int32_t size)
 int is_my_mac(uint8_t *addr)
 {
 	struct batman_if *batman_if;
+
 	rcu_read_lock();
 	list_for_each_entry_rcu(batman_if, &if_list, list) {
-		if ((batman_if->net_dev) &&
-		    (compare_orig(batman_if->net_dev->dev_addr, addr))) {
+		if (batman_if->if_status != IF_ACTIVE)
+			continue;
+
+		if (compare_orig(batman_if->net_dev->dev_addr, addr)) {
 			rcu_read_unlock();
 			return 1;
 		}
@@ -283,6 +276,9 @@ int is_mcast(uint8_t *addr)
 {
 	return *addr & 0x01;
 }
+
+module_init(batman_init);
+module_exit(batman_exit);
 
 MODULE_LICENSE("GPL");
 
