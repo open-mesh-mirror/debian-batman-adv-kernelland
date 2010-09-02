@@ -27,7 +27,6 @@
 #include "translation-table.h"
 #include "routing.h"
 #include "compat.h"
-#include "gateway_client.h"
 #include "hard-interface.h"
 
 static DECLARE_DELAYED_WORK(purge_orig_wq, purge_orig);
@@ -62,9 +61,12 @@ struct neigh_node *
 create_neighbor(struct orig_node *orig_node, struct orig_node *orig_neigh_node,
 		uint8_t *neigh, struct batman_if *if_incoming)
 {
+	/* FIXME: each orig_node->batman_if will be attached to a softif */
+	struct bat_priv *bat_priv = netdev_priv(soft_device);
 	struct neigh_node *neigh_node;
 
-	bat_dbg(DBG_BATMAN, "Creating new last-hop neighbor of originator\n");
+	bat_dbg(DBG_BATMAN, bat_priv,
+		"Creating new last-hop neighbor of originator\n");
 
 	neigh_node = kzalloc(sizeof(struct neigh_node), GFP_ATOMIC);
 	if (!neigh_node)
@@ -131,7 +133,8 @@ struct orig_node *get_orig_node(uint8_t *addr)
 	if (orig_node != NULL)
 		return orig_node;
 
-	bat_dbg(DBG_BATMAN, "Creating new originator: %pM\n", addr);
+	bat_dbg(DBG_BATMAN, bat_priv,
+		"Creating new originator: %pM\n", addr);
 
 	orig_node = kzalloc(sizeof(struct orig_node), GFP_ATOMIC);
 	if (!orig_node)
@@ -165,8 +168,8 @@ struct orig_node *get_orig_node(uint8_t *addr)
 		swaphash = hash_resize(orig_hash, orig_hash->size * 2);
 
 		if (swaphash == NULL)
-			printk(KERN_ERR
-			       "batman-adv:Couldn't resize orig hash table\n");
+			bat_err(soft_device,
+				"Couldn't resize orig hash table\n");
 		else
 			orig_hash = swaphash;
 	}
@@ -184,6 +187,8 @@ free_orig_node:
 static bool purge_orig_neighbors(struct orig_node *orig_node,
 				 struct neigh_node **best_neigh_node)
 {
+	/* FIXME: each orig_node->batman_if will be attached to a softif */
+	struct bat_priv *bat_priv = netdev_priv(soft_device);
 	struct list_head *list_pos, *list_pos_tmp;
 	struct neigh_node *neigh_node;
 	bool neigh_purged = false;
@@ -195,20 +200,19 @@ static bool purge_orig_neighbors(struct orig_node *orig_node,
 		neigh_node = list_entry(list_pos, struct neigh_node, list);
 
 		if ((time_after(jiffies,
-			       (neigh_node->last_valid +
-				((PURGE_TIMEOUT * HZ) / 1000)))) ||
+			neigh_node->last_valid + PURGE_TIMEOUT * HZ)) ||
 		    (neigh_node->if_incoming->if_status ==
 						IF_TO_BE_REMOVED)) {
 
 			if (neigh_node->if_incoming->if_status ==
 							IF_TO_BE_REMOVED)
-				bat_dbg(DBG_BATMAN,
+				bat_dbg(DBG_BATMAN, bat_priv,
 					"neighbor purge: originator %pM, "
 					"neighbor: %pM, iface: %s\n",
 					orig_node->orig, neigh_node->addr,
 					neigh_node->if_incoming->dev);
 			else
-				bat_dbg(DBG_BATMAN,
+				bat_dbg(DBG_BATMAN, bat_priv,
 					"neighbor timeout: originator %pM, "
 					"neighbor: %pM, last_valid: %lu\n",
 					orig_node->orig, neigh_node->addr,
@@ -233,10 +237,9 @@ static bool purge_orig_node(struct orig_node *orig_node)
 	struct neigh_node *best_neigh_node;
 
 	if (time_after(jiffies,
-		       (orig_node->last_valid +
-			((2 * PURGE_TIMEOUT * HZ) / 1000)))) {
+		orig_node->last_valid + 2 * PURGE_TIMEOUT * HZ)) {
 
-		bat_dbg(DBG_BATMAN,
+		bat_dbg(DBG_BATMAN, bat_priv,
 			"Originator timeout: originator %pM, last_valid %lu\n",
 			orig_node->orig, (orig_node->last_valid / HZ));
 		return true;
@@ -266,17 +269,12 @@ void purge_orig(struct work_struct *work)
 	while (hash_iterate(orig_hash, &hashit)) {
 		orig_node = hashit.bucket->data;
 		if (purge_orig_node(orig_node)) {
-			if (orig_node->gw_flags)
-				gw_node_delete(orig_node);
 			hash_remove_bucket(orig_hash, &hashit);
 			free_orig_node(orig_node);
 		}
 	}
 
 	spin_unlock_irqrestore(&orig_hash_lock, flags);
-
-	gw_node_purge_deleted();
-	gw_election();
 
 	/* if work == NULL we were not called by the timer
 	 * and thus do not need to re-arm the timer */
@@ -292,6 +290,8 @@ int orig_seq_print_text(struct seq_file *seq, void *offset)
 	struct orig_node *orig_node;
 	struct neigh_node *neigh_node;
 	int batman_count = 0;
+	int last_seen_secs;
+	int last_seen_msecs;
 	unsigned long flags;
 	char orig_str[ETH_STR_LEN], router_str[ETH_STR_LEN];
 
@@ -308,12 +308,13 @@ int orig_seq_print_text(struct seq_file *seq, void *offset)
 	}
 
 	rcu_read_lock();
-	seq_printf(seq, "  %-14s (%s/%i) %17s [%10s]: %20s "
-		   "... [B.A.T.M.A.N. adv %s%s, MainIF/MAC: %s/%s (%s)]\n",
-		   "Originator", "#", TQ_MAX_VALUE, "Nexthop", "outgoingIF",
-		   "Potential nexthops", SOURCE_VERSION, REVISION_VERSION_STR,
+	seq_printf(seq, "[B.A.T.M.A.N. adv %s%s, MainIF/MAC: %s/%s (%s)]\n",
+		   SOURCE_VERSION, REVISION_VERSION_STR,
 		   bat_priv->primary_if->dev, bat_priv->primary_if->addr_str,
 		   net_dev->name);
+	seq_printf(seq, "  %-15s %s (%s/%i) %17s [%10s]: %20s ...\n",
+		   "Originator", "last-seen", "#", TQ_MAX_VALUE, "Nexthop",
+		   "outgoingIF", "Potential nexthops");
 	rcu_read_unlock();
 
 	spin_lock_irqsave(&orig_hash_lock, flags);
@@ -330,9 +331,14 @@ int orig_seq_print_text(struct seq_file *seq, void *offset)
 
 		addr_to_string(orig_str, orig_node->orig);
 		addr_to_string(router_str, orig_node->router->addr);
+		last_seen_secs = jiffies_to_msecs(jiffies -
+						orig_node->last_valid) / 1000;
+		last_seen_msecs = jiffies_to_msecs(jiffies -
+						orig_node->last_valid) % 1000;
 
-		seq_printf(seq, "%-17s  (%3i) %17s [%10s]:",
-			   orig_str, orig_node->router->tq_avg, router_str,
+		seq_printf(seq, "%-17s %4i.%03is   (%3i) %17s [%10s]:",
+			   orig_str, last_seen_secs, last_seen_msecs,
+			   orig_node->router->tq_avg, router_str,
 			   orig_node->router->if_incoming->dev);
 
 		list_for_each_entry(neigh_node, &orig_node->neigh_list, list) {
@@ -360,8 +366,7 @@ static int orig_node_add_if(struct orig_node *orig_node, int max_if_num)
 	data_ptr = kmalloc(max_if_num * sizeof(TYPE_OF_WORD) * NUM_WORDS,
 			   GFP_ATOMIC);
 	if (!data_ptr) {
-		printk(KERN_ERR
-		       "batman-adv:Can't resize orig: out of memory\n");
+		pr_err("Can't resize orig: out of memory\n");
 		return -1;
 	}
 
@@ -372,8 +377,7 @@ static int orig_node_add_if(struct orig_node *orig_node, int max_if_num)
 
 	data_ptr = kmalloc(max_if_num * sizeof(uint8_t), GFP_ATOMIC);
 	if (!data_ptr) {
-		printk(KERN_ERR
-		       "batman-adv:Can't resize orig: out of memory\n");
+		pr_err("Can't resize orig: out of memory\n");
 		return -1;
 	}
 
@@ -388,11 +392,12 @@ static int orig_node_add_if(struct orig_node *orig_node, int max_if_num)
 int orig_hash_add_if(struct batman_if *batman_if, int max_if_num)
 {
 	struct orig_node *orig_node;
+	unsigned long flags;
 	HASHIT(hashit);
 
 	/* resize all orig nodes because orig_node->bcast_own(_sum) depend on
 	 * if_num */
-	spin_lock(&orig_hash_lock);
+	spin_lock_irqsave(&orig_hash_lock, flags);
 
 	while (hash_iterate(orig_hash, &hashit)) {
 		orig_node = hashit.bucket->data;
@@ -401,11 +406,11 @@ int orig_hash_add_if(struct batman_if *batman_if, int max_if_num)
 			goto err;
 	}
 
-	spin_unlock(&orig_hash_lock);
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
 	return 0;
 
 err:
-	spin_unlock(&orig_hash_lock);
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
 	return -ENOMEM;
 }
 
@@ -422,8 +427,7 @@ static int orig_node_del_if(struct orig_node *orig_node,
 	chunk_size = sizeof(TYPE_OF_WORD) * NUM_WORDS;
 	data_ptr = kmalloc(max_if_num * chunk_size, GFP_ATOMIC);
 	if (!data_ptr) {
-		printk(KERN_ERR
-		       "batman-adv:Can't resize orig: out of memory\n");
+		pr_err("Can't resize orig: out of memory\n");
 		return -1;
 	}
 
@@ -444,8 +448,7 @@ free_bcast_own:
 
 	data_ptr = kmalloc(max_if_num * sizeof(uint8_t), GFP_ATOMIC);
 	if (!data_ptr) {
-		printk(KERN_ERR
-		       "batman-adv:Can't resize orig: out of memory\n");
+		pr_err("Can't resize orig: out of memory\n");
 		return -1;
 	}
 
@@ -467,12 +470,13 @@ int orig_hash_del_if(struct batman_if *batman_if, int max_if_num)
 {
 	struct batman_if *batman_if_tmp;
 	struct orig_node *orig_node;
+	unsigned long flags;
 	HASHIT(hashit);
 	int ret;
 
 	/* resize all orig nodes because orig_node->bcast_own(_sum) depend on
 	 * if_num */
-	spin_lock(&orig_hash_lock);
+	spin_lock_irqsave(&orig_hash_lock, flags);
 
 	while (hash_iterate(orig_hash, &hashit)) {
 		orig_node = hashit.bucket->data;
@@ -499,10 +503,10 @@ int orig_hash_del_if(struct batman_if *batman_if, int max_if_num)
 	rcu_read_unlock();
 
 	batman_if->if_num = -1;
-	spin_unlock(&orig_hash_lock);
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
 	return 0;
 
 err:
-	spin_unlock(&orig_hash_lock);
+	spin_unlock_irqrestore(&orig_hash_lock, flags);
 	return -ENOMEM;
 }

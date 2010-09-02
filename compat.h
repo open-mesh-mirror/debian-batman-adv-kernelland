@@ -22,12 +22,11 @@
  * of the Linux kernel.
  */
 
+#ifndef _NET_BATMAN_ADV_COMPAT_H_
+#define _NET_BATMAN_ADV_COMPAT_H_
+
 #include <linux/version.h>	/* LINUX_VERSION_CODE */
 #include "bat_sysfs.h"		/* struct bat_attribute */
-
-#ifndef IPPROTO_UDP
-#define IPPROTO_UDP 17
-#endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22)
 
@@ -59,6 +58,19 @@ static inline int skb_clone_writable(struct sk_buff *skb, unsigned int len)
 #define cancel_delayed_work_sync(wq) cancel_delayed_work(wq)
 
 #endif /* < KERNEL_VERSION(2, 6, 23) */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
+
+#ifndef pr_fmt
+#define pr_fmt(fmt) fmt
+#endif
+
+#define pr_err(fmt, ...) \
+       printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
+#define pr_warning(fmt, ...) \
+       printk(KERN_WARNING pr_fmt(fmt), ##__VA_ARGS__)
+
+#endif /* < KERNEL_VERSION(2, 6, 24) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 25)
 
@@ -232,3 +244,5 @@ static inline struct net_device_stats *dev_get_stats(struct net_device *dev)
 }
 
 #endif /* < KERNEL_VERSION(2, 6, 29) */
+
+#endif /* _NET_BATMAN_ADV_COMPAT_H_ */

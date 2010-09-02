@@ -19,9 +19,9 @@
  *
  */
 
+#include "main.h"
 #include <linux/debugfs.h>
 #include <linux/slab.h>
-#include "main.h"
 #include "icmp_socket.h"
 #include "send.h"
 #include "types.h"
@@ -60,8 +60,7 @@ static int bat_socket_open(struct inode *inode, struct file *file)
 	}
 
 	if (i == ARRAY_SIZE(socket_client_hash)) {
-		printk(KERN_ERR "batman-adv:"
-		       "Error - can't add another packet client: "
+		pr_err("Error - can't add another packet client: "
 		       "maximum number of clients reached\n");
 		kfree(socket_client);
 		return -EXFULL;
@@ -70,6 +69,7 @@ static int bat_socket_open(struct inode *inode, struct file *file)
 	INIT_LIST_HEAD(&socket_client->queue_list);
 	socket_client->queue_len = 0;
 	socket_client->index = i;
+	socket_client->bat_priv = inode->i_private;
 	spin_lock_init(&socket_client->lock);
 	init_waitqueue_head(&socket_client->queue_wait);
 
@@ -81,8 +81,7 @@ static int bat_socket_open(struct inode *inode, struct file *file)
 
 static int bat_socket_release(struct inode *inode, struct file *file)
 {
-	struct socket_client *socket_client =
-		(struct socket_client *)file->private_data;
+	struct socket_client *socket_client = file->private_data;
 	struct socket_packet *socket_packet;
 	struct list_head *list_pos, *list_pos_tmp;
 	unsigned long flags;
@@ -110,8 +109,7 @@ static int bat_socket_release(struct inode *inode, struct file *file)
 static ssize_t bat_socket_read(struct file *file, char __user *buf,
 			       size_t count, loff_t *ppos)
 {
-	struct socket_client *socket_client =
-		(struct socket_client *)file->private_data;
+	struct socket_client *socket_client = file->private_data;
 	struct socket_packet *socket_packet;
 	size_t packet_len;
 	int error;
@@ -156,8 +154,8 @@ static ssize_t bat_socket_read(struct file *file, char __user *buf,
 static ssize_t bat_socket_write(struct file *file, const char __user *buff,
 				size_t len, loff_t *off)
 {
-	struct socket_client *socket_client =
-		(struct socket_client *)file->private_data;
+	struct socket_client *socket_client = file->private_data;
+	struct bat_priv *bat_priv = socket_client->bat_priv;
 	struct icmp_packet_rr icmp_packet;
 	struct orig_node *orig_node;
 	struct batman_if *batman_if;
@@ -166,11 +164,14 @@ static ssize_t bat_socket_write(struct file *file, const char __user *buff,
 	unsigned long flags;
 
 	if (len < sizeof(struct icmp_packet)) {
-		bat_dbg(DBG_BATMAN, "batman-adv:"
+		bat_dbg(DBG_BATMAN, bat_priv,
 			"Error - can't send packet from char device: "
 			"invalid packet size\n");
 		return -EINVAL;
 	}
+
+	if (!bat_priv->primary_if)
+		return -EFAULT;
 
 	if (len >= sizeof(struct icmp_packet_rr))
 		packet_len = sizeof(struct icmp_packet_rr);
@@ -182,14 +183,14 @@ static ssize_t bat_socket_write(struct file *file, const char __user *buff,
 		return -EFAULT;
 
 	if (icmp_packet.packet_type != BAT_ICMP) {
-		bat_dbg(DBG_BATMAN, "batman-adv:"
+		bat_dbg(DBG_BATMAN, bat_priv,
 			"Error - can't send packet from char device: "
 			"got bogus packet type (expected: BAT_ICMP)\n");
 		return -EINVAL;
 	}
 
 	if (icmp_packet.msg_type != ECHO_REQUEST) {
-		bat_dbg(DBG_BATMAN, "batman-adv:"
+		bat_dbg(DBG_BATMAN, bat_priv,
 			"Error - can't send packet from char device: "
 			"got bogus message type (expected: ECHO_REQUEST)\n");
 		return -EINVAL;
@@ -227,7 +228,8 @@ static ssize_t bat_socket_write(struct file *file, const char __user *buff,
 	if (batman_if->if_status != IF_ACTIVE)
 		goto dst_unreach;
 
-	memcpy(icmp_packet.orig, batman_if->net_dev->dev_addr, ETH_ALEN);
+	memcpy(icmp_packet.orig,
+	       bat_priv->primary_if->net_dev->dev_addr, ETH_ALEN);
 
 	if (packet_len == sizeof(struct icmp_packet_rr))
 		memcpy(icmp_packet.rr, batman_if->net_dev->dev_addr, ETH_ALEN);
@@ -248,8 +250,7 @@ out:
 
 static unsigned int bat_socket_poll(struct file *file, poll_table *wait)
 {
-	struct socket_client *socket_client =
-		(struct socket_client *)file->private_data;
+	struct socket_client *socket_client = file->private_data;
 
 	poll_wait(file, &socket_client->queue_wait, wait);
 
@@ -276,7 +277,7 @@ int bat_socket_setup(struct bat_priv *bat_priv)
 		goto err;
 
 	d = debugfs_create_file(ICMP_SOCKET, S_IFREG | S_IWUSR | S_IRUSR,
-				bat_priv->debug_dir, NULL, &fops);
+				bat_priv->debug_dir, bat_priv, &fops);
 	if (d)
 		goto err;
 

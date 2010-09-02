@@ -391,7 +391,7 @@ static struct vis_info *add_packet(struct vis_packet *vis_packet,
 
 	/* Make it a broadcast packet, if required */
 	if (make_broadcast)
-		memcpy(info->packet.target_orig, broadcastAddr, ETH_ALEN);
+		memcpy(info->packet.target_orig, broadcast_addr, ETH_ALEN);
 
 	/* repair if entries is longer than packet. */
 	if (info->packet.entries * sizeof(struct vis_info_entry) > vis_info_len)
@@ -525,7 +525,7 @@ static int generate_vis_packet(struct bat_priv *bat_priv)
 	info->packet.vis_type = atomic_read(&bat_priv->vis_mode);
 
 	spin_lock_irqsave(&orig_hash_lock, flags);
-	memcpy(info->packet.target_orig, broadcastAddr, ETH_ALEN);
+	memcpy(info->packet.target_orig, broadcast_addr, ETH_ALEN);
 	info->packet.ttl = TTL;
 	info->packet.seqno = htonl(ntohl(info->packet.seqno) + 1);
 	info->packet.entries = 0;
@@ -598,7 +598,7 @@ static void purge_vis_packets(void)
 		if (info == my_vis_info)	/* never purge own data. */
 			continue;
 		if (time_after(jiffies,
-			       info->first_seen + (VIS_TIMEOUT*HZ)/1000)) {
+			       info->first_seen + VIS_TIMEOUT * HZ)) {
 			hash_remove_bucket(vis_hash, &hashit);
 			send_list_del(info);
 			kref_put(&info->refcount, free_info);
@@ -642,7 +642,7 @@ static void broadcast_vis_packet(struct vis_info *info, int packet_length)
 
 	}
 	spin_unlock_irqrestore(&orig_hash_lock, flags);
-	memcpy(info->packet.target_orig, broadcastAddr, ETH_ALEN);
+	memcpy(info->packet.target_orig, broadcast_addr, ETH_ALEN);
 }
 
 static void unicast_vis_packet(struct vis_info *info, int packet_length)
@@ -679,11 +679,11 @@ static void send_vis_packet(struct vis_info *info)
 	int packet_length;
 
 	if (info->packet.ttl < 2) {
-		printk(KERN_WARNING "batman-adv: Error - can't send vis packet: ttl exceeded\n");
+		pr_warning("Error - can't send vis packet: ttl exceeded\n");
 		return;
 	}
 
-	memcpy(info->packet.sender_orig, mainIfAddr, ETH_ALEN);
+	memcpy(info->packet.sender_orig, main_if_addr, ETH_ALEN);
 	info->packet.ttl--;
 
 	packet_length = sizeof(struct vis_packet) +
@@ -741,13 +741,13 @@ int vis_init(void)
 
 	vis_hash = hash_new(256, vis_info_cmp, vis_info_choose);
 	if (!vis_hash) {
-		printk(KERN_ERR "batman-adv:Can't initialize vis_hash\n");
+		pr_err("Can't initialize vis_hash\n");
 		goto err;
 	}
 
 	my_vis_info = kmalloc(1000, GFP_ATOMIC);
 	if (!my_vis_info) {
-		printk(KERN_ERR "batman-adv:Can't initialize vis packet\n");
+		pr_err("Can't initialize vis packet\n");
 		goto err;
 	}
 
@@ -764,12 +764,11 @@ int vis_init(void)
 
 	INIT_LIST_HEAD(&send_list);
 
-	memcpy(my_vis_info->packet.vis_orig, mainIfAddr, ETH_ALEN);
-	memcpy(my_vis_info->packet.sender_orig, mainIfAddr, ETH_ALEN);
+	memcpy(my_vis_info->packet.vis_orig, main_if_addr, ETH_ALEN);
+	memcpy(my_vis_info->packet.sender_orig, main_if_addr, ETH_ALEN);
 
 	if (hash_add(vis_hash, my_vis_info) < 0) {
-		printk(KERN_ERR
-		       "batman-adv:Can't add own vis packet into hash\n");
+		pr_err("Can't add own vis packet into hash\n");
 		/* not in hash, need to remove it manually. */
 		kref_put(&my_vis_info->refcount, free_info);
 		goto err;

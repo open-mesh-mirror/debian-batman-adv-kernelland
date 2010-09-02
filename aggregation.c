@@ -111,8 +111,9 @@ static void new_aggregated_packet(unsigned char *packet_buff,
 
 	/* own packet should always be scheduled */
 	if (!own_packet) {
-		if (!atomic_dec_not_zero(&bat_priv->batman_queue_left)) {
-			bat_dbg(DBG_BATMAN, "batman packet queue full\n");
+		if (!atomic_dec_not_zero(&batman_queue_left)) {
+			bat_dbg(DBG_BATMAN, bat_priv,
+				"batman packet queue full\n");
 			return;
 		}
 	}
@@ -120,7 +121,7 @@ static void new_aggregated_packet(unsigned char *packet_buff,
 	forw_packet_aggr = kmalloc(sizeof(struct forw_packet), GFP_ATOMIC);
 	if (!forw_packet_aggr) {
 		if (!own_packet)
-			atomic_inc(&bat_priv->batman_queue_left);
+			atomic_inc(&batman_queue_left);
 		return;
 	}
 
@@ -128,7 +129,7 @@ static void new_aggregated_packet(unsigned char *packet_buff,
 						GFP_ATOMIC);
 	if (!forw_packet_aggr->packet_buff) {
 		if (!own_packet)
-			atomic_inc(&bat_priv->batman_queue_left);
+			atomic_inc(&batman_queue_left);
 		kfree(forw_packet_aggr);
 		return;
 	}

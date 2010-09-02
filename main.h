@@ -19,6 +19,9 @@
  *
  */
 
+#ifndef _NET_BATMAN_ADV_MAIN_H_
+#define _NET_BATMAN_ADV_MAIN_H_
+
 /* Kernel Programming */
 #define LINUX
 
@@ -27,7 +30,7 @@
 #define DRIVER_DESC   "B.A.T.M.A.N. advanced"
 #define DRIVER_DEVICE "batman-adv"
 
-#define SOURCE_VERSION "0.3.0-alpha"
+#define SOURCE_VERSION "maint"
 
 
 /* B.A.T.M.A.N. parameters */
@@ -36,10 +39,10 @@
 #define JITTER 20
 #define TTL 50			  /* Time To Live of broadcast messages */
 
-#define PURGE_TIMEOUT 200000	  /* purge originators after time in ms if no
+#define PURGE_TIMEOUT 200	/* purge originators after time in seconds if no
 				   * valid packet comes in -> TODO: check
 				   * influence on TQ_LOCAL_WINDOW_SIZE */
-#define LOCAL_HNA_TIMEOUT 3600000
+#define LOCAL_HNA_TIMEOUT 3600 /* in seconds */
 
 #define TQ_LOCAL_WINDOW_SIZE 64	  /* sliding packet range of received originator
 				   * messages in squence numbers (should be a
@@ -83,25 +86,16 @@
 /*
  * Debug Messages
  */
+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt /* Append 'batman-adv: ' before
+					     * kernel messages */
 
 #define DBG_BATMAN 1	/* all messages related to routing / flooding /
 			 * broadcasting / etc */
 #define DBG_ROUTES 2	/* route or hna added / changed / deleted */
+#define DBG_ALL 3
 
-#ifdef CONFIG_BATMAN_ADV_DEBUG
-extern int debug;
+#define LOG_BUF_LEN 8192          /* has to be a power of 2 */
 
-extern int bat_debug_type(int type);
-#define bat_dbg(type, fmt, arg...) do {					\
-		if (bat_debug_type(type))				\
-			printk(KERN_DEBUG "batman-adv:" fmt, ## arg);	\
-	}								\
-	while (0)
-#else /* !CONFIG_BATMAN_ADV_DEBUG */
-#define bat_dbg(type, fmt, arg...) do {		\
-	}					\
-	while (0)
-#endif
 
 /*
  *  Vis
@@ -142,11 +136,13 @@ extern spinlock_t orig_hash_lock;
 extern spinlock_t forw_bat_list_lock;
 extern spinlock_t forw_bcast_list_lock;
 
+extern atomic_t bcast_queue_left;
+extern atomic_t batman_queue_left;
 extern int16_t num_hna;
 
 extern struct net_device *soft_device;
 
-extern unsigned char broadcastAddr[];
+extern unsigned char broadcast_addr[];
 extern atomic_t module_state;
 extern struct workqueue_struct *bat_event_workqueue;
 
@@ -160,3 +156,44 @@ int choose_orig(void *data, int32_t size);
 int is_my_mac(uint8_t *addr);
 int is_bcast(uint8_t *addr);
 int is_mcast(uint8_t *addr);
+
+#ifdef CONFIG_BATMAN_ADV_DEBUG
+extern int debug_log(struct bat_priv *bat_priv, char *fmt, ...);
+
+#define bat_dbg(type, bat_priv, fmt, arg...)			\
+	do {							\
+		if (atomic_read(&bat_priv->log_level) & type)	\
+			debug_log(bat_priv, fmt, ## arg);	\
+	}							\
+	while (0)
+#else /* !CONFIG_BATMAN_ADV_DEBUG */
+static inline void bat_dbg(char type __attribute__((unused)),
+			   struct bat_priv *bat_priv __attribute__((unused)),
+			   char *fmt __attribute__((unused)), ...)
+{
+}
+#endif
+
+#define bat_warning(net_dev, fmt, arg...)				\
+	do {								\
+		struct net_device *_netdev = (net_dev);                 \
+		struct bat_priv *_batpriv = netdev_priv(_netdev);       \
+		bat_dbg(DBG_ALL, _batpriv, fmt, ## arg);		\
+		pr_warning("%s: " fmt, _netdev->name, ## arg);		\
+	} while (0)
+#define bat_info(net_dev, fmt, arg...)					\
+	do {								\
+		struct net_device *_netdev = (net_dev);                 \
+		struct bat_priv *_batpriv = netdev_priv(_netdev);       \
+		bat_dbg(DBG_ALL, _batpriv, fmt, ## arg);		\
+		pr_info("%s: " fmt, _netdev->name, ## arg);		\
+	} while (0)
+#define bat_err(net_dev, fmt, arg...)					\
+	do {								\
+		struct net_device *_netdev = (net_dev);                 \
+		struct bat_priv *_batpriv = netdev_priv(_netdev);       \
+		bat_dbg(DBG_ALL, _batpriv, fmt, ## arg);		\
+		pr_err("%s: " fmt, _netdev->name, ## arg);		\
+	} while (0)
+
+#endif /* _NET_BATMAN_ADV_MAIN_H_ */

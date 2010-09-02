@@ -21,10 +21,8 @@
 
 
 
-
-
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef _NET_BATMAN_ADV_TYPES_H_
+#define _NET_BATMAN_ADV_TYPES_H_
 
 #include "packet.h"
 #include "bitarray.h"
@@ -47,6 +45,7 @@ struct batman_if {
 	int packet_len;
 	struct kobject *hardif_obj;
 	struct rcu_head rcu;
+
 };
 
 /**
@@ -55,7 +54,6 @@ struct batman_if {
   *	@last_valid: when last packet from this node was received
   *	@bcast_seqno_reset: time when the broadcast seqno window was reset
   *	@batman_seqno_reset: time when the batman seqno window was reset
-  *	@gw_flags: flags related to gateway class
   *	@flags: for now only VIS_SERVER flag
   *	@last_real_seqno: last and best known squence number
   *	@last_ttl: ttl of last received packet
@@ -75,8 +73,7 @@ struct orig_node {
 	unsigned long last_valid;
 	unsigned long bcast_seqno_reset;
 	unsigned long batman_seqno_reset;
-	uint8_t gw_flags;
-	uint8_t flags;
+	uint8_t  flags;
 	unsigned char *hna_buff;
 	int16_t hna_buff_len;
 	uint32_t last_real_seqno;
@@ -88,13 +85,6 @@ struct orig_node {
 		uint8_t candidates;
 		struct neigh_node *selected;
 	} bond;
-};
-
-struct gw_node {
-	struct list_head list;
-	struct orig_node *orig_node;
-	unsigned long deleted;
-	struct rcu_head rcu;
 };
 
 /**
@@ -121,12 +111,10 @@ struct bat_priv {
 	atomic_t aggregation_enabled;
 	atomic_t bonding_enabled;
 	atomic_t vis_mode;
-	atomic_t gw_mode;
-	atomic_t gw_class;
 	atomic_t orig_interval;
-	atomic_t bcast_queue_left;
-	atomic_t batman_queue_left;
+	atomic_t log_level;
 	char num_ifaces;
+	struct debug_log *debug_log;
 	struct batman_if *primary_if;
 	struct kobject *mesh_obj;
 	struct dentry *debug_dir;
@@ -138,6 +126,7 @@ struct socket_client {
 	unsigned char index;
 	spinlock_t lock;
 	wait_queue_head_t queue_wait;
+	struct bat_priv *bat_priv;
 };
 
 struct socket_packet {
@@ -184,4 +173,12 @@ struct if_list_entry {
 	struct hlist_node list;
 };
 
-#endif
+struct debug_log {
+	char log_buff[LOG_BUF_LEN];
+	unsigned long log_start;
+	unsigned long log_end;
+	spinlock_t lock;
+	wait_queue_head_t queue_wait;
+};
+
+#endif /* _NET_BATMAN_ADV_TYPES_H_ */
