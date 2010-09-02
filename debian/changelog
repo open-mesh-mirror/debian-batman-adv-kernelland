@@ -1,6 +1,7 @@
 batman-adv-kernelland (2010.1.0~49+g49241cb-1) UNRELEASED; urgency=low
 
   * New Upstream Snapshot from 49241cb8c43049b2d87ee73a48ca640cf659cefb
+  * Change get-orig-source.sh to support versions from next branch
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 02 Sep 2010 21:34:33 +0200
 
