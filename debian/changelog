@@ -5,6 +5,24 @@ batman-adv-kernelland (2010.0.0+v0.2+124+g9faa319-1) experimental; urgency=low
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Jun 2010 00:42:37 +0200
 
+batman-adv-kernelland (2010.0.0-2) unstable; urgency=low
+
+  * Correct destination path of dkms module
+  * Upgraded to policy 3.9.1, no changes required
+  * debian/patches:
+    - Add foreign_stats.patch, Don't increment stats of foreign device (Closes:
+      #593473)
+    - Add orig_hash_deadlock.patch, unify orig_hash_lock spinlock handling to
+      avoid deadlocks (Closes: #593519)
+    - Add register_event.patch, Create batman_if only on register event (Closes:
+      #593471)
+    - Add netdev_reference.patch, Don't use net_dev after dev_put (Closes:
+      #593472)
+    - Add mac_packet_buff_check.patch, Don't write in not allocated packet_buff
+      (Closes: #593724)
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 21 Aug 2010 10:47:59 +0200
+
 batman-adv-kernelland (2010.0.0-1) unstable; urgency=low
 
   * New Upstream Version
