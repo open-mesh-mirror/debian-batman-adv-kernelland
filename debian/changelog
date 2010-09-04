@@ -1,3 +1,9 @@
+batman-adv-kernelland (2010.1.0+20+g6b0d828-1) UNRELEASED; urgency=low
+
+  * New Upstream Snapshot from 6b0d828f5b4033928fb300a9950111aa7533bb3f
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 04 Sep 2010 15:47:21 +0200
+
 batman-adv-kernelland (2010.1.0-1) experimental; urgency=low
 
   * New Upstream Version

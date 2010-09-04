@@ -45,6 +45,17 @@
 #define skb_mac_header(_skb) \
     ((_skb)->mac.raw)
 
+#include <linux/etherdevice.h>
+static inline __be16 bat_eth_type_trans(struct sk_buff *skb,
+					struct net_device *dev)
+{
+	skb->dev = dev;
+	return eth_type_trans(skb, dev);
+}
+
+#define eth_type_trans(_skb, _dev) \
+	bat_eth_type_trans(_skb, _dev);
+
 #endif /* < KERNEL_VERSION(2,6,22) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
@@ -53,6 +64,11 @@ static inline int skb_clone_writable(struct sk_buff *skb, unsigned int len)
 {
 	/* skb->hdr_len not available, just "not writable" to enforce a copy */
 	return 0;
+}
+
+static inline int skb_cow_head(struct sk_buff *skb, unsigned int headroom)
+{
+	return skb_cow(skb, headroom);
 }
 
 #define cancel_delayed_work_sync(wq) cancel_delayed_work(wq)
@@ -69,6 +85,16 @@ static inline int skb_clone_writable(struct sk_buff *skb, unsigned int len)
        printk(KERN_ERR pr_fmt(fmt), ##__VA_ARGS__)
 #define pr_warning(fmt, ...) \
        printk(KERN_WARNING pr_fmt(fmt), ##__VA_ARGS__)
+
+#if defined(DEBUG)
+#define pr_debug(fmt, ...) \
+	printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+#else
+#define pr_debug(fmt, ...) \
+	({ if (0) printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__); 0; })
+#endif
+
+#define dev_get_by_name(x, y) dev_get_by_name(y)
 
 #endif /* < KERNEL_VERSION(2, 6, 24) */
 
