@@ -1,3 +1,9 @@
+batman-adv-kernelland (2010.1.0+23+gfcf8180-2) UNRELEASED; urgency=low
+
+  * Upgrade debhelper compat to v8
+
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 08 Sep 2010 13:24:34 +0200
+
 batman-adv-kernelland (2010.1.0+23+gfcf8180-1) experimental; urgency=low
 
   * New Upstream Snapshot fcf8180574be5a49933f6fd6ec452d3b0eab9ab6
