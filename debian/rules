@@ -24,6 +24,7 @@ dkmssource:=batman-adv-dkms
 # The short upstream name, used for the module source directory
 sname:=batman-adv
 
+REVISION=$(shell dpkg-parsechangelog|grep '^Version: '|sed 's/^Version:\s*//')
 version:= $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 \
             | cut -d- -f1)
 
@@ -133,6 +134,9 @@ install: build
 		debian/$(psource)/usr/src/modules/$(sname)
 	cp *.c *.h Makefile* README  \
 		debian/$(dkmssource)/usr/src/$(sname)-$(version)
+	sed -i 's/^\(\#define[[:space:]]*REVISION_VERSION_STR[[:space:]]*\"\)\(\".*\)$$/\1 debian-2010.1.0+23+gfcf8180-2\2/' \
+		debian/$(psource)/usr/src/modules/$(sname)/main.h \
+		debian/$(dkmssource)/usr/src/$(sname)-$(version)/main.h
 	mv debian/$(psource)/usr/src/modules/$(sname)/Makefile.kbuild \
 	   debian/$(psource)/usr/src/modules/$(sname)/Makefile
 	mv debian/$(dkmssource)/usr/src/$(sname)-$(version)/Makefile.kbuild \
