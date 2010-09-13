@@ -2,6 +2,7 @@ batman-adv-kernelland (2010.1.0+23+gfcf8180-2) UNRELEASED; urgency=low
 
   * Upgrade debhelper compat to v8
   * Save debian version as version string for batman-adv
+  * Change upstream domain to open-mesh.org
 
  -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 08 Sep 2010 13:24:34 +0200
 

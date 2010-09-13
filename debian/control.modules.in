@@ -3,9 +3,9 @@ Section: kernel
 Priority: optional
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Build-Depends: gcc (>= 4:4.0) [!m68k], gcc-3.3 [m68k], binutils-hppa64 [hppa], gcc-4.0-hppa64 [hppa], debhelper (>= 7), dpkg-dev (>= 1.10.23), debianutils (>= 1.6), sparc-utils [sparc], module-assistant, linux-headers-_KVERS_
-XS-Vcs-Svn: http://downloads.open-mesh.net/svn/batman/trunk
+XS-Vcs-Svn: http://downloads.open-mesh.org/svn/batman/trunk
 Standards-Version: 3.8.1
-Homepage: http://www.open-mesh.net/
+Homepage: http://www.open-mesh.org/
 
 Package: batman-adv-modules-_KVERS_
 Architecture: any
