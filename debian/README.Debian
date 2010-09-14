@@ -3,9 +3,11 @@ batman-adv-kernelland for Debian
 
 Please see ./README for a description of the batman-adv-kernelland software.
 
-The Debian batman-adv source package provides one package,
+The Debian batman-adv source package provides two packages,
 
  1) batman-adv-source, which provides the source for the kernel modules
+
+ 2) batman-adv-dkms, which provides the dkms source for the kernel modules
 
 The batman-adv-source package can be used in several ways,
 
