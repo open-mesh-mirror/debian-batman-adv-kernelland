@@ -72,6 +72,8 @@ static void __exit batman_exit(void)
 	flush_workqueue(bat_event_workqueue);
 	destroy_workqueue(bat_event_workqueue);
 	bat_event_workqueue = NULL;
+
+	rcu_barrier();
 }
 
 int mesh_init(struct net_device *soft_iface)
@@ -83,13 +85,11 @@ int mesh_init(struct net_device *soft_iface)
 	spin_lock_init(&bat_priv->forw_bcast_list_lock);
 	spin_lock_init(&bat_priv->hna_lhash_lock);
 	spin_lock_init(&bat_priv->hna_ghash_lock);
-	spin_lock_init(&bat_priv->gw_list_lock);
 	spin_lock_init(&bat_priv->vis_hash_lock);
 	spin_lock_init(&bat_priv->vis_list_lock);
 
 	INIT_HLIST_HEAD(&bat_priv->forw_bat_list);
 	INIT_HLIST_HEAD(&bat_priv->forw_bcast_list);
-	INIT_HLIST_HEAD(&bat_priv->gw_list);
 
 	if (originator_init(bat_priv) < 1)
 		goto err;
@@ -133,9 +133,6 @@ void mesh_free(struct net_device *soft_iface)
 	hna_local_free(bat_priv);
 	hna_global_free(bat_priv);
 
-	synchronize_net();
-
-	synchronize_rcu();
 	atomic_set(&bat_priv->mesh_state, MESH_INACTIVE);
 }
 
