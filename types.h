@@ -44,7 +44,7 @@ struct batman_if {
 	unsigned char *packet_buff;
 	int packet_len;
 	struct kobject *hardif_obj;
-	struct rcu_head rcu;
+	atomic_t refcnt;
 	struct packet_type batman_adv_ptype;
 	struct net_device *soft_iface;
 };
@@ -109,6 +109,7 @@ struct neigh_node {
 	struct batman_if *if_incoming;
 };
 
+
 struct bat_priv {
 	atomic_t mesh_state;
 	struct net_device_stats stats;
@@ -128,26 +129,23 @@ struct bat_priv {
 	struct dentry *debug_dir;
 	struct hlist_head forw_bat_list;
 	struct hlist_head forw_bcast_list;
-	struct hlist_head gw_list;
 	struct list_head vis_send_list;
 	struct hashtable_t *orig_hash;
 	struct hashtable_t *hna_local_hash;
 	struct hashtable_t *hna_global_hash;
 	struct hashtable_t *vis_hash;
-	spinlock_t orig_hash_lock;
-	spinlock_t forw_bat_list_lock;
-	spinlock_t forw_bcast_list_lock;
-	spinlock_t hna_lhash_lock;
-	spinlock_t hna_ghash_lock;
-	spinlock_t gw_list_lock;
-	spinlock_t vis_hash_lock;
-	spinlock_t vis_list_lock;
+	spinlock_t orig_hash_lock; /* protects orig_hash */
+	spinlock_t forw_bat_list_lock; /* protects forw_bat_list */
+	spinlock_t forw_bcast_list_lock; /* protects  */
+	spinlock_t hna_lhash_lock; /* protects hna_local_hash */
+	spinlock_t hna_ghash_lock; /* protects hna_global_hash */
+	spinlock_t vis_hash_lock; /* protects vis_hash */
+	spinlock_t vis_list_lock; /* protects vis_info::recv_list */
 	int16_t num_local_hna;
 	atomic_t hna_local_changed;
 	struct delayed_work hna_work;
 	struct delayed_work orig_work;
 	struct delayed_work vis_work;
-	struct gw_node *curr_gw;
 	struct vis_info *my_vis_info;
 };
 
@@ -155,7 +153,7 @@ struct socket_client {
 	struct list_head queue_list;
 	unsigned int queue_len;
 	unsigned char index;
-	spinlock_t lock;
+	spinlock_t lock; /* protects queue_list, queue_len, index */
 	wait_queue_head_t queue_wait;
 	struct bat_priv *bat_priv;
 };
@@ -207,7 +205,7 @@ struct debug_log {
 	char log_buff[LOG_BUF_LEN];
 	unsigned long log_start;
 	unsigned long log_end;
-	spinlock_t lock;
+	spinlock_t lock; /* protects log_buff, log_start and log_end */
 	wait_queue_head_t queue_wait;
 };
 

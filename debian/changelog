@@ -1,5 +1,6 @@
-batman-adv-kernelland (2010.1.0+23+gfcf8180-2) UNRELEASED; urgency=low
+batman-adv-kernelland (2010.1.0+39+g078eb6a-1) UNRELEASED; urgency=low
 
+  * New Upstream Snapshot from 078eb6abad4d6166c7bf6e9b87eaa84d0ad94457
   * Upgrade debhelper compat to v8
   * Save debian version as version string for batman-adv
   * Change upstream domain to open-mesh.org

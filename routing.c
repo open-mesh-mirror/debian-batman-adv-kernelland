@@ -564,6 +564,7 @@ void receive_bat_packet(struct ethhdr *ethhdr,
 		batman_packet->tq, batman_packet->ttl, batman_packet->version,
 		has_directlink_flag);
 
+	rcu_read_lock();
 	list_for_each_entry_rcu(batman_if, &if_list, list) {
 		if (batman_if->if_status != IF_ACTIVE)
 			continue;
@@ -586,6 +587,7 @@ void receive_bat_packet(struct ethhdr *ethhdr,
 		if (compare_orig(ethhdr->h_source, broadcast_addr))
 			is_broadcast = 1;
 	}
+	rcu_read_unlock();
 
 	if (batman_packet->version != COMPAT_VERSION) {
 		bat_dbg(DBG_BATMAN, bat_priv,
@@ -1233,8 +1235,12 @@ int recv_ucast_frag_packet(struct sk_buff *skb, struct batman_if *recv_if)
 
 		orig_node->last_frag_packet = jiffies;
 
-		if (list_empty(&orig_node->frag_list))
-			create_frag_buffer(&orig_node->frag_list);
+		if (list_empty(&orig_node->frag_list) &&
+			create_frag_buffer(&orig_node->frag_list)) {
+			spin_unlock_irqrestore(&bat_priv->orig_hash_lock,
+					       flags);
+			return NET_RX_DROP;
+		}
 
 		tmp_frag_entry =
 			search_frag_packet(&orig_node->frag_list,
