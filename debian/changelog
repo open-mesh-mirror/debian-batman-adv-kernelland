@@ -1,8 +1,8 @@
-batman-adv-kernelland (2010.1.0+48+g050ada5-1) UNRELEASED; urgency=low
+batman-adv-kernelland (2010.1.0+48+g050ada5-1) experimental; urgency=low
 
   * New Upstream Snapshot from 050ada5d7cdcc7d68b630af6eb6c477011867ead
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 19 Oct 2010 13:43:26 +0200
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 19 Oct 2010 13:44:12 +0200
 
 batman-adv-kernelland (2010.1.0+39+g078eb6a-1) experimental; urgency=low
 
