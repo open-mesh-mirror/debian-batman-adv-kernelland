@@ -123,8 +123,14 @@ static void new_aggregated_packet(unsigned char *packet_buff, int packet_len,
 		return;
 	}
 
-	forw_packet_aggr->skb = dev_alloc_skb(MAX_AGGREGATION_BYTES +
-					      sizeof(struct ethhdr));
+	if ((atomic_read(&bat_priv->aggregation_enabled)) &&
+	    (packet_len < MAX_AGGREGATION_BYTES))
+		forw_packet_aggr->skb = dev_alloc_skb(MAX_AGGREGATION_BYTES +
+						      sizeof(struct ethhdr));
+	else
+		forw_packet_aggr->skb = dev_alloc_skb(packet_len +
+						      sizeof(struct ethhdr));
+
 	if (!forw_packet_aggr->skb) {
 		if (!own_packet)
 			atomic_inc(&bat_priv->batman_queue_left);
@@ -251,9 +257,7 @@ void receive_aggr_bat_packet(struct ethhdr *ethhdr, unsigned char *packet_buff,
 
 	batman_packet = (struct batman_packet *)packet_buff;
 
-	while (aggregated_packet(buff_pos, packet_len,
-				 batman_packet->num_hna)) {
-
+	do {
 		/* network to host order for our 32bit seqno, and the
 		   orig_interval. */
 		batman_packet->seqno = ntohl(batman_packet->seqno);
@@ -266,5 +270,6 @@ void receive_aggr_bat_packet(struct ethhdr *ethhdr, unsigned char *packet_buff,
 		buff_pos += BAT_PACKET_LEN + hna_len(batman_packet);
 		batman_packet = (struct batman_packet *)
 			(packet_buff + buff_pos);
-	}
+	} while (aggregated_packet(buff_pos, packet_len,
+				   batman_packet->num_hna));
 }
