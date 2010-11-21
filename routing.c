@@ -555,11 +555,11 @@ void receive_bat_packet(struct ethhdr *ethhdr,
 					    batman_packet->orig) ? 1 : 0);
 
 	bat_dbg(DBG_BATMAN, bat_priv,
-		"Received BATMAN packet via NB: %pM, IF: %s [%s] "
+		"Received BATMAN packet via NB: %pM, IF: %s [%pM] "
 		"(from OG: %pM, via prev OG: %pM, seqno %d, tq %d, "
 		"TTL %d, V %d, IDF %d)\n",
 		ethhdr->h_source, if_incoming->net_dev->name,
-		if_incoming->addr_str, batman_packet->orig,
+		if_incoming->net_dev->dev_addr, batman_packet->orig,
 		batman_packet->prev_sender, batman_packet->seqno,
 		batman_packet->tq, batman_packet->ttl, batman_packet->version,
 		has_directlink_flag);
@@ -1001,10 +1001,10 @@ int recv_icmp_packet(struct sk_buff *skb, struct batman_if *recv_if)
 
 /* find a suitable router for this originator, and use
  * bonding if possible. */
-struct neigh_node *find_router(struct orig_node *orig_node,
+struct neigh_node *find_router(struct bat_priv *bat_priv,
+			       struct orig_node *orig_node,
 			       struct batman_if *recv_if)
 {
-	struct bat_priv *bat_priv;
 	struct orig_node *primary_orig_node;
 	struct orig_node *router_orig;
 	struct neigh_node *router, *first_candidate, *best_router;
@@ -1020,13 +1020,9 @@ struct neigh_node *find_router(struct orig_node *orig_node,
 	/* without bonding, the first node should
 	 * always choose the default router. */
 
-	if (!recv_if)
-		return orig_node->router;
-
-	bat_priv = netdev_priv(recv_if->soft_iface);
 	bonding_enabled = atomic_read(&bat_priv->bonding_enabled);
 
-	if (!bonding_enabled)
+	if ((!recv_if) && (!bonding_enabled))
 		return orig_node->router;
 
 	router_orig = orig_node->router->orig_node;
@@ -1155,7 +1151,7 @@ static int route_unicast_packet(struct sk_buff *skb,
 	orig_node = ((struct orig_node *)
 		     hash_find(bat_priv->orig_hash, unicast_packet->dest));
 
-	router = find_router(orig_node, recv_if);
+	router = find_router(bat_priv, orig_node, recv_if);
 
 	if (!router) {
 		spin_unlock_irqrestore(&bat_priv->orig_hash_lock, flags);
