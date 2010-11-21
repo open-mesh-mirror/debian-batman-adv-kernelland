@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2009-2010 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner
  *
@@ -19,17 +19,20 @@
  *
  */
 
-#ifndef _NET_BATMAN_ADV_SOFT_INTERFACE_H_
-#define _NET_BATMAN_ADV_SOFT_INTERFACE_H_
+#ifndef _NET_BATMAN_ADV_GATEWAY_COMMON_H_
+#define _NET_BATMAN_ADV_GATEWAY_COMMON_H_
 
-int my_skb_head_push(struct sk_buff *skb, unsigned int len);
-int softif_neigh_seq_print_text(struct seq_file *seq, void *offset);
-void softif_neigh_purge(struct bat_priv *bat_priv);
-int interface_tx(struct sk_buff *skb, struct net_device *soft_iface);
-void interface_rx(struct net_device *soft_iface,
-		  struct sk_buff *skb, struct batman_if *recv_if,
-		  int hdr_size);
-struct net_device *softif_create(char *name);
-void softif_destroy(struct net_device *soft_iface);
+enum gw_modes {
+	GW_MODE_OFF,
+	GW_MODE_CLIENT,
+	GW_MODE_SERVER,
+};
 
-#endif /* _NET_BATMAN_ADV_SOFT_INTERFACE_H_ */
+#define GW_MODE_OFF_NAME	"off"
+#define GW_MODE_CLIENT_NAME	"client"
+#define GW_MODE_SERVER_NAME	"server"
+
+void gw_bandwidth_to_kbit(uint8_t gw_class, int *down, int *up);
+ssize_t gw_bandwidth_set(struct net_device *net_dev, char *buff, size_t count);
+
+#endif /* _NET_BATMAN_ADV_GATEWAY_COMMON_H_ */

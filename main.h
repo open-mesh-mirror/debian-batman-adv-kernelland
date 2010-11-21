@@ -30,7 +30,7 @@
 #define DRIVER_DESC   "B.A.T.M.A.N. advanced"
 #define DRIVER_DEVICE "batman-adv"
 
-#define SOURCE_VERSION "2010.2.0"
+#define SOURCE_VERSION "next"
 
 
 /* B.A.T.M.A.N. parameters */
@@ -52,8 +52,6 @@
 #define TQ_LOCAL_BIDRECT_RECV_MINIMUM 1
 #define TQ_TOTAL_BIDRECT_LIMIT 1
 
-#define TQ_HOP_PENALTY 10
-
 #define NUM_WORDS (TQ_LOCAL_WINDOW_SIZE / WORD_BIT_SIZE)
 
 #define PACKBUFF_SIZE 2000
@@ -71,6 +69,8 @@
 				   * forw_packet->direct_link_flags */
 #define MAX_AGGREGATION_MS 100
 
+#define SOFTIF_NEIGH_TIMEOUT 180000 /* 3 minutes */
+
 #define RESET_PROTECTION_MS 30000
 #define EXPECTED_SEQNO_RANGE	65536
 /* don't reset again within 30 seconds */
@@ -85,6 +85,9 @@
 /*
  * Debug Messages
  */
+#ifdef pr_fmt
+#undef pr_fmt
+#endif
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt /* Append 'batman-adv: ' before
 					     * kernel messages */
 
@@ -109,6 +112,7 @@
 #include <linux/mutex.h>	/* mutex */
 #include <linux/module.h>	/* needed by all modules */
 #include <linux/netdevice.h>	/* netdevice */
+#include <linux/etherdevice.h>  /* ethernet address classifaction */
 #include <linux/if_ether.h>	/* ethernet header */
 #include <linux/poll.h>		/* poll_table */
 #include <linux/kthread.h>	/* kernel threads */
@@ -119,6 +123,8 @@
 #include <linux/jiffies.h>
 #include <linux/seq_file.h>
 #include "types.h"
+
+#include "compat.h"
 
 #ifndef REVISION_VERSION
 #define REVISION_VERSION_STR ""
@@ -135,11 +141,7 @@ int mesh_init(struct net_device *soft_iface);
 void mesh_free(struct net_device *soft_iface);
 void inc_module_count(void);
 void dec_module_count(void);
-int compare_orig(void *data1, void *data2);
-int choose_orig(void *data, int32_t size);
 int is_my_mac(uint8_t *addr);
-int is_bcast(uint8_t *addr);
-int is_mcast(uint8_t *addr);
 
 #ifdef CONFIG_BATMAN_ADV_DEBUG
 int debug_log(struct bat_priv *bat_priv, char *fmt, ...);
