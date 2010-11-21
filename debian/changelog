@@ -1,8 +1,8 @@
-batman-adv-kernelland (2010.2.0+265+g187cb65-1) UNRELEASED; urgency=low
+batman-adv-kernelland (2010.2.0+265+g187cb65-1) experimental; urgency=low
 
   * New Upstream Snapshot from 187cb65b6b3bc9b7bdc8020ce4f5031f6600f15c
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 21 Nov 2010 22:25:01 +0100
+ -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 21 Nov 2010 22:29:42 +0100
 
 batman-adv-kernelland (2010.2.0-1) experimental; urgency=low
 
