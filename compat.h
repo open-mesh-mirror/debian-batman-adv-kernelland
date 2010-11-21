@@ -28,6 +28,10 @@
 #include <linux/version.h>	/* LINUX_VERSION_CODE */
 #include "bat_sysfs.h"		/* struct bat_attribute */
 
+#ifndef IPPROTO_UDP
+#define IPPROTO_UDP 17
+#endif
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22)
 
 #define skb_set_network_header(_skb, _offset) \
@@ -38,9 +42,6 @@
 
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
-
-#define skb_mac_header(_skb) \
-    ((_skb)->mac.raw)
 
 #define skb_mac_header(_skb) \
     ((_skb)->mac.raw)
@@ -59,12 +60,6 @@ static inline __be16 bat_eth_type_trans(struct sk_buff *skb,
 #endif /* < KERNEL_VERSION(2,6,22) */
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 23)
-
-static inline int skb_clone_writable(struct sk_buff *skb, unsigned int len)
-{
-	/* skb->hdr_len not available, just "not writable" to enforce a copy */
-	return 0;
-}
 
 static inline int skb_cow_head(struct sk_buff *skb, unsigned int headroom)
 {
@@ -266,14 +261,6 @@ int bat_snprintf(char *buf, size_t size, const char *fmt, ...);
 
 int bat_seq_printf(struct seq_file *m, const char *f, ...);
 #define seq_printf bat_seq_printf
-
-static inline struct net_device_stats *dev_get_stats(struct net_device *dev)
-{
-	if (dev->get_stats)
-		return dev->get_stats(dev);
-	else
-		return NULL;
-}
 
 #endif /* < KERNEL_VERSION(2, 6, 29) */
 

@@ -1,3 +1,7 @@
+#include <linux/version.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
+
 /*
  *  linux/lib/vsprintf.c
  *
@@ -30,7 +34,8 @@
 #include <asm/page.h>		/* for PAGE_SIZE */
 #include <asm/div64.h>
 #include <asm/sections.h>	/* for dereference_function_descriptor() */
-#include "compat.h"
+
+#include "main.h"
 
 /* Works only for digits and letters, but small and fast */
 #define TOLOWER(x) ((x) | 0x20)
@@ -952,3 +957,5 @@ int bat_seq_printf(struct seq_file *m, const char *f, ...)
 	m->count = m->size;
 	return -1;
 }
+
+#endif /* < KERNEL_VERSION(2, 6, 29) */
