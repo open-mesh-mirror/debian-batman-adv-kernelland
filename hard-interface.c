@@ -161,15 +161,13 @@ static bool hardif_is_iface_up(struct batman_if *batman_if)
 
 static void update_mac_addresses(struct batman_if *batman_if)
 {
-	addr_to_string(batman_if->addr_str, batman_if->net_dev->dev_addr);
-
 	memcpy(((struct batman_packet *)(batman_if->packet_buff))->orig,
 	       batman_if->net_dev->dev_addr, ETH_ALEN);
 	memcpy(((struct batman_packet *)(batman_if->packet_buff))->prev_sender,
 	       batman_if->net_dev->dev_addr, ETH_ALEN);
 }
 
-static void check_known_mac_addr(uint8_t *addr)
+static void check_known_mac_addr(struct net_device *net_dev)
 {
 	struct batman_if *batman_if;
 
@@ -179,11 +177,16 @@ static void check_known_mac_addr(uint8_t *addr)
 		    (batman_if->if_status != IF_TO_BE_ACTIVATED))
 			continue;
 
-		if (!compare_orig(batman_if->net_dev->dev_addr, addr))
+		if (batman_if->net_dev == net_dev)
+			continue;
+
+		if (!compare_orig(batman_if->net_dev->dev_addr,
+				  net_dev->dev_addr))
 			continue;
 
 		pr_warning("The newly added mac address (%pM) already exists "
-			   "on: %s\n", addr, batman_if->net_dev->name);
+			   "on: %s\n", net_dev->dev_addr,
+			   batman_if->net_dev->name);
 		pr_warning("It is strongly recommended to keep mac addresses "
 			   "unique to avoid problems!\n");
 	}
@@ -434,7 +437,7 @@ static struct batman_if *hardif_add_interface(struct net_device *net_dev)
 	atomic_set(&batman_if->refcnt, 0);
 	hardif_hold(batman_if);
 
-	check_known_mac_addr(batman_if->net_dev->dev_addr);
+	check_known_mac_addr(batman_if->net_dev);
 
 	spin_lock(&if_list_lock);
 	list_add_tail_rcu(&batman_if->list, &if_list);
@@ -462,9 +465,6 @@ static void hardif_remove_interface(struct batman_if *batman_if)
 		return;
 
 	batman_if->if_status = IF_TO_BE_REMOVED;
-
-	/* caller must take if_list_lock */
-	list_del_rcu(&batman_if->list);
 	synchronize_rcu();
 	sysfs_del_hardif(&batman_if->hardif_obj);
 	hardif_put(batman_if);
@@ -473,13 +473,21 @@ static void hardif_remove_interface(struct batman_if *batman_if)
 void hardif_remove_interfaces(void)
 {
 	struct batman_if *batman_if, *batman_if_tmp;
+	struct list_head if_list_queue;
 
-	rtnl_lock();
+	INIT_LIST_HEAD(&if_list_queue);
+
 	spin_lock(&if_list_lock);
 	list_for_each_entry_safe(batman_if, batman_if_tmp, &if_list, list) {
-		hardif_remove_interface(batman_if);
+		list_del_rcu(&batman_if->list);
+		list_add_tail(&batman_if->list, &if_list_queue);
 	}
 	spin_unlock(&if_list_lock);
+
+	rtnl_lock();
+	list_for_each_entry_safe(batman_if, batman_if_tmp, &if_list_queue, list) {
+		hardif_remove_interface(batman_if);
+	}
 	rtnl_unlock();
 }
 
@@ -506,8 +514,10 @@ static int hard_if_event(struct notifier_block *this,
 		break;
 	case NETDEV_UNREGISTER:
 		spin_lock(&if_list_lock);
-		hardif_remove_interface(batman_if);
+		list_del_rcu(&batman_if->list);
 		spin_unlock(&if_list_lock);
+
+		hardif_remove_interface(batman_if);
 		break;
 	case NETDEV_CHANGEMTU:
 		if (batman_if->soft_iface)
@@ -519,7 +529,7 @@ static int hard_if_event(struct notifier_block *this,
 			goto out;
 		}
 
-		check_known_mac_addr(batman_if->net_dev->dev_addr);
+		check_known_mac_addr(batman_if->net_dev);
 		update_mac_addresses(batman_if);
 
 		bat_priv = netdev_priv(batman_if->soft_iface);
