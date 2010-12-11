@@ -1,20 +1,26 @@
+batman-adv-kernelland (2010.2.0+265+g187cb65-2) UNRELEASED; urgency=low
+
+  * Updated my maintainer e-mail address
+
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 11 Dec 2010 11:28:31 +0100
+
 batman-adv-kernelland (2010.2.0+265+g187cb65-1) experimental; urgency=low
 
   * New Upstream Snapshot from 187cb65b6b3bc9b7bdc8020ce4f5031f6600f15c
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 21 Nov 2010 22:29:42 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 21 Nov 2010 22:29:42 +0100
 
 batman-adv-kernelland (2010.2.0-1) experimental; urgency=low
 
   * New Upstream Version
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 21 Nov 2010 22:22:46 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 21 Nov 2010 22:22:46 +0100
 
 batman-adv-kernelland (2010.1.0+48+g050ada5-1) experimental; urgency=low
 
   * New Upstream Snapshot from 050ada5d7cdcc7d68b630af6eb6c477011867ead
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 19 Oct 2010 13:44:12 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Tue, 19 Oct 2010 13:44:12 +0200
 
 batman-adv-kernelland (2010.1.0+39+g078eb6a-1) experimental; urgency=low
 
@@ -23,39 +29,39 @@ batman-adv-kernelland (2010.1.0+39+g078eb6a-1) experimental; urgency=low
   * Save debian version as version string for batman-adv
   * Change upstream domain to open-mesh.org
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 23 Sep 2010 13:15:37 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 23 Sep 2010 13:15:37 +0200
 
 batman-adv-kernelland (2010.1.0+23+gfcf8180-1) experimental; urgency=low
 
   * New Upstream Snapshot fcf8180574be5a49933f6fd6ec452d3b0eab9ab6
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 05 Sep 2010 02:06:10 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 05 Sep 2010 02:06:10 +0200
 
 batman-adv-kernelland (2010.1.0+20+g6b0d828-1) experimental; urgency=low
 
   * New Upstream Snapshot from 6b0d828f5b4033928fb300a9950111aa7533bb3f
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 04 Sep 2010 15:47:52 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 04 Sep 2010 15:47:52 +0200
 
 batman-adv-kernelland (2010.1.0-1) experimental; urgency=low
 
   * New Upstream Version
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 04 Sep 2010 15:44:32 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 04 Sep 2010 15:44:32 +0200
 
 batman-adv-kernelland (2010.1.0~49+g49241cb-1) experimental; urgency=low
 
   * New Upstream Snapshot from 49241cb8c43049b2d87ee73a48ca640cf659cefb
   * Change get-orig-source.sh to support versions from next branch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 02 Sep 2010 21:42:14 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 02 Sep 2010 21:42:14 +0200
 
 batman-adv-kernelland (2010.0.0+v0.2+124+g9faa319-1) experimental; urgency=low
 
   * New Upstream Snapshot from 9faa3194a34d578d189ff2b5e45568736c948ded
   * Change get-orig-source.sh to support new versioning scheme
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Jun 2010 00:42:37 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 19 Jun 2010 00:42:37 +0200
 
 batman-adv-kernelland (2010.0.0-2) unstable; urgency=low
 
@@ -73,7 +79,7 @@ batman-adv-kernelland (2010.0.0-2) unstable; urgency=low
     - Add mac_packet_buff_check.patch, Don't write in not allocated packet_buff
       (Closes: #593724)
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 21 Aug 2010 10:47:59 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 21 Aug 2010 10:47:59 +0200
 
 batman-adv-kernelland (2010.0.0-1) unstable; urgency=low
 
@@ -84,13 +90,13 @@ batman-adv-kernelland (2010.0.0-1) unstable; urgency=low
     - Remove upstream merged patches: bat0_failure_memleak.patch,
       limit_queues.patch, seqno_redesign.patch, update_ethhdr_after_copy.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 19 Jun 2010 00:02:48 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 19 Jun 2010 00:02:48 +0200
 
 batman-adv-kernelland (0.3.0~alpha~v0.2+113+gde32ed5-1) experimental; urgency=low
 
   * New Upstream Snapshot from de32ed5ba4b6487dbd3c4cad6c9ba8240d79c421
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 02 Jun 2010 11:52:31 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Wed, 02 Jun 2010 11:52:31 +0200
 
 batman-adv-kernelland (0.3.0~alpha~svn1641-1) experimental; urgency=low
 
@@ -99,19 +105,19 @@ batman-adv-kernelland (0.3.0~alpha~svn1641-1) experimental; urgency=low
     - Remove upstream merged bat0_failure_memleak.patch, limit_queues.patch,
       seqno_redesign.patch, update_ethhdr_after_copy.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 29 Apr 2010 10:49:58 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 29 Apr 2010 10:49:58 +0200
 
 batman-adv-kernelland (0.3.0~alpha~svn1608-1) experimental; urgency=low
 
   * New Upstream Snapshot
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 23 Mar 2010 01:24:25 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Tue, 23 Mar 2010 01:24:25 +0100
 
 batman-adv-kernelland (0.3.0~alpha~svn1578-1) experimental; urgency=low
 
   * New Upstream Snapshot
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 01 Mar 2010 13:06:35 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Mon, 01 Mar 2010 13:06:35 +0100
 
 batman-adv-kernelland (0.2.1-2) unstable; urgency=low
 
@@ -125,7 +131,7 @@ batman-adv-kernelland (0.2.1-2) unstable; urgency=low
     - Add update_ethhdr_after_copy.patch, Update pointer to ethhdr after
       skb_copy
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 26 Apr 2010 22:33:03 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Mon, 26 Apr 2010 22:33:03 +0200
 
 batman-adv-kernelland (0.2.1-1) unstable; urgency=low
 
@@ -136,7 +142,7 @@ batman-adv-kernelland (0.2.1-1) unstable; urgency=low
     - Remove upstream merged irqdeadlock.patch, missing_kfree.patch,
       random_mac.patch, route_flapping.patch, vis_rounding.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 23 Mar 2010 01:11:04 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Tue, 23 Mar 2010 01:11:04 +0100
 
 batman-adv-kernelland (0.2-6) unstable; urgency=low
 
@@ -144,14 +150,14 @@ batman-adv-kernelland (0.2-6) unstable; urgency=low
   * Upgraded to policy 3.8.4, no changes required
   * Use dh_dkms to provide DKMS support
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 01 Mar 2010 12:51:54 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Mon, 01 Mar 2010 12:51:54 +0100
 
 batman-adv-kernelland (0.2-5) unstable; urgency=low
 
   * Correct spelling errors found by lintian
   * Use dkms postinst script for batman-adv-dkms (Closes LP: #497149)
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 14 Jan 2010 00:01:22 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 14 Jan 2010 00:01:22 +0100
 
 batman-adv-kernelland (0.2-4) unstable; urgency=low
 
@@ -160,7 +166,7 @@ batman-adv-kernelland (0.2-4) unstable; urgency=low
     - Add route_flapping.patch, decrease route flapping in perfect environments
     - Add random_mac.patch, Copy complete 6 bytes of a random ethernet address
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 02 Jan 2010 00:15:50 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 02 Jan 2010 00:15:50 +0100
 
 batman-adv-kernelland (0.2-3) unstable; urgency=low
 
@@ -171,26 +177,26 @@ batman-adv-kernelland (0.2-3) unstable; urgency=low
       interrupt context
     - Add vis_rounding.patch, Fixes rounding issues in vis.c
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 20 Dec 2009 00:24:11 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 20 Dec 2009 00:24:11 +0100
 
 batman-adv-kernelland (0.2-2) unstable; urgency=low
 
   * Recommend batctl instead of deprecated batman-adv-battool
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 08 Nov 2009 23:17:12 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 08 Nov 2009 23:17:12 +0100
 
 batman-adv-kernelland (0.2-1) unstable; urgency=low
 
   * New Upstream Version
   * Convert to 3.0 (quilt) source format
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 08 Nov 2009 14:41:07 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 08 Nov 2009 14:41:07 +0100
 
 batman-adv-kernelland (0.2~beta~svn1453-1) experimental; urgency=low
 
   * New Upstream Snapshot
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 22 Oct 2009 23:03:21 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 22 Oct 2009 23:03:21 +0200
 
 batman-adv-kernelland (0.2~beta~svn1440-1) experimental; urgency=low
 
@@ -199,7 +205,7 @@ batman-adv-kernelland (0.2~beta~svn1440-1) experimental; urgency=low
     - Remove upstream merged patches disable-csum-offloading.patch,
       filled_socketbuffer.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 20:14:06 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 15 Oct 2009 20:14:06 +0200
 
 batman-adv-kernelland (0.2~beta~svn1436-1) experimental; urgency=low
 
@@ -211,20 +217,20 @@ batman-adv-kernelland (0.2~beta~svn1436-1) experimental; urgency=low
     - Remove patches which cannot be backported, linux-2.6.19.patch,
       linux-2.6.18.patch, linux-2.6.17.patch, linux-2.6.15.patch
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 13 Sep 2009 20:25:08 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 13 Sep 2009 20:25:08 +0200
 
 batman-adv-kernelland (0.2~beta~svn1397-1) experimental; urgency=low
 
   * New Upstream Version
   * Upgraded to policy 3.8.3, no changes required
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 16 Aug 2009 12:43:04 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 16 Aug 2009 12:43:04 +0200
 
 batman-adv-kernelland (0.2~beta~svn1370-1) experimental; urgency=low
 
   * New Upstream Snapshot
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 06 Aug 2009 19:25:31 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 06 Aug 2009 19:25:31 +0200
 
 batman-adv-kernelland (0.2~beta~svn1336-1) experimental; urgency=low
 
@@ -238,7 +244,7 @@ batman-adv-kernelland (0.2~beta~svn1336-1) experimental; urgency=low
   * Recommend batctl instead of transitional package batman-adv-battool
   * Update copyright years in debian/changelog
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 15 Jul 2009 17:35:14 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Wed, 15 Jul 2009 17:35:14 +0200
 
 batman-adv-kernelland (0.1-13) unstable; urgency=low
 
@@ -246,7 +252,7 @@ batman-adv-kernelland (0.1-13) unstable; urgency=low
   * Provide batman-adv-dkms package that uses DKMS to dynamically build modules
     for the local kernel
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 20 Oct 2009 17:39:11 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Tue, 20 Oct 2009 17:39:11 +0200
 
 batman-adv-kernelland (0.1-12) unstable; urgency=low
 
@@ -255,7 +261,7 @@ batman-adv-kernelland (0.1-12) unstable; urgency=low
       of data
     - Add disable-csum-offloading.patch, Disable checksum offloading
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 15 Oct 2009 19:41:36 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 15 Oct 2009 19:41:36 +0200
 
 batman-adv-kernelland (0.1-11) unstable; urgency=low
 
@@ -274,7 +280,7 @@ batman-adv-kernelland (0.1-11) unstable; urgency=low
     - Add clamp_ttl.patch, Don't forward packets with ttl 255 after receiving
       packet with ttl 0
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 13 Sep 2009 20:07:24 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 13 Sep 2009 20:07:24 +0200
 
 batman-adv-kernelland (0.1-10) unstable; urgency=low
 
@@ -284,7 +290,7 @@ batman-adv-kernelland (0.1-10) unstable; urgency=low
     - Add 107-linux-2.6.19.patch, 108-linux-2.6.18.patch,
       109-linux-2.6.17.patch, 110-linux-2.6.15.patch, backport to linux-2.6.15
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Fri, 07 Aug 2009 22:44:56 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Fri, 07 Aug 2009 22:44:56 +0200
 
 batman-adv-kernelland (0.1-9) unstable; urgency=low
 
@@ -304,13 +310,13 @@ batman-adv-kernelland (0.1-9) unstable; urgency=low
   * Upgraded to policy 3.8.2, no changes required
   * Add debian/get-orig-source.sh to get source from svn or via uscan
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 25 Jun 2009 01:08:41 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 25 Jun 2009 01:08:41 +0200
 
 batman-adv-kernelland (0.1-8) unstable; urgency=low
 
   * Allow Debian Maintainers to upload new versions of batman-adv-kernelland
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Wed, 06 May 2009 13:04:37 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Wed, 06 May 2009 13:04:37 +0200
 
 batman-adv-kernelland (0.1-7) unstable; urgency=low
 
@@ -318,7 +324,7 @@ batman-adv-kernelland (0.1-7) unstable; urgency=low
     batman-adv-source.tar.bz2
   * Allow out of tree module build for linux-modules-extra-2.6
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 09 Apr 2009 20:00:59 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 09 Apr 2009 20:00:59 +0200
 
 batman-adv-kernelland (0.1-6) unstable; urgency=low
 
@@ -334,19 +340,19 @@ batman-adv-kernelland (0.1-6) unstable; urgency=low
     - Add 102-log-irqenable-sleep.patch to enable irqs again when reading log
       which may sleep when putting data to userspace
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Thu, 02 Apr 2009 21:09:50 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Thu, 02 Apr 2009 21:09:50 +0200
 
 batman-adv-kernelland (0.1-5) unstable; urgency=low
 
   * Correct variable to specify path to kernel headers
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 09 Feb 2009 13:25:06 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Mon, 09 Feb 2009 13:25:06 +0100
 
 batman-adv-kernelland (0.1-4) unstable; urgency=low
 
   * Correct URL in watch file to match newer releases
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Tue, 20 Jan 2009 00:51:45 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Tue, 20 Jan 2009 00:51:45 +0100
 
 batman-adv-kernelland (0.1-3) unstable; urgency=low
 
@@ -354,7 +360,7 @@ batman-adv-kernelland (0.1-3) unstable; urgency=low
   * Recommend batman-adv-battool
   * Depend on dephelper 7 in generated source packages
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 11 Jan 2009 14:04:18 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 11 Jan 2009 14:04:18 +0100
 
 batman-adv-kernelland (0.1-2) unstable; urgency=low
 
@@ -366,14 +372,14 @@ batman-adv-kernelland (0.1-2) unstable; urgency=low
   * Change upstream url to http://www.open-mesh.net/
   * Replace dh_clean -k with dh_prep in debian/rules
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Fri, 02 Jan 2009 14:20:44 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Fri, 02 Jan 2009 14:20:44 +0100
 
 batman-adv (0.1-1) unstable; urgency=low
 
   * New upstream release
   * Install upstream changelog for batman-adv-source
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 28 Dec 2008 12:37:37 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 28 Dec 2008 12:37:37 +0100
 
 batman-adv (0.1~beta+svn1154-1) unstable; urgency=low
 
@@ -383,7 +389,7 @@ batman-adv (0.1~beta+svn1154-1) unstable; urgency=low
   * Replace batman-adv@packages.debian.org maintainer with first Uploader in
     debian/control
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Mon, 17 Nov 2008 11:28:35 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Mon, 17 Nov 2008 11:28:35 +0100
 
 batman-adv (0.1~beta+svn1141-1) unstable; urgency=low
 
@@ -392,13 +398,13 @@ batman-adv (0.1~beta+svn1141-1) unstable; urgency=low
     - Add Andreas Langer who has also copyright to battool/*
     - Set copyright of debian/* to Simon Wunderlich and myself
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 26 Oct 2008 09:42:25 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 26 Oct 2008 09:42:25 +0100
 
 batman-adv (0.1~beta+svn1105-3) unstable; urgency=low
 
   * reuse orig.tar.gz from 0.1~beta+svn1105-1 release
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sun, 14 Sep 2008 14:24:34 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 14 Sep 2008 14:24:34 +0200
 
 batman-adv (0.1~beta+svn1105-2) unstable; urgency=low
 
@@ -406,7 +412,7 @@ batman-adv (0.1~beta+svn1105-2) unstable; urgency=low
   * move maintainer to uploaders field in control for multiple maintainers
   * add debian watch file for uscan/dehs
 
- -- Sven Eckelmann <sven.eckelmann@gmx.de>  Sat, 13 Sep 2008 01:19:11 +0200
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 13 Sep 2008 01:19:11 +0200
 
 batman-adv (0.1~beta+svn1105-1) unstable; urgency=low
 

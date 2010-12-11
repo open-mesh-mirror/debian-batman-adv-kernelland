@@ -2,7 +2,7 @@ Source: batman-adv-kernelland
 Section: kernel
 Priority: extra
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Uploaders: Sven Eckelmann <sven.eckelmann@gmx.de>
+Uploaders: Sven Eckelmann <sven@narfation.org>
 Dm-Upload-Allowed: yes
 Homepage: http://www.open-mesh.org/
 Standards-Version: 3.9.1
