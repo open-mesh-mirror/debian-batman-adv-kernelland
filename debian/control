@@ -4,10 +4,10 @@ Priority: extra
 Maintainer: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
 Uploaders: Sven Eckelmann <sven@narfation.org>
 Dm-Upload-Allowed: yes
-Homepage: http://www.open-mesh.org/
 Standards-Version: 3.9.1
-Vcs-Browser: http://git.debian.org/?p=collab-maint/batman-adv-kernelland.git
+Homepage: http://www.open-mesh.org/
 Vcs-Git: git://git.debian.org/git/collab-maint/batman-adv-kernelland.git
+Vcs-Browser: http://git.debian.org/?p=collab-maint/batman-adv-kernelland.git
 Build-Depends:
  debhelper (>= 8.0.0),
  dkms (>= 2.1.1.1-2),
@@ -18,10 +18,10 @@ Package: batman-adv-source
 Architecture: all
 Depends:
  ${misc:Depends},
- module-assistant,
+ bzip2,
  debhelper (>= 7),
  make,
- bzip2,
+ module-assistant,
 Recommends:
  batctl,
 Description: Source for the batman-advanced kernel module
