@@ -8,13 +8,22 @@ Homepage: http://www.open-mesh.org/
 Standards-Version: 3.9.1
 Vcs-Browser: http://git.debian.org/?p=collab-maint/batman-adv-kernelland.git
 Vcs-Git: git://git.debian.org/git/collab-maint/batman-adv-kernelland.git
-Build-Depends: debhelper (>= 8.0.0), dkms (>= 2.1.1.1-2)
-Build-Depends-Indep: bzip2
+Build-Depends:
+ debhelper (>= 8.0.0),
+ dkms (>= 2.1.1.1-2),
+Build-Depends-Indep:
+ bzip2,
 
 Package: batman-adv-source
 Architecture: all
-Depends: ${misc:Depends}, module-assistant, debhelper (>= 7), make, bzip2
-Recommends: batctl
+Depends:
+ ${misc:Depends},
+ module-assistant,
+ debhelper (>= 7),
+ make,
+ bzip2,
+Recommends:
+ batctl,
 Description: Source for the batman-advanced kernel module
  This package provides the source code for the batman-adv-source kernel modules.
  Kernel source or headers are required to compile these modules.
@@ -27,8 +36,10 @@ Description: Source for the batman-advanced kernel module
 
 Package: batman-adv-dkms
 Architecture: all
-Depends: ${misc:Depends}
-Recommends: batctl
+Depends:
+ ${misc:Depends},
+Recommends:
+ batctl,
 Description: DKMS Source for the batman-advanced kernel module
  This package contains the source for the batman-adv-source kernel modules,
  packaged with approriate configuration for DKMS to build new modules

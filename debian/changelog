@@ -1,6 +1,7 @@
 batman-adv-kernelland (2010.2.0+265+g187cb65-2) UNRELEASED; urgency=low
 
   * Updated my maintainer e-mail address
+  * Keep dependencies on separate lines in debian/control
 
  -- Sven Eckelmann <sven@narfation.org>  Sat, 11 Dec 2010 11:28:31 +0100
 
