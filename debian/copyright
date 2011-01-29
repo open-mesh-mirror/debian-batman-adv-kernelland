@@ -5,9 +5,9 @@ Upstream-Contact: Marek Lindner <lindner_marek@yahoo.de>
 Source: http://www.open-mesh.org/
 
 Files: *
-Copyright: 2006-2010, Marek Lindner <lindner_marek@yahoo.de>
-           2006-2010, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-           2010, Andreas Langer <an.langer@gmx.de>
+Copyright: 2006-2011, Marek Lindner <lindner_marek@yahoo.de>
+           2006-2011, Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+           2010-2011, Andreas Langer <an.langer@gmx.de>
 License: GPL-2
 
 Files: bat_printk.c
