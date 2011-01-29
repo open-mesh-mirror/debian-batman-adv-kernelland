@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2011 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -33,6 +33,12 @@
 
 /* protect update critical side of if_list - but not the content */
 static DEFINE_SPINLOCK(if_list_lock);
+
+
+static int batman_skb_recv(struct sk_buff *skb,
+			   struct net_device *dev,
+			   struct packet_type *ptype,
+			   struct net_device *orig_dev);
 
 static void hardif_free_rcu(struct rcu_head *rcu)
 {
@@ -476,19 +482,19 @@ static void hardif_remove_interface(struct batman_if *batman_if)
 void hardif_remove_interfaces(void)
 {
 	struct batman_if *batman_if, *batman_if_tmp;
-	struct list_head if_list_queue;
+	struct list_head if_queue;
 
-	INIT_LIST_HEAD(&if_list_queue);
+	INIT_LIST_HEAD(&if_queue);
 
 	spin_lock(&if_list_lock);
 	list_for_each_entry_safe(batman_if, batman_if_tmp, &if_list, list) {
 		list_del_rcu(&batman_if->list);
-		list_add_tail(&batman_if->list, &if_list_queue);
+		list_add_tail(&batman_if->list, &if_queue);
 	}
 	spin_unlock(&if_list_lock);
 
 	rtnl_lock();
-	list_for_each_entry_safe(batman_if, batman_if_tmp, &if_list_queue, list) {
+	list_for_each_entry_safe(batman_if, batman_if_tmp, &if_queue, list) {
 		hardif_remove_interface(batman_if);
 	}
 	rtnl_unlock();
@@ -549,8 +555,9 @@ out:
 
 /* receive a packet with the batman ethertype coming on a hard
  * interface */
-int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
-	struct packet_type *ptype, struct net_device *orig_dev)
+static int batman_skb_recv(struct sk_buff *skb, struct net_device *dev,
+			   struct packet_type *ptype,
+			   struct net_device *orig_dev)
 {
 	struct bat_priv *bat_priv;
 	struct batman_packet *batman_packet;

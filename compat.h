@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2011 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -263,5 +263,11 @@ int bat_seq_printf(struct seq_file *m, const char *f, ...);
 #define seq_printf bat_seq_printf
 
 #endif /* < KERNEL_VERSION(2, 6, 29) */
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33)
+
+#define __always_unused			__attribute__((unused))
+
+#endif /* < KERNEL_VERSION(2, 6, 33) */
 
 #endif /* _NET_BATMAN_ADV_COMPAT_H_ */

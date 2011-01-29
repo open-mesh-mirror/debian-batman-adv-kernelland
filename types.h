@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2011 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -68,7 +68,7 @@ struct orig_node {
 	uint8_t orig[ETH_ALEN];
 	uint8_t primary_addr[ETH_ALEN];
 	struct neigh_node *router;
-	TYPE_OF_WORD *bcast_own;
+	unsigned long *bcast_own;
 	uint8_t *bcast_own_sum;
 	uint8_t tq_own;
 	int tq_asym_penalty;
@@ -81,7 +81,7 @@ struct orig_node {
 	int16_t hna_buff_len;
 	uint32_t last_real_seqno;
 	uint8_t last_ttl;
-	TYPE_OF_WORD bcast_bits[NUM_WORDS];
+	unsigned long bcast_bits[NUM_WORDS];
 	uint32_t last_bcast_seqno;
 	struct list_head neigh_list;
 	struct list_head frag_list;
@@ -114,7 +114,7 @@ struct neigh_node {
 	uint8_t last_ttl;
 	struct neigh_node *next_bond_candidate;
 	unsigned long last_valid;
-	TYPE_OF_WORD real_bits[NUM_WORDS];
+	unsigned long real_bits[NUM_WORDS];
 	struct orig_node *orig_node;
 	struct batman_if *if_incoming;
 };
@@ -246,13 +246,13 @@ struct vis_info {
 	/* this packet might be part of the vis send queue. */
 	struct sk_buff *skb_packet;
 	/* vis_info may follow here*/
-} __attribute__((packed));
+} __packed;
 
 struct vis_info_entry {
 	uint8_t  src[ETH_ALEN];
 	uint8_t  dest[ETH_ALEN];
 	uint8_t  quality;	/* quality = 0 means HNA */
-} __attribute__((packed));
+} __packed;
 
 struct recvlist_node {
 	struct list_head list;
