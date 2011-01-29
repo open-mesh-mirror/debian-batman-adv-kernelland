@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2010 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2006-2011 B.A.T.M.A.N. contributors:
  *
  * Simon Wunderlich, Marek Lindner
  *
@@ -27,8 +27,6 @@ static void hash_init(struct hashtable_t *hash)
 {
 	int i;
 
-	hash->elements = 0;
-
 	for (i = 0 ; i < hash->size; i++)
 		INIT_HLIST_HEAD(&hash->table[i]);
 }
@@ -47,13 +45,13 @@ struct hashtable_t *hash_new(int size)
 
 	hash = kmalloc(sizeof(struct hashtable_t) , GFP_ATOMIC);
 
-	if (hash == NULL)
+	if (!hash)
 		return NULL;
 
 	hash->size = size;
 	hash->table = kmalloc(sizeof(struct element_t *) * size, GFP_ATOMIC);
 
-	if (hash->table == NULL) {
+	if (!hash->table) {
 		kfree(hash);
 		return NULL;
 	}
@@ -61,23 +59,4 @@ struct hashtable_t *hash_new(int size)
 	hash_init(hash);
 
 	return hash;
-}
-
-/* remove bucket (this might be used in hash_iterate() if you already found the
- * bucket you want to delete and don't need the overhead to find it again with
- * hash_remove(). But usually, you don't want to use this function, as it
- * fiddles with hash-internals. */
-void *hash_remove_bucket(struct hashtable_t *hash, struct hash_it_t *hash_it_t)
-{
-	void *data_save;
-	struct element_t *bucket;
-
-	bucket = hlist_entry(hash_it_t->walk, struct element_t, hlist);
-	data_save = bucket->data;
-
-	hlist_del(hash_it_t->walk);
-	kfree(bucket);
-	hash->elements--;
-
-	return data_save;
 }

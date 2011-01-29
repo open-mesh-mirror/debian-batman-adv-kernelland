@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2010 B.A.T.M.A.N. contributors:
+ * Copyright (C) 2007-2011 B.A.T.M.A.N. contributors:
  *
  * Marek Lindner, Simon Wunderlich
  *
@@ -221,7 +221,7 @@ void add_bat_packet_to_list(struct bat_priv *bat_priv,
 
 	/* nothing to aggregate with - either aggregation disabled or no
 	 * suitable aggregation packet found */
-	if (forw_packet_aggr == NULL) {
+	if (!forw_packet_aggr) {
 		/* the following section can run without the lock */
 		spin_unlock_bh(&bat_priv->forw_bat_list_lock);
 
