@@ -1,4 +1,4 @@
-batman-adv-kernelland (2011.0.0-1) UNRELEASED; urgency=low
+batman-adv-kernelland (2011.0.0-1) experimental; urgency=low
 
   * New Upstream Version
   * Updated my maintainer e-mail address
@@ -7,7 +7,7 @@ batman-adv-kernelland (2011.0.0-1) UNRELEASED; urgency=low
     - Update to DEP5 revision 164
     - Update copyright years
 
- -- Sven Eckelmann <sven@narfation.org>  Sat, 11 Dec 2010 11:28:31 +0100
+ -- Sven Eckelmann <sven@narfation.org>  Sat, 29 Jan 2011 23:10:38 +0100
 
 batman-adv-kernelland (2010.2.0+265+g187cb65-1) experimental; urgency=low
 
