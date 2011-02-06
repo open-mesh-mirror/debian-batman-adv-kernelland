@@ -1,3 +1,10 @@
+batman-adv-kernelland (2011.0.0-2) UNRELEASED; urgency=low
+
+  * debian/patches:
+    - Add linearize_fragment.patch, Linearize fragment packets before merge
+
+ -- Sven Eckelmann <sven@narfation.org>  Sun, 06 Feb 2011 11:38:00 +0100
+
 batman-adv-kernelland (2011.0.0-1) experimental; urgency=low
 
   * New Upstream Version
