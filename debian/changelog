@@ -1,6 +1,8 @@
 batman-adv-kernelland (2011.1.0-1) UNRELEASED; urgency=low
 
   * New Upstream Version
+  * debian/patches:
+    - Remove upstream merged patch linearize_fragment.patch
 
  -- Sven Eckelmann <sven@narfation.org>  Sun, 17 Apr 2011 19:51:35 +0200
 
