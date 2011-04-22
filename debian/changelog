@@ -1,3 +1,9 @@
+batman-adv-kernelland (2011.1.0-2) UNRELEASED; urgency=low
+
+  * Upgraded to policy 3.9.2, no changes required
+
+ -- Sven Eckelmann <sven@narfation.org>  Fri, 22 Apr 2011 18:12:04 +0200
+
 batman-adv-kernelland (2011.1.0-1) unstable; urgency=low
 
   * New Upstream Version
